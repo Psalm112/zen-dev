@@ -1,18 +1,22 @@
-
-
-import { StrictMode } from "react";
+import { lazy, StrictMode } from "react";
 import "./index.css";
 import { createBrowserRouter, Outlet, RouterProvider } from "react-router-dom";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import Layout from "./ui/Layout.tsx";
-import Login from "./pages/Login.tsx";
+// import Login from "./pages/Login.tsx";
 import Loadscreen from "./pages/Loadscreen.tsx";
-import Home from "./pages/Home.tsx";
-import Product from "./pages/Product.tsx";
-import SingleProduct from "./pages/SingleProduct.tsx";
+// import Home from "./pages/Home.tsx";
+// import Product from "./pages/Product.tsx";
+// import SingleProduct from "./pages/SingleProduct.tsx";
 import { Configuration } from "@react-md/layout";
-import Account from "./pages/Account.tsx";
+// import Account from "./pages/Account.tsx";
+
+const Login = lazy(() => import("./pages/Login.tsx"));
+const Home = lazy(() => import("./pages/Home.tsx"));
+const Product = lazy(() => import("./pages/Product.tsx"));
+const SingleProduct = lazy(() => import("./pages/SingleProduct.tsx"));
+const Account = lazy(() => import("./pages/Account.tsx"));
 // import About from "./pages/About.tsx";
 // import Market from "./pages/Market.tsx";
 // import Photos from "./pages/Photos.tsx";
@@ -102,5 +106,3 @@ createRoot(document.getElementById("root")!).render(
     <RouterProvider router={router} />
   </StrictMode>
 );
-
-

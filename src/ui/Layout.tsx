@@ -16,9 +16,10 @@
 // };
 
 // export default Layout;
-
+// src/ui/Layout.tsx
 import Header from "./Header.tsx";
 import Footer from "./Footer.tsx";
+import MobileNavigation from "./MobileNavigation.tsx";
 import { useLocation } from "react-router-dom";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
@@ -28,8 +29,13 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <>
       {!isAuthPage && <Header />}
-      <main className="min-h-screen">{children}</main>
-      {!isAuthPage && <Footer />}
+      <main className="min-h-screen pb-16 md:pb-0">{children}</main>
+      {!isAuthPage && (
+        <>
+          <MobileNavigation />
+          <Footer />
+        </>
+      )}
     </>
   );
 };

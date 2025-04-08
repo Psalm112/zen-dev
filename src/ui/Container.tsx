@@ -1,15 +1,31 @@
+// import { twMerge } from "tailwind-merge";
+
+// interface Props {
+//     children: React.ReactNode;
+//     className?: string;
+// }
+// const Container = ({ children, className }: Props) => {
+//     const newClassName = twMerge(
+//         "max-w-screen-xl mx-auto py-20 px-4 lg:px-0",
+//         className
+//     );
+//     return <div className={newClassName}> {children} </div>;
+// };
+
+// export default Container;
+
 import { twMerge } from "tailwind-merge";
 
 interface Props {
-    children: React.ReactNode;
-    className?: string;
+  children: React.ReactNode;
+  className?: string;
 }
 const Container = ({ children, className }: Props) => {
-    const newClassName = twMerge(
-        "max-w-screen-xl mx-auto py-20 px-4 lg:px-0",
-        className
-    );
-    return <div className={newClassName}> {children} </div>;
+  const newClassName = twMerge(
+    "max-w-screen-xl mx-auto py-4 px-4 md:py-20 md:px-4 lg:px-0",
+    className
+  );
+  return <div className={newClassName}> {children} </div>;
 };
 
 export default Container;
