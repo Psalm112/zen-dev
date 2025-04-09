@@ -8,6 +8,9 @@ export default {
         Dark: "#212428",
         Red: "#ff343f",
       },
+      screens: {
+        xs: "480px",
+      },
       flex: {
         full: "0 0 100%",
       },
