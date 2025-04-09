@@ -2,7 +2,7 @@ import { lazy, StrictMode, Suspense } from "react";
 import "./index.css";
 import { createBrowserRouter, Outlet, RouterProvider } from "react-router-dom";
 import { createRoot } from "react-dom/client";
-import Layout from "./ui/Layout.tsx";
+import Layout from "./components/layout/Layout.tsx";
 import { Configuration } from "@react-md/layout";
 
 const Login = lazy(() => import("./pages/Login.tsx"));

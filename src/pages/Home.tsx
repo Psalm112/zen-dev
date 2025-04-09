@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Browseproduct, Mywallet, Pen, Pen2, Trackorder } from ".";
-import Container from "../ui/Container";
-import ProductList from "../ui/ProductList";
+import Container from "../components/common/Container";
+import ProductList from "../components/product/ProductList";
 import { RiVerifiedBadgeFill } from "react-icons/ri";
 
 const Home = () => {

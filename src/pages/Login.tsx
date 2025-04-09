@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { googleIcon, facebookIcon, xIcon } from ".";
-import Button from "../ui/Button";
+import Button from "../components/common/Button";
 
 const Login = () => {
   const [email, setEmail] = useState("");

@@ -1,7 +1,7 @@
 import { useState } from "react";
-import Container from "../ui/Container";
+import Container from "../components/common/Container";
 import { IoSearch } from "react-icons/io5";
-import ProductList from "../ui/ProductList";
+import ProductList from "../components/product/ProductList";
 
 // categories
 const categories = [

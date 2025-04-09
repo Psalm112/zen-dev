@@ -1,6 +1,6 @@
 import Header from "./Header.tsx";
 import Footer from "./Footer.tsx";
-import MobileNavigation from "./MobileNavigation.tsx";
+import MobileNavigation from "../../ui/MobileNavigation.tsx";
 import { useLocation } from "react-router-dom";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {

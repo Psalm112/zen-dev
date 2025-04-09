@@ -1,5 +1,5 @@
 import { LiaAngleLeftSolid } from "react-icons/lia";
-import Container from "../ui/Container";
+import Container from "../components/common/Container";
 import { FaRegCommentDots, FaRegHeart } from "react-icons/fa";
 import { Comment, Detail, Product1 } from ".";
 import { useState } from "react";

@@ -1,8 +1,8 @@
 import { twMerge } from "tailwind-merge";
 import ProductCard from "./ProductCard";
-import Title from "./Title";
+import Title from "../common/Title";
 import { Link } from "react-router-dom";
-import { Product1 } from "../pages";
+import { Product1 } from "../../pages";
 
 interface Props {
   title: string;
