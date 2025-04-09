@@ -1,16 +1,9 @@
-import { lazy, StrictMode } from "react";
+import { lazy, StrictMode, Suspense } from "react";
 import "./index.css";
 import { createBrowserRouter, Outlet, RouterProvider } from "react-router-dom";
 import { createRoot } from "react-dom/client";
-import App from "./App.tsx";
 import Layout from "./ui/Layout.tsx";
-// import Login from "./pages/Login.tsx";
-import Loadscreen from "./pages/Loadscreen.tsx";
-// import Home from "./pages/Home.tsx";
-// import Product from "./pages/Product.tsx";
-// import SingleProduct from "./pages/SingleProduct.tsx";
 import { Configuration } from "@react-md/layout";
-// import Account from "./pages/Account.tsx";
 
 const Login = lazy(() => import("./pages/Login.tsx"));
 const Home = lazy(() => import("./pages/Home.tsx"));
@@ -31,7 +24,15 @@ const RouterLayout = () => {
   return (
     <Configuration>
       <Layout>
-        <Outlet />
+        <Suspense
+          fallback={
+            <div className="bg-Dark min-h-screen flex items-center justify-center text-white">
+              Loading...
+            </div>
+          }
+        >
+          <Outlet />
+        </Suspense>
       </Layout>
     </Configuration>
   );
@@ -43,24 +44,16 @@ const router = createBrowserRouter([
     element: <RouterLayout />,
     children: [
       {
-        path: "/",
-        element: <App />,
+        index: true,
+        element: <Home />,
       },
       {
         path: "/login",
         element: <Login />,
       },
       {
-        path: "/load",
-        element: <Loadscreen />,
-      },
-      {
         path: "/account",
         element: <Account />,
-      },
-      {
-        path: "/",
-        element: <Home />,
       },
       {
         path: "/product",
@@ -101,6 +94,7 @@ const router = createBrowserRouter([
     ],
   },
 ]);
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <RouterProvider router={router} />

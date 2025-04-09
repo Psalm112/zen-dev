@@ -1,104 +1,7 @@
-// import { useState } from "react";
-// import Container from "./Container";
-// import { HiOutlineBell, HiMenu, HiX } from "react-icons/hi";
-// import { Avatar, Mainlogo } from "../pages";
-// import { Link, NavLink, useLocation } from "react-router-dom";
-
-// const NavList = [
-//   { title: "Home", path: "/" },
-//   { title: "Product", path: "/product" },
-//   { title: "Trade", path: "/trade" },
-//   { title: "Community", path: "/community" },
-//   { title: "Account", path: "/account" },
-// ];
-
-// const Header = () => {
-//   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-//   const location = useLocation();
-
-//   const toggleMobileMenu = () => {
-//     setMobileMenuOpen(!mobileMenuOpen);
-//   };
-
-//   return (
-//     <header className="w-full py-3 bg-[#212428] shadow-md sticky top-0 z-50">
-//       <Container className="flex items-center justify-between py-0">
-//         <Link to="/" className="flex items-center">
-//           <img src={Mainlogo} className="w-[35px]" alt="Dezennmart" />
-//         </Link>
-
-//         {/* Desktop Navigation */}
-//         <nav className="hidden md:flex items-center gap-10">
-//           {NavList.map(({ title, path }) => (
-//             <NavLink
-//               key={path}
-//               to={path}
-//               className={({ isActive }) =>
-//                 `font-semibold text-md transition-colors ${
-//                   isActive ? "text-Red" : "text-[#545456] hover:text-Red"
-//                 }`
-//               }
-//             >
-//               {title}
-//             </NavLink>
-//           ))}
-//         </nav>
-
-//         <div className="flex items-center gap-3">
-//           <button
-//             aria-label="Notifications"
-//             className="hover:opacity-80 transition-opacity"
-//           >
-//             <HiOutlineBell className="text-xl text-white" />
-//           </button>
-//           <Link to="/account">
-//             <img
-//               src={Avatar}
-//               alt="User profile"
-//               className="w-8 h-8 rounded-full"
-//             />
-//           </Link>
-
-//           {/* Mobile Menu Button */}
-//           <button
-//             className="md:hidden text-white"
-//             onClick={toggleMobileMenu}
-//             aria-label="Toggle mobile menu"
-//           >
-//             {mobileMenuOpen ? <HiX size={24} /> : <HiMenu size={24} />}
-//           </button>
-//         </div>
-//       </Container>
-
-//       {/* Mobile Navigation */}
-//       {mobileMenuOpen && (
-//         <div className="md:hidden absolute top-[60px] left-0 right-0 bg-[#212428] shadow-lg z-40">
-//           <div className="flex flex-col p-4">
-//             {NavList.map(({ title, path }) => (
-//               <NavLink
-//                 key={path}
-//                 to={path}
-//                 className={`py-3 px-4 font-semibold text-md ${
-//                   location.pathname === path ? "text-Red" : "text-[#545456]"
-//                 }`}
-//                 onClick={() => setMobileMenuOpen(false)}
-//               >
-//                 {title}
-//               </NavLink>
-//             ))}
-//           </div>
-//         </div>
-//       )}
-//     </header>
-//   );
-// };
-
-// export default Header;
-
 import { useState } from "react";
 import Container from "./Container";
-import { HiOutlineBell, HiMenu, HiX } from "react-icons/hi";
-import { FiSearch } from "react-icons/fi";
+import { HiOutlineBell } from "react-icons/hi";
+import { IoChevronBackOutline } from "react-icons/io5"; // Modern back icon
 import { Avatar, Mainlogo } from "../pages";
 import { Link, NavLink, useLocation } from "react-router-dom";
 
@@ -111,51 +14,41 @@ const NavList = [
 ];
 
 const Header = () => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
-
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen(!mobileMenuOpen);
-  };
 
   return (
     <header className="w-full py-3 bg-[#212428] shadow-md sticky top-0 z-50">
       <Container className="flex items-center justify-between py-0">
-        {/* Back button (mobile only) - show on inner pages */}
-        {location.pathname !== "/" && (
-          <button
-            className="md:hidden text-white"
-            onClick={() => window.history.back()}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+        {/* Left section: Back button and logo */}
+        <div className="flex items-center gap-3">
+          {/* Modern back button with smooth transition */}
+          {location.pathname !== "/" && (
+            <button
+              className="md:hidden text-white p-1.5 rounded-full hover:bg-[#292B30] transition-colors"
+              onClick={() => window.history.back()}
+              aria-label="Go back"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-          </button>
-        )}
+              <IoChevronBackOutline className="h-5 w-5" />
+            </button>
+          )}
 
-        {/* Logo with conditional styles */}
-        <Link
-          to="/"
-          className={`flex items-center ${
-            location.pathname !== "/" ? "md:flex" : "flex"
-          }`}
-        >
-          <img src={Mainlogo} className="w-[35px]" alt="Dezennmart" />
-          <span className="ml-2 text-white font-semibold hidden md:inline">
-            DezenMart
-          </span>
-        </Link>
+          {/* Logo with modern animation */}
+          <Link
+            to="/"
+            className="flex items-center group transition-transform hover:scale-105"
+          >
+            <div className="relative overflow-hidden rounded-md">
+              <img
+                src={Mainlogo}
+                className="w-[35px] transition-transform group-hover:scale-110"
+                alt="DezenMart"
+              />
+            </div>
+            <span className="ml-2 text-white font-medium hidden md:inline transition-opacity group-hover:opacity-90">
+              DezenMart
+            </span>
+          </Link>
+        </div>
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-10">
@@ -164,8 +57,10 @@ const Header = () => {
               key={path}
               to={path}
               className={({ isActive }) =>
-                `font-semibold text-md transition-colors ${
-                  isActive ? "text-Red" : "text-[#545456] hover:text-Red"
+                `font-semibold text-md transition-all ${
+                  isActive
+                    ? "text-Red relative after:content-[''] after:absolute after:bottom-[-6px] after:left-0 after:w-full after:h-0.5 after:bg-Red after:rounded-full"
+                    : "text-[#545456] hover:text-white"
                 }`
               }
             >
@@ -174,60 +69,24 @@ const Header = () => {
           ))}
         </nav>
 
+        {/* Right section: Buttons */}
         <div className="flex items-center gap-3">
-          {/* Search button - mobile only */}
-          <button
-            aria-label="Search"
-            className="md:hidden hover:opacity-80 transition-opacity"
-          >
-            <FiSearch className="text-xl text-white" />
-          </button>
-
           <button
             aria-label="Notifications"
-            className="hover:opacity-80 transition-opacity"
+            className="p-1.5 rounded-full hover:bg-[#292B30] transition-colors"
           >
             <HiOutlineBell className="text-xl text-white" />
           </button>
 
-          <Link to="/account">
+          <Link to="/account" className="transition-transform hover:scale-105">
             <img
               src={Avatar}
               alt="User profile"
-              className="w-8 h-8 rounded-full"
+              className="w-8 h-8 rounded-full ring-2 ring-[#292B30] hover:ring-Red transition-all"
             />
           </Link>
-
-          {/* Mobile Menu Button */}
-          <button
-            className="md:hidden text-white ml-2"
-            onClick={toggleMobileMenu}
-            aria-label="Toggle mobile menu"
-          >
-            {mobileMenuOpen ? <HiX size={24} /> : <HiMenu size={24} />}
-          </button>
         </div>
       </Container>
-
-      {/* Mobile Navigation */}
-      {mobileMenuOpen && (
-        <div className="md:hidden fixed top-[60px] left-0 right-0 bottom-0 bg-[#212428] shadow-lg z-40">
-          <div className="flex flex-col p-4">
-            {NavList.map(({ title, path }) => (
-              <NavLink
-                key={path}
-                to={path}
-                className={`py-3 px-4 font-semibold text-md ${
-                  location.pathname === path ? "text-Red" : "text-[#545456]"
-                }`}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {title}
-              </NavLink>
-            ))}
-          </div>
-        </div>
-      )}
     </header>
   );
 };

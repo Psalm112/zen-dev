@@ -7,19 +7,19 @@ import { RiUser3Line } from "react-icons/ri";
 
 const MobileNavigation = () => {
   const navItems = [
-    { icon: <AiOutlineHome size={20} />, label: "Home", path: "/" },
-    { icon: <BiPackage size={20} />, label: "Product", path: "/product" },
+    { icon: <AiOutlineHome size={24} />, label: "Home", path: "/" },
+    { icon: <BiPackage size={24} />, label: "Product", path: "/product" },
     {
-      icon: <IoSwapHorizontalOutline size={20} />,
+      icon: <IoSwapHorizontalOutline size={24} />,
       label: "Trade",
       path: "/trade",
     },
-    { icon: <BsPeople size={20} />, label: "Community", path: "/community" },
-    { icon: <RiUser3Line size={20} />, label: "Account", path: "/account" },
+    { icon: <BsPeople size={24} />, label: "Community", path: "/community" },
+    { icon: <RiUser3Line size={24} />, label: "Account", path: "/account" },
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-[#212428] flex justify-between items-center px-4 py-2 md:hidden z-50">
+    <div className="fixed bottom-0 left-0 right-0 bg-[#212428] flex justify-evenly items-center px-4 py-2 md:hidden z-50">
       {navItems.map((item) => (
         <NavLink
           key={item.path}
