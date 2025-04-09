@@ -1,9 +1,7 @@
-import { useState } from "react";
-import Container from "./Container";
 import { HiOutlineBell } from "react-icons/hi";
-import { IoChevronBackOutline } from "react-icons/io5"; // Modern back icon
-import { Avatar, Mainlogo } from "../pages";
-import { Link, NavLink, useLocation } from "react-router-dom";
+import { Avatar, Mainlogo } from "../../pages";
+import { Link, NavLink } from "react-router-dom";
+import Container from "../common/Container";
 
 const NavList = [
   { title: "Home", path: "/" },
@@ -14,15 +12,15 @@ const NavList = [
 ];
 
 const Header = () => {
-  const location = useLocation();
+  // const location = useLocation();
 
   return (
     <header className="w-full py-3 bg-[#212428] shadow-md sticky top-0 z-50">
       <Container className="flex items-center justify-between py-0">
         {/* Left section: Back button and logo */}
-        <div className="flex items-center gap-3">
-          {/* Modern back button with smooth transition */}
-          {location.pathname !== "/" && (
+        {/* <div className="flex items-center gap-3"> */}
+        {/* Modern back button with smooth transition */}
+        {/* {location.pathname !== "/" && (
             <button
               className="md:hidden text-white p-1.5 rounded-full hover:bg-[#292B30] transition-colors"
               onClick={() => window.history.back()}
@@ -30,25 +28,25 @@ const Header = () => {
             >
               <IoChevronBackOutline className="h-5 w-5" />
             </button>
-          )}
+          )} */}
 
-          {/* Logo with modern animation */}
-          <Link
-            to="/"
-            className="flex items-center group transition-transform hover:scale-105"
-          >
-            <div className="relative overflow-hidden rounded-md">
-              <img
-                src={Mainlogo}
-                className="w-[35px] transition-transform group-hover:scale-110"
-                alt="DezenMart"
-              />
-            </div>
-            <span className="ml-2 text-white font-medium hidden md:inline transition-opacity group-hover:opacity-90">
-              DezenMart
-            </span>
-          </Link>
-        </div>
+        {/* Logo with modern animation */}
+        <Link
+          to="/"
+          className="flex items-center group transition-transform hover:scale-105"
+        >
+          <div className="relative overflow-hidden rounded-md">
+            <img
+              src={Mainlogo}
+              className="w-[35px] transition-transform group-hover:scale-110"
+              alt="DezenMart"
+            />
+          </div>
+          <span className="ml-2 text-white font-medium hidden md:inline transition-opacity group-hover:opacity-90">
+            DezenMart
+          </span>
+        </Link>
+        {/* </div> */}
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-10">

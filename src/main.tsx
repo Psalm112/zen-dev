@@ -2,8 +2,8 @@ import { lazy, StrictMode, Suspense } from "react";
 import "./index.css";
 import { createBrowserRouter, Outlet, RouterProvider } from "react-router-dom";
 import { createRoot } from "react-dom/client";
-import Layout from "./components/layout/Layout.tsx";
 import { Configuration } from "@react-md/layout";
+import Layout from "./components/layout/Layout.tsx";
 
 const Login = lazy(() => import("./pages/Login.tsx"));
 const Home = lazy(() => import("./pages/Home.tsx"));
@@ -57,6 +57,10 @@ const router = createBrowserRouter([
       },
       {
         path: "/product",
+        element: <Product />,
+      },
+      {
+        path: "/product/category/:categoryName",
         element: <Product />,
       },
       {

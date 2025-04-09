@@ -1,5 +1,4 @@
 import { LiaAngleLeftSolid } from "react-icons/lia";
-import Container from "../components/common/Container";
 import { FaRegCommentDots, FaRegHeart } from "react-icons/fa";
 import { Comment, Detail, Product1 } from ".";
 import { useState } from "react";
@@ -7,6 +6,7 @@ import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
 import { MdOutlineStar } from "react-icons/md";
 import { BiSolidQuoteRight } from "react-icons/bi";
 import { Link, useParams, useNavigate } from "react-router-dom";
+import Container from "../components/common/Container";
 
 type TabType = "details" | "reviews";
 type SectionType = "About this product" | "Properties" | "Description" | null;

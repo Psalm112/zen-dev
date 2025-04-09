@@ -1,10 +1,10 @@
 import { RiSettings3Fill, RiVerifiedBadgeFill } from "react-icons/ri";
 import { Avatar2, Product1 } from ".";
-import Button from "../components/common/Button";
-import Container from "../components/common/Container";
 import { MdOutlineCheckCircleOutline } from "react-icons/md";
 import { LiaAngleDownSolid } from "react-icons/lia";
 import { useState } from "react";
+import Button from "../components/common/Button";
+import Container from "../components/common/Container";
 
 type TabType = "1" | "2" | "3";
 
