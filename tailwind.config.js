@@ -17,6 +17,10 @@ export default {
       animation: {
         loading: "loadingAnimation 1.5s infinite linear",
         fadeIn: "fadeIn 0.3s ease-in-out",
+        "slide-out-left": "slideOutLeft 300ms ease-in-out forwards",
+        "slide-out-right": "slideOutRight 300ms ease-in-out forwards",
+        "slide-in-left": "slideInLeft 300ms ease-in-out forwards",
+        "slide-in-right": "slideInRight 300ms ease-in-out forwards",
       },
       keyframes: {
         loadingAnimation: {
@@ -26,6 +30,22 @@ export default {
         fadeIn: {
           "0%": { opacity: "0" },
           "100%": { opacity: "1" },
+        },
+        slideOutLeft: {
+          "0%": { transform: "translateX(0)", opacity: 1 },
+          "100%": { transform: "translateX(-100%)", opacity: 0 },
+        },
+        slideOutRight: {
+          "0%": { transform: "translateX(0)", opacity: 1 },
+          "100%": { transform: "translateX(100%)", opacity: 0 },
+        },
+        slideInLeft: {
+          "0%": { transform: "translateX(-100%)", opacity: 0 },
+          "100%": { transform: "translateX(0)", opacity: 1 },
+        },
+        slideInRight: {
+          "0%": { transform: "translateX(100%)", opacity: 0 },
+          "100%": { transform: "translateX(0)", opacity: 1 },
         },
       },
     },

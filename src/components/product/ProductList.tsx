@@ -6,7 +6,7 @@ import { Product1 } from "../../pages";
 
 interface Props {
   title: string;
-  path: string;
+  path?: string;
   className?: string;
   isCategoryView: boolean;
 }
@@ -33,12 +33,14 @@ const ProductList = ({ title, path, className, isCategoryView }: Props) => {
       {!isCategoryView && (
         <div className="flex items-center justify-between px-4 md:px-0">
           <Title text={title} className="text-white text-lg md:text-2xl" />
-          <Link
-            to={path}
-            className="text-sm md:text-base text-white hover:text-Red transition-colors"
-          >
-            View all
-          </Link>
+          {path && (
+            <Link
+              to={path}
+              className="text-sm md:text-base text-white hover:text-Red transition-colors"
+            >
+              View all
+            </Link>
+          )}
         </div>
       )}
       <div className="mt-4 md:mt-8 overflow-x-auto scrollbar-hide">
