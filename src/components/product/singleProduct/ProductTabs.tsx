@@ -51,7 +51,7 @@ const ProductTabs = ({
             <img src={Comment} alt="" className="w-4 h-4 sm:w-5 sm:h-5" />
             <span className="whitespace-nowrap">Reviews</span>
             {reviewCount > 0 && (
-              <span className="bg-Red text-xs rounded-full px-1.5 py-0.5 ml-1">
+              <span className="bg-Red text-xs rounded-full px-1.5 py-0.5 ml-1 text-white">
                 {reviewCount}
               </span>
             )}

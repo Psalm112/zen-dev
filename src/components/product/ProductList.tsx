@@ -14,7 +14,7 @@ interface Props {
 const ProductList = ({ title, path, className, isCategoryView }: Props) => {
   const newClass = twMerge("", className);
 
-  const products = Array(5)
+  const products = Array(4)
     .fill(null)
     .map((_, index) => ({
       id: index + 1,

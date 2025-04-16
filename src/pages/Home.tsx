@@ -3,6 +3,7 @@ import { Browseproduct, Mywallet, Pen, Pen2, Trackorder } from ".";
 import { RiVerifiedBadgeFill } from "react-icons/ri";
 import Container from "../components/common/Container";
 import ProductList from "../components/product/ProductList";
+import BannerCarousel from "../components/common/BannerCarousel";
 
 const Home = () => {
   const quickActions = [
@@ -22,7 +23,77 @@ const Home = () => {
       path: "/wallet",
     },
   ];
-
+  const banners = [
+    {
+      title: "Smart Ecommerce for",
+      subtitle: "creators",
+      primaryImage: Pen,
+      secondaryImage: Pen2,
+      backgroundColor: "#ff3b3b",
+      textColor: "white",
+      isUppercase: true,
+    },
+    {
+      title: "Special Offers for",
+      subtitle: "new users",
+      primaryImage: Pen,
+      backgroundColor: "#3b82f6",
+      textColor: "white",
+      isUppercase: true,
+    },
+    {
+      title: "Smart Ecommerce for",
+      subtitle: "creators",
+      primaryImage: Pen,
+      secondaryImage: Pen2,
+      backgroundColor: "#ff3b3b",
+      textColor: "white",
+      isUppercase: true,
+    },
+    {
+      title: "Special Offers for",
+      subtitle: "new users",
+      primaryImage: Pen,
+      backgroundColor: "#3b82f6",
+      textColor: "white",
+      isUppercase: true,
+    },
+    {
+      title: "Smart Ecommerce for",
+      subtitle: "creators",
+      primaryImage: Pen,
+      secondaryImage: Pen2,
+      backgroundColor: "#ff3b3b",
+      textColor: "white",
+      isUppercase: true,
+    },
+    {
+      title: "Special Offers for",
+      subtitle: "new users",
+      primaryImage: Pen,
+      backgroundColor: "#3b82f6",
+      textColor: "white",
+      isUppercase: true,
+    },
+    {
+      title: "Smart Ecommerce for",
+      subtitle: "creators",
+      primaryImage: Pen,
+      secondaryImage: Pen2,
+      backgroundColor: "#ff3b3b",
+      textColor: "white",
+      isUppercase: true,
+    },
+    {
+      title: "Special Offers for",
+      subtitle: "new users",
+      primaryImage: Pen,
+      backgroundColor: "#3b82f6",
+      textColor: "white",
+      isUppercase: true,
+    },
+    // Add more banners as needed
+  ];
   return (
     <div className="bg-Dark min-h-screen">
       <Container className="py-6 md:py-20">
@@ -60,7 +131,7 @@ const Home = () => {
           ))}
         </div>
 
-        <div className="flex justify-between items-center px-4 bg-Red rounded-lg mt-8 md:mt-28 overflow-hidden">
+        {/* <div className="flex justify-between items-center px-4 bg-Red rounded-lg mt-8 md:mt-28 overflow-hidden">
           <h5 className="text-white text-base md:text-xl p-4">
             Smart Ecommerce for{" "}
             <span className="uppercase font-bold block md:inline">
@@ -79,7 +150,13 @@ const Home = () => {
               className="w-[30px] h-[30px] md:w-[69px] md:h-[67px]"
             />
           </div>
-        </div>
+        </div> */}
+
+        <BannerCarousel
+          banners={banners}
+          autoRotate={true}
+          rotationInterval={6000}
+        />
 
         <ProductList
           title="Featured Product"
