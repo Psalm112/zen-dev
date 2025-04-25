@@ -6,7 +6,7 @@ import Container from "../common/Container";
 const NavList = [
   { title: "Home", path: "/" },
   { title: "Product", path: "/product" },
-  { title: "Trade", path: "/trade" },
+  { title: "Trade", path: "/trades" },
   { title: "Community", path: "/community" },
   { title: "Account", path: "/account" },
 ];
@@ -17,9 +17,8 @@ const Header = () => {
   return (
     <header className="w-full py-3 bg-[#212428] shadow-md sticky top-0 z-50">
       <Container className="flex items-center justify-between py-0">
-        {/* Left section: Back button and logo */}
         {/* <div className="flex items-center gap-3"> */}
-        {/* Modern back button with smooth transition */}
+
         {/* {location.pathname !== "/" && (
             <button
               className="md:hidden text-white p-1.5 rounded-full hover:bg-[#292B30] transition-colors"
@@ -30,7 +29,6 @@ const Header = () => {
             </button>
           )} */}
 
-        {/* Logo with modern animation */}
         <Link
           to="/"
           className="flex items-center group transition-transform hover:scale-105"

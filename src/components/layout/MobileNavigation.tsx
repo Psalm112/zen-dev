@@ -12,7 +12,7 @@ const MobileNavigation = () => {
     {
       icon: <IoSwapHorizontalOutline size={24} />,
       label: "Trade",
-      path: "/trade",
+      path: "/trades",
     },
     { icon: <BsPeople size={24} />, label: "Community", path: "/community" },
     { icon: <RiUser3Line size={24} />, label: "Account", path: "/account" },

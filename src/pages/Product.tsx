@@ -20,13 +20,12 @@ const Product = () => {
   const params = useParams();
   const categoryParam = params.categoryName;
 
-  // Set the active category based on URL or default to "All"
+  // future: Set the active category based on URL or default to "All"
   const [activeCategory, setActiveCategory] = useState(categoryParam || "All");
 
   // Update active category when URL changes
   useEffect(() => {
     if (categoryParam) {
-      // Capitalize first letter for display
       const formattedCategory =
         categoryParam.charAt(0).toUpperCase() + categoryParam.slice(1);
       setActiveCategory(formattedCategory);

@@ -22,7 +22,7 @@ const SingleProduct = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>("details");
   const [isFavorite, setIsFavorite] = useState(false);
-  const [dominantColor, setDominantColor] = useState("#292B30");
+  // const [dominantColor, setDominantColor] = useState("#292B30");
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [reviewCount, setReviewCount] = useState(0);
@@ -35,7 +35,7 @@ const SingleProduct = () => {
 
   const toggleFavorite = () => {
     setIsFavorite((prev) => !prev);
-    // Uncomment when implementing context
+
     // if (isFavorite) {
     //   removeFromFavorites(id as string);
     // } else {
@@ -69,11 +69,9 @@ const SingleProduct = () => {
     const fetchProduct = async () => {
       setLoading(true);
       try {
-        // Replace with your actual API call
         // const response = await fetch(`/api/products/${id}`);
         // const data = await response.json();
 
-        // Simulating API response for now
         setTimeout(() => {
           const mockProduct = {
             id,
@@ -83,7 +81,6 @@ const SingleProduct = () => {
             description: "Product description goes here...",
             rating: 4.7,
             reviewCount: 4,
-            // other product data...
           };
 
           setProduct(mockProduct);
@@ -98,11 +95,6 @@ const SingleProduct = () => {
 
     // Check if product is in favorites
     // Uncomment when implementing context
-    // const checkFavoriteStatus = () => {
-    //   if (favorites && id) {
-    //     setIsFavorite(favorites.includes(id));
-    //   }
-    // };
 
     if (id) {
       fetchProduct();
@@ -115,19 +107,12 @@ const SingleProduct = () => {
     window.scrollTo(0, 0);
   }, [id]);
 
-  // Effect for setting background color based on product theme
-  useEffect(() => {
-    if (product?.themeColor) {
-      setDominantColor(product.themeColor);
-    }
-  }, [product]);
-
   if (loading) {
     return <ProductLoadingSkeleton />;
   }
 
   const backgroundStyle = {
-    background: `linear-gradient(to bottom, ${dominantColor} 0%, rgba(41, 43, 48, 0.95) 100%)`,
+    background: `linear-gradient(to bottom, #292B30 0%, rgba(41, 43, 48, 0.95) 100%)`,
   };
 
   return (
@@ -139,7 +124,6 @@ const SingleProduct = () => {
     >
       <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
         <div className="flex flex-col xl:flex-row gap-6">
-          {/* Left Column - Product Image */}
           <div
             style={backgroundStyle}
             className="w-full xl:w-5/12 rounded-xl shadow-lg transition-all duration-500"
@@ -185,10 +169,8 @@ const SingleProduct = () => {
             </div>
           </div>
 
-          {/* Right Column - Product Info and Tabs */}
           <div className="w-full xl:w-7/12">
             <div className="bg-[#292B30] shadow-xl text-white w-full rounded-xl overflow-hidden">
-              {/* Product Title and Price Section */}
               <div className="px-4 sm:px-8 md:px-12 py-6">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <h1 className="text-2xl sm:text-3xl font-bold">
@@ -211,8 +193,6 @@ const SingleProduct = () => {
                     )}
                   </div>
                 </div>
-
-                {/* Optional: Add brief product description or highlights here */}
               </div>
 
               {/* Tabs */}
@@ -231,14 +211,11 @@ const SingleProduct = () => {
                 )}
               </div>
 
-              {/* Purchase Section */}
               <PurchaseSection />
             </div>
           </div>
         </div>
-        {/* Related Products Section */}
         <div className="mt-8">
-          {/* <RelatedProducts productId={id} /> */}
           <ProductList
             title="You might also like"
             className="mt-8"
@@ -249,65 +226,5 @@ const SingleProduct = () => {
     </motion.div>
   );
 };
-
-// Loading skeleton component for the product page
-// const ProductLoadingSkeleton = () => (
-//   <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-//     <div className="flex flex-col xl:flex-row gap-6">
-//       {/* Image skeleton */}
-//       <div className="w-full xl:w-5/12 bg-[#292B30] rounded-xl shadow-lg h-[500px] animate-pulse">
-//         <div className="h-full flex items-center justify-center">
-//           <div className="w-2/3 h-2/3 bg-gray-700/30 rounded-lg"></div>
-//         </div>
-//       </div>
-
-//       {/* Content skeleton */}
-//       <div className="w-full xl:w-7/12">
-//         <div className="bg-[#292B30] shadow-xl rounded-xl overflow-hidden p-6">
-//           <div className="h-8 bg-gray-700/30 rounded w-3/4 mb-4"></div>
-//           <div className="h-6 bg-gray-700/30 rounded w-1/4 mb-8"></div>
-
-//           <div className="flex gap-4 mb-8">
-//             <div className="h-10 bg-gray-700/30 rounded w-1/2"></div>
-//             <div className="h-10 bg-gray-700/30 rounded w-1/2"></div>
-//           </div>
-
-//           <div className="space-y-4">
-//             <div className="h-4 bg-gray-700/30 rounded w-full"></div>
-//             <div className="h-4 bg-gray-700/30 rounded w-5/6"></div>
-//             <div className="h-4 bg-gray-700/30 rounded w-4/6"></div>
-//           </div>
-
-//           <div className="mt-8 h-12 bg-gray-700/30 rounded w-full"></div>
-//         </div>
-//       </div>
-//     </div>
-//   </div>
-// );
-
-// Add this new component for related products
-// const RelatedProducts = ({ productId }: { productId?: string }) => {
-//   // In a real app, you would fetch related products based on the current product ID
-//   return (
-//     <div className="bg-[#292B30] rounded-xl p-4 sm:p-6">
-//       <h3 className="text-xl font-bold text-white mb-4">You might also like</h3>
-//       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-//         {[1, 2, 3, 4].map((item) => (
-//           <div
-//             key={item}
-//             className="bg-[#212428] rounded-lg p-3 cursor-pointer hover:scale-105 transition-transform"
-//             onClick={() => {
-//               /* Navigate to product */
-//             }}
-//           >
-//             <div className="bg-[#292B30] rounded-lg aspect-square mb-2"></div>
-//             <div className="h-4 bg-gray-700/30 rounded w-4/5 mb-1"></div>
-//             <div className="h-4 bg-gray-700/30 rounded w-2/5"></div>
-//           </div>
-//         ))}
-//       </div>
-//     </div>
-//   );
-// };
 
 export default SingleProduct;

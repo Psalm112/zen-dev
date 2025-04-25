@@ -5,7 +5,6 @@ import { BsZoomIn } from "react-icons/bs";
 
 interface ProductImageProps {
   productId?: string;
-  // onColorExtracted?: (color: string) => void;
 }
 
 const ProductImage = ({ productId }: ProductImageProps) => {
@@ -26,14 +25,13 @@ const ProductImage = ({ productId }: ProductImageProps) => {
     setLoading(true);
     setCurrentImageIndex(0);
 
-    // Simulating API call to fetch product images
+    // future: API call to fetch product images
     const fetchImages = async () => {
       try {
         // API call
         // const response = await fetch(`/api/products/${productId}/images`);
         // const data = await response.json();
 
-        // Simulation with timeout
         const timer = setTimeout(() => {
           setImages([Product1, Product1, Product1, Product1]); // Example with duplicate images
           setLoading(false);
@@ -56,7 +54,7 @@ const ProductImage = ({ productId }: ProductImageProps) => {
     setTransitioning(true);
     setZoomed(false);
 
-    // Apply transition classes to slideContainerRef
+    // Apply transition
     if (slideContainerRef.current) {
       const direction = index > currentImageIndex ? "next" : "prev";
       slideContainerRef.current.style.transition = "transform 300ms ease-out";
@@ -65,7 +63,6 @@ const ProductImage = ({ productId }: ProductImageProps) => {
 
       setTimeout(() => {
         setCurrentImageIndex(index);
-        // Reset container position without transition
         slideContainerRef.current!.style.transition = "none";
         slideContainerRef.current!.style.transform = "translateX(0)";
         setTransitioning(false);
@@ -106,10 +103,9 @@ const ProductImage = ({ productId }: ProductImageProps) => {
 
     if (touchStartX.current && touchEndX.current && slideContainerRef.current) {
       const diffX = touchEndX.current - touchStartX.current;
-      const threshold = 20; // Minimum swipe distance to register movement
+      const threshold = 20;
 
       if (Math.abs(diffX) > threshold) {
-        // Apply direct manipulation for smoother feel
         const translateX = Math.min(Math.max(-100, diffX / 3), 100);
         slideContainerRef.current.style.transform = `translateX(${translateX}px)`;
       }
@@ -121,14 +117,13 @@ const ProductImage = ({ productId }: ProductImageProps) => {
 
     if (touchStartX.current && touchEndX.current) {
       const diffX = touchEndX.current - touchStartX.current;
-      const threshold = 75; // Minimum swipe distance to trigger navigation
+      const threshold = 75;
 
       if (diffX > threshold) {
         prevImage();
       } else if (diffX < -threshold) {
         nextImage();
       } else if (slideContainerRef.current) {
-        // Reset position if swipe wasn't strong enough
         slideContainerRef.current.style.transition = "transform 200ms ease-out";
         slideContainerRef.current.style.transform = "translateX(0)";
       }
@@ -181,7 +176,6 @@ const ProductImage = ({ productId }: ProductImageProps) => {
                 className="w-full object-contain transition-transform"
                 alt={`Product Image ${currentImageIndex + 1}`}
                 loading="lazy"
-                // onLoad={handleImageLoad}
               />
             </div>
           </div>
@@ -249,7 +243,7 @@ const ProductImage = ({ productId }: ProductImageProps) => {
         </div>
       )}
 
-      {/* Zoom instructions tooltip - show briefly when image first loads */}
+      {/* Zoom instructions tooltip  */}
       {!loading && !zoomed && (
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/70 text-white text-xs py-1 px-3 rounded-full opacity-0 animate-fadeInOut pointer-events-none">
           Tap to zoom

@@ -12,7 +12,7 @@ export const useProductData = (productId: string | undefined) => {
     const fetchProduct = async () => {
       try {
         setLoading(true);
-        // Simulate API call
+        // API call
         await new Promise(resolve => setTimeout(resolve, 300));
         
         // Mock data

@@ -92,7 +92,6 @@ const Home = () => {
       textColor: "white",
       isUppercase: true,
     },
-    // Add more banners as needed
   ];
   return (
     <div className="bg-Dark min-h-screen">

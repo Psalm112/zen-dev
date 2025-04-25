@@ -21,11 +21,11 @@ const BannerCarousel: FC<BannerCarouselProps> = ({
     setCurrentIndex((prevIndex) => (prevIndex + 1) % banners.length);
   }, [banners.length]);
 
-  const goToPrevious = useCallback(() => {
-    setCurrentIndex(
-      (prevIndex) => (prevIndex - 1 + banners.length) % banners.length
-    );
-  }, [banners.length]);
+  //   const goToPrevious = useCallback(() => {
+  //     setCurrentIndex(
+  //       (prevIndex) => (prevIndex - 1 + banners.length) % banners.length
+  //     );
+  //   }, [banners.length]);
 
   const goToIndex = (index: number) => {
     setCurrentIndex(index);
@@ -121,7 +121,7 @@ const BannerCarousel: FC<BannerCarouselProps> = ({
         </div> */}
       </div>
 
-      {/* Mixed indicator system: active=line, inactive=dot */}
+      {/*indicator */}
       {banners.length > 1 && (
         <div className="flex justify-center items-center space-x-3 mt-4">
           {banners.map((_, index) => (

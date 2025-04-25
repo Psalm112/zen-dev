@@ -4,12 +4,15 @@ import { createBrowserRouter, Outlet, RouterProvider } from "react-router-dom";
 import { createRoot } from "react-dom/client";
 import { Configuration } from "@react-md/layout";
 import Layout from "./components/layout/Layout.tsx";
+import ViewTrade from "./pages/ViewTrade.tsx";
+import Loadscreen from "./pages/Loadscreen.tsx";
 
 const Login = lazy(() => import("./pages/Login.tsx"));
 const Home = lazy(() => import("./pages/Home.tsx"));
 const Product = lazy(() => import("./pages/Product.tsx"));
 const SingleProduct = lazy(() => import("./pages/SingleProduct.tsx"));
 const Account = lazy(() => import("./pages/Account.tsx"));
+const Trade = lazy(() => import("./pages/Trade.tsx"));
 // import About from "./pages/About.tsx";
 // import Market from "./pages/Market.tsx";
 // import Photos from "./pages/Photos.tsx";
@@ -24,13 +27,7 @@ const RouterLayout = () => {
   return (
     <Configuration>
       <Layout>
-        <Suspense
-          fallback={
-            <div className="bg-Dark min-h-screen flex items-center justify-center text-white">
-              Loading...
-            </div>
-          }
-        >
+        <Suspense fallback={<Loadscreen />}>
           <Outlet />
         </Suspense>
       </Layout>
@@ -64,9 +61,22 @@ const router = createBrowserRouter([
         element: <Product />,
       },
       {
-        path: "/single-product/:id",
+        path: "/product/:id",
         element: <SingleProduct />,
       },
+      {
+        path: "/trades",
+        element: <Trade />,
+      },
+      {
+        path: "/trades/viewtrades",
+        element: <ViewTrade />,
+      },
+      {
+        path: "/load",
+        element: <Loadscreen />,
+      },
+
       // {
       //   path: "/member/:id",
       //   element: <Members />,
