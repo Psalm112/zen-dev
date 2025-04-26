@@ -10,8 +10,10 @@ import CompletedTradeCard from "../components/trade/view/CompletedTradeCard";
 import ConnectWallet from "../components/trade/ConnectWallet";
 import Tab from "../components/trade/Tab";
 import EmptyState from "../components/trade/view/EmptyState";
+import { useNavigate } from "react-router-dom";
 
 const ViewTrade = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TradeTab>("active");
   const [isLoading, setIsLoading] = useState(true);
   const { isConnected, connect, isConnecting } = useWallet();
@@ -128,10 +130,16 @@ const ViewTrade = () => {
                   {activeTab === "active" &&
                     (activeTrades.length > 0 ? (
                       activeTrades.map((trade) => (
-                        <ActiveTradeCard
+                        <div
                           key={trade.id}
-                          // trade={trade}
-                        />
+                          onClick={() =>
+                            navigate(
+                              `/trades/viewtrade/${trade.id}?status=pending`
+                            )
+                          }
+                        >
+                          <ActiveTradeCard />
+                        </div>
                       ))
                     ) : (
                       <EmptyState
@@ -143,7 +151,16 @@ const ViewTrade = () => {
                   {activeTab === "completed" &&
                     (!(completedTrades.length > 0) ? (
                       completedTrades.map((trade) => (
-                        <CompletedTradeCard key={trade.id} trade={trade} />
+                        <div
+                          key={trade.id}
+                          onClick={() =>
+                            navigate(
+                              `/trades/viewtrade/${trade.id}?status=completed`
+                            )
+                          }
+                        >
+                          <CompletedTradeCard trade={trade} />
+                        </div>
                       ))
                     ) : (
                       <EmptyState

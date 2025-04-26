@@ -6,6 +6,7 @@ import { Configuration } from "@react-md/layout";
 import Layout from "./components/layout/Layout.tsx";
 import ViewTrade from "./pages/ViewTrade.tsx";
 import Loadscreen from "./pages/Loadscreen.tsx";
+import ViewTradeDetail from "./pages/ViewTradeDetail.tsx";
 
 const Login = lazy(() => import("./pages/Login.tsx"));
 const Home = lazy(() => import("./pages/Home.tsx"));
@@ -81,6 +82,10 @@ const router = createBrowserRouter([
       {
         path: "/trades/sell/:productId",
         element: <SellCheckout />,
+      },
+      {
+        path: "/trades/viewtrades/:productId",
+        element: <ViewTradeDetail />,
       },
       {
         path: "/load",

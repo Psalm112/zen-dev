@@ -52,18 +52,18 @@ const FundsReleaseStatus: FC<FundsReleaseStatusProps> = ({
   );
 
   const actionButtons = (
-    <>
+    <div className="w-full flex flex-col sm:flex-row gap-4">
       <Button
         title="Order Dispute?"
-        className="bg-transparent hover:bg-gray-700 text-white text-sm px-6 py-3 border border-gray-600 rounded transition-colors sm:flex-1"
+        className="bg-transparent hover:bg-gray-700 text-white text-sm px-6 py-3 border border-gray-600 rounded transition-colors w-full"
         onClick={onOrderDispute}
       />
       <Button
         title="Release Now"
-        className="bg-Red hover:bg-[#e02d37] text-white text-sm px-6 py-3 rounded transition-colors sm:flex-1"
+        className="bg-Red hover:bg-[#e02d37] text-white text-sm px-6 py-3 rounded transition-colors w-full"
         onClick={onReleaseNow}
       />
-    </>
+    </div>
   );
 
   return (

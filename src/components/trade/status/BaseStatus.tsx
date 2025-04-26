@@ -1,4 +1,4 @@
-import { FC, ReactNode } from "react";
+import { FC, ReactNode, useState } from "react";
 import { motion } from "framer-motion";
 import { TradeOrderDetails, TradeTransactionInfo } from "../../../utils/types";
 import TradeDetailRow from "../view/TradeDetailRow";
