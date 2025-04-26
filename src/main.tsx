@@ -13,6 +13,8 @@ const Product = lazy(() => import("./pages/Product.tsx"));
 const SingleProduct = lazy(() => import("./pages/SingleProduct.tsx"));
 const Account = lazy(() => import("./pages/Account.tsx"));
 const Trade = lazy(() => import("./pages/Trade.tsx"));
+const BuyCheckout = lazy(() => import("./pages/BuyCheckout.tsx"));
+const SellCheckout = lazy(() => import("./pages/SellCheckout.tsx"));
 // import About from "./pages/About.tsx";
 // import Market from "./pages/Market.tsx";
 // import Photos from "./pages/Photos.tsx";
@@ -61,7 +63,7 @@ const router = createBrowserRouter([
         element: <Product />,
       },
       {
-        path: "/product/:id",
+        path: "/product/:productId",
         element: <SingleProduct />,
       },
       {
@@ -71,6 +73,14 @@ const router = createBrowserRouter([
       {
         path: "/trades/viewtrades",
         element: <ViewTrade />,
+      },
+      {
+        path: "/trades/buy/:productId",
+        element: <BuyCheckout />,
+      },
+      {
+        path: "/trades/sell/:productId",
+        element: <SellCheckout />,
       },
       {
         path: "/load",

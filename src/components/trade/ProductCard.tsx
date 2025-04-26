@@ -7,14 +7,16 @@ import { FaArrowRightLong } from "react-icons/fa6";
 
 interface ProductCardProps {
   product: Product;
-  onBuyClick?: () => void;
+  // onBuyClick?: () => void;
   actionType?: "buy" | "view";
+  isSellTab?: boolean;
 }
 
 const ProductCard: FC<ProductCardProps> = ({
   product,
-  onBuyClick,
+  // onBuyClick,
   actionType = "buy",
+  isSellTab = false,
 }) => {
   return (
     <motion.div
@@ -80,11 +82,13 @@ const ProductCard: FC<ProductCardProps> = ({
         }}
       >
         <Button
-          title={actionType === "buy" ? "BUY" : "VIEW DETAILS"}
+          title={
+            actionType === "buy" ? (isSellTab ? "SELL" : "BUY") : "VIEW DETAILS"
+          }
           className="flex justify-between items-center w-full bg-Red border-0 rounded text-white px-6 py-2 w-full transition-colors hover:bg-[#e02d37]"
-          path=""
+          path={`/trades/buy/${product.id}`}
           icon={<FaArrowRightLong />}
-          onClick={onBuyClick}
+          // onClick={handleButtonClick}
         />
       </motion.div>
     </motion.div>

@@ -105,13 +105,14 @@ const ViewTrade = () => {
               text="Completed"
               isActive={activeTab === "completed"}
               onClick={() => setActiveTab("completed")}
-              count={completedTrades.length}
+              // count={completedTrades.length}
+              count={0}
               className="w-full"
             />
           </div>
 
           {/* Content Area */}
-          <div className="p-4">
+          <div className="py-4">
             <AnimatePresence mode="wait">
               {isLoading ? (
                 <ProductListingSkeleton />
@@ -127,7 +128,10 @@ const ViewTrade = () => {
                   {activeTab === "active" &&
                     (activeTrades.length > 0 ? (
                       activeTrades.map((trade) => (
-                        <ActiveTradeCard key={trade.id} trade={trade} />
+                        <ActiveTradeCard
+                          key={trade.id}
+                          // trade={trade}
+                        />
                       ))
                     ) : (
                       <EmptyState

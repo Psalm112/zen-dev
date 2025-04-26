@@ -6,6 +6,7 @@ import { forwardRef } from "react";
 interface Props {
   title: string;
   icon?: React.ReactNode;
+  iconPosition?: "start" | "end";
   path?: string;
   className?: string;
   img?: string;
@@ -25,6 +26,7 @@ const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, Props>(
       onClick,
       disabled = false,
       type = "button",
+      iconPosition = "end",
     },
     ref
   ) => {
@@ -36,9 +38,10 @@ const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, Props>(
 
     const content = (
       <>
+        {icon && iconPosition === "start" && icon}
         {img && <img src={img} alt="" className="w-[18px] h-[18px]" />}
         {title}
-        {icon && icon}
+        {icon && iconPosition === "end" && icon}
       </>
     );
 

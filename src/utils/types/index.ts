@@ -28,6 +28,7 @@ export interface Product {
   timeRemaining?: string;
   escrowStatus?: string;
   paymentStatus?: string;
+  paymentDuration? : string
 }
 
 export interface ReferralItem {

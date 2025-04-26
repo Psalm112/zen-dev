@@ -1,4 +1,4 @@
-import { useState, useEffect, FC, Suspense } from "react";
+import { useState, useEffect, FC, Suspense, lazy } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaExchangeAlt } from "react-icons/fa";
 import Container from "../components/common/Container";
@@ -9,11 +9,15 @@ import { Pen, Pen2 } from ".";
 import { useWallet } from "../utils/hooks/useWallet";
 import { Product, TradeTab } from "../utils/types";
 import ProductListingSkeleton from "../components/trade/ProductListingSkeleton";
-import IncomingOrderCard from "../components/trade/IncomingOrderCard";
-import OrderSummaryModal from "../components/trade/OrderSummary";
-import ProductCard from "../components/trade/ProductCard";
+// import IncomingOrderCard from "../components/trade/IncomingOrderCard";
+// import OrderSummaryModal from "../components/trade/OrderSummary";
+// import ProductCard from "../components/trade/ProductCard";
 import ConnectWallet from "../components/trade/ConnectWallet";
 import Tab from "../components/trade/Tab";
+const ProductCard = lazy(() => import("../components/trade/ProductCard"));
+const IncomingOrderCard = lazy(
+  () => import("../components/trade/IncomingOrderCard")
+);
 
 const ButtonPlaceholder: FC = () => (
   <motion.div
@@ -26,15 +30,15 @@ const ButtonPlaceholder: FC = () => (
 const Trade = () => {
   const [activeTab, setActiveTab] = useState<TradeTab>("buy");
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [showOrderSummary, setShowOrderSummary] = useState(false);
+  // const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  // const [showOrderSummary, setShowOrderSummary] = useState(false);
   const { isConnected, connect, isConnecting } = useWallet(); // Custom hook for wallet management
 
   // Sample data for products
   const products: Product[] = [
     {
       id: "1",
-      name: "FemiMark",
+      name: "Vaseline",
       image: "/images/product1.svg",
       price: "₦1,200",
       quantity: "100 Cars",
@@ -46,7 +50,7 @@ const Trade = () => {
     },
     {
       id: "2",
-      name: "FemiMark",
+      name: "RFD Car",
       image: "/images/product2.svg",
       price: "₦1,200",
       quantity: "100 Cars",
@@ -62,7 +66,7 @@ const Trade = () => {
   const incomingOrders: Product[] = [
     {
       id: "5",
-      name: "FemiMark",
+      name: "Vaseline",
       image: "/images/product1.svg",
       price: "₦1,350",
       quantity: "35 Cars",
@@ -158,20 +162,20 @@ const Trade = () => {
   }, []);
 
   // Handle product selection and order summary display
-  const handleBuyClick = (product: Product) => {
-    if (!isConnected) {
-      return;
-    }
-    setSelectedProduct(product);
-    setShowOrderSummary(true);
-  };
+  // const handleBuyClick = (product: Product) => {
+  //   if (!isConnected) {
+  //     return;
+  //   }
+  //   // setSelectedProduct(product);
+  //   // setShowOrderSummary(true);
+  // };
 
   // Handle order acceptance (for sellers)
-  const handleAcceptOrder = (product: Product) => {
-    // Implementation for accepting an order
-    console.log("Order accepted:", product);
-    // Logic to update order status
-  };
+  // const handleAcceptOrder = (product: Product) => {
+  //   // Implementation for accepting an order
+  //   console.log("Order accepted:", product);
+  //   // Logic to update order status
+  // };
 
   // Handle order rejection (for sellers)
   const handleRejectOrder = (product: Product) => {
@@ -181,18 +185,17 @@ const Trade = () => {
   };
 
   // Close order summary modal
-  const handleCloseOrderSummary = () => {
-    setShowOrderSummary(false);
-    setSelectedProduct(null);
-  };
+  // const handleCloseOrderSummary = () => {
+  //   setShowOrderSummary(false);
+  //   setSelectedProduct(null);
+  // };
 
   // Confirm order purchase
-  const handleConfirmPurchase = () => {
-    // Logic to process purchase
-    console.log("Purchase confirmed for:", selectedProduct);
-    setShowOrderSummary(false);
-    setActiveTab("active");
-  };
+  // const handleConfirmPurchase = () => {
+  //   console.log("Purchase confirmed for:", selectedProduct);
+  //   setShowOrderSummary(false);
+  //   setActiveTab("active");
+  // };
 
   if (!isConnected) {
     return (
@@ -237,6 +240,7 @@ const Trade = () => {
               text="Buy"
               isActive={activeTab === "buy"}
               onClick={() => setActiveTab("buy")}
+              count={products.length}
             />
             <Tab
               text="Sell"
@@ -265,17 +269,25 @@ const Trade = () => {
                       <ProductCard
                         key={product.id}
                         product={product}
-                        onBuyClick={() => handleBuyClick(product)}
+                        // onBuyClick={() => handleBuyClick(product)}
                         actionType="buy"
+                        isSellTab={false}
                       />
                     ))}
 
                   {activeTab === "sell" &&
                     incomingOrders.map((order) => (
+                      // <ProductCard
+                      //   key={order.id}
+                      //   product={order}
+                      //   onBuyClick={() => "kk"}
+                      //   actionType="buy"
+                      //   isSellTab={true}
+                      // />
                       <IncomingOrderCard
                         key={order.id}
                         product={order}
-                        onAccept={() => handleAcceptOrder(order)}
+                        // onAccept={() => handleAcceptOrder(order)}
                         onReject={() => handleRejectOrder(order)}
                       />
                     ))}
@@ -288,13 +300,13 @@ const Trade = () => {
 
       {/* Order Summary Modal */}
       <AnimatePresence>
-        {showOrderSummary && selectedProduct && (
+        {/* {showOrderSummary && selectedProduct && (
           <OrderSummaryModal
             product={selectedProduct}
             onClose={handleCloseOrderSummary}
             onConfirm={handleConfirmPurchase}
           />
-        )}
+        )} */}
       </AnimatePresence>
 
       <Suspense fallback={<ButtonPlaceholder />}>

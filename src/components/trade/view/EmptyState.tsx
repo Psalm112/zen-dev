@@ -1,5 +1,6 @@
 import { FC } from "react";
 import { motion } from "framer-motion";
+import Button from "../../common/Button";
 
 interface EmptyStateProps {
   title: string;
@@ -61,7 +62,7 @@ const EmptyState: FC<EmptyStateProps> = ({
 
   return (
     <motion.div
-      className={`flex flex-col items-center justify-center w-full h-full py-16 px-4 ${className}`}
+      className={`flex flex-col items-center justify-start w-full h-[50vh] md:h-[60vh] py-16 px-4 ${className}`}
       variants={containerVariants}
       initial="initial"
       animate="animate"
@@ -123,6 +124,22 @@ const EmptyState: FC<EmptyStateProps> = ({
       >
         {message}
       </motion.p>
+      <motion.div
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        className="mt-auto text-center xs:col-span-2 xs:w-[80%] w-full lg:w-full lg:col-start-2"
+        transition={{
+          type: "spring",
+          stiffness: 400,
+          damping: 15,
+        }}
+      >
+        <Button
+          title="Browse for Products"
+          className="flex justify-center items-center  bg-Red border-0 rounded text-white px-6 py-2 w-full transition-colors hover:bg-[#e02d37]"
+          path={`/trades`}
+        />
+      </motion.div>
     </motion.div>
   );
 };

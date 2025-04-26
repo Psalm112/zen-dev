@@ -4,13 +4,13 @@ import { Product } from "../../utils/types";
 import Button from "../common/Button";
 interface IncomingOrderCardProps {
   product: Product;
-  onAccept: () => void;
+  // onAccept: () => void;
   onReject: () => void;
 }
 
 const IncomingOrderCard: FC<IncomingOrderCardProps> = ({
   product,
-  onAccept,
+  // onAccept,
   onReject,
 }) => {
   return (
@@ -85,8 +85,9 @@ const IncomingOrderCard: FC<IncomingOrderCardProps> = ({
           <Button
             title="ACCEPT"
             className="flex justify-center items-center w-full bg-Red border-0 rounded text-white px-6 py-2 transition-colors hover:bg-[#e02d37]"
-            path=""
-            onClick={onAccept}
+            path={`/trades/sell/${product.id}`}
+
+            // onClick={onAccept}
           />
         </motion.div>
       </div>
