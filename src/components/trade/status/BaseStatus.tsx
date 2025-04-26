@@ -5,6 +5,7 @@ import TradeDetailRow from "../view/TradeDetailRow";
 import { FaCopy } from "react-icons/fa";
 import { LuMessageSquare } from "react-icons/lu";
 import Button from "../../common/Button";
+import { IoChevronBack } from "react-icons/io5";
 
 interface BaseStatusProps {
   statusTitle: string;
@@ -42,29 +43,21 @@ const BaseStatus: FC<BaseStatusProps> = ({
   };
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="w-full mx-auto">
       <motion.div
-        className="flex items-center mb-8 justify-between"
+        className="flex items-center mb-8 justify-between flex-col sm:flex-row gap-4"
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        <div>
+        <div className="w-full">
           <motion.button
             className="flex items-center text-gray-400 hover:text-white mb-4"
             whileHover={{ x: -3 }}
             transition={{ type: "spring", stiffness: 400 }}
             onClick={() => window.history.back()}
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M15 18L9 12L15 6"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            <IoChevronBack className="w-5 h-5" />
           </motion.button>
           <motion.h1
             className="text-2xl font-medium text-white"
@@ -76,7 +69,7 @@ const BaseStatus: FC<BaseStatusProps> = ({
           </motion.h1>
           {statusDescription && (
             <motion.p
-              className="text-gray-400 text-sm mt-2"
+              className="text-gray-400 text-sm mt-2 w-full"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
@@ -88,7 +81,7 @@ const BaseStatus: FC<BaseStatusProps> = ({
 
         {showTimer && timeRemaining && (
           <motion.div
-            className="flex gap-2 items-center"
+            className="flex gap-2 items-center self-end sm:self-auto"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
@@ -119,6 +112,7 @@ const BaseStatus: FC<BaseStatusProps> = ({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
+            className="self-end sm:self-auto"
           >
             <Button
               title={contactLabel}
@@ -275,7 +269,7 @@ const BaseStatus: FC<BaseStatusProps> = ({
 
       {actionButtons && (
         <motion.div
-          className="flex flex-col sm:flex-row justify-center gap-4 mt-8"
+          className="mt-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6, duration: 0.5 }}

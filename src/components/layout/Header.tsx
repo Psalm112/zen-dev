@@ -1,7 +1,9 @@
 import { HiOutlineBell } from "react-icons/hi";
 import { Avatar, Mainlogo } from "../../pages";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import Container from "../common/Container";
+import { useNotifications } from "../../utils/hooks/useNotifications";
+import NotificationBadge from "../notifications/NotificationBadge";
 
 const NavList = [
   { title: "Home", path: "/" },
@@ -12,7 +14,8 @@ const NavList = [
 ];
 
 const Header = () => {
-  // const location = useLocation();
+  const navigate = useNavigate();
+  const { unreadCount } = useNotifications();
 
   return (
     <header className="w-full py-3 bg-[#212428] shadow-md sticky top-0 z-50">
@@ -69,9 +72,11 @@ const Header = () => {
         <div className="flex items-center gap-3">
           <button
             aria-label="Notifications"
-            className="p-1.5 rounded-full hover:bg-[#292B30] transition-colors"
+            className="p-1.5 rounded-full hover:bg-[#292B30] transition-colors relative"
+            onClick={() => navigate("/notifications")}
           >
             <HiOutlineBell className="text-xl text-white" />
+            <NotificationBadge count={unreadCount} />
           </button>
 
           <Link to="/account" className="transition-transform hover:scale-105">

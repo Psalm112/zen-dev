@@ -4,7 +4,7 @@ import { TradeOrderDetails, TradeTransactionInfo } from "../../../utils/types";
 import BaseStatus from "./BaseStatus";
 import StatusAlert from "./StatusAlert";
 import Button from "../../common/Button";
-import { FaExclamationTriangle } from "react-icons/fa";
+import { BsShieldExclamation } from "react-icons/bs";
 
 interface CancelledStatusProps {
   orderDetails: TradeOrderDetails;
@@ -21,7 +21,7 @@ const CancelledStatus: FC<CancelledStatusProps> = ({
 }) => {
   const statusAlert = (
     <StatusAlert
-      icon={<FaExclamationTriangle size={18} />}
+      icon={<BsShieldExclamation size={18} />}
       message="This order has been concluded, and the assets are no longer locked by Desemnart. Do not blindly trust strangers or release funds without confirming."
       verificationMessage="To ensure the safety of your funds,please verify the real name of the payer: Femi Cole"
       type="warning"
@@ -31,7 +31,7 @@ const CancelledStatus: FC<CancelledStatusProps> = ({
   const actionButtons = (
     <Button
       title="Order Dispute?"
-      className="bg-transparent hover:bg-gray-700 text-white text-sm px-6 py-3 border border-gray-600 rounded transition-colors"
+      className="mx-auto bg-transparent hover:bg-gray-700 text-white text-sm px-6 py-3 border border-gray-600 rounded transition-colors"
       onClick={onOrderDispute}
     />
   );

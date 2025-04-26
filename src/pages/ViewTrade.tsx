@@ -134,7 +134,7 @@ const ViewTrade = () => {
                           key={trade.id}
                           onClick={() =>
                             navigate(
-                              `/trades/viewtrade/${trade.id}?status=pending`
+                              `/trades/viewtrades/${trade.id}?status=pending`
                             )
                           }
                         >
@@ -155,7 +155,7 @@ const ViewTrade = () => {
                           key={trade.id}
                           onClick={() =>
                             navigate(
-                              `/trades/viewtrade/${trade.id}?status=completed`
+                              `/trades/viewtrades/${trade.id}?status=completed`
                             )
                           }
                         >

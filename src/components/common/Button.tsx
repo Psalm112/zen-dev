@@ -31,7 +31,7 @@ const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, Props>(
     ref
   ) => {
     const newClassName = twMerge(
-      "flex whitespace-nowrap gap-1 text-sm font-bold items-center capitalize border rounded-lg py-1.5 px-3 transition-all duration-300",
+      "flex whitespace-nowrap gap-1 text-sm font-bold items-center capitalize rounded-lg py-1.5 px-3 transition-all duration-300",
       disabled ? "opacity-50 cursor-not-allowed" : "hover:opacity-90",
       className
     );

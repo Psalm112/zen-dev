@@ -1,3 +1,15 @@
+export type NotificationType = 'update' | 'funds' | 'buyer' | 'system';
+
+export interface Notification {
+  id: string;
+  type: NotificationType;
+  message: string;
+  isRead: boolean;
+  timestamp: Date;
+  icon?: string; 
+  link?: string; 
+}
+
 export type TabType = "1" | "2" | "3" | "4";
 export type TradeTab = "buy" | "sell" | "active" | "completed";
 

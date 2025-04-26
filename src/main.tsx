@@ -4,9 +4,7 @@ import { createBrowserRouter, Outlet, RouterProvider } from "react-router-dom";
 import { createRoot } from "react-dom/client";
 import { Configuration } from "@react-md/layout";
 import Layout from "./components/layout/Layout.tsx";
-import ViewTrade from "./pages/ViewTrade.tsx";
 import Loadscreen from "./pages/Loadscreen.tsx";
-import ViewTradeDetail from "./pages/ViewTradeDetail.tsx";
 
 const Login = lazy(() => import("./pages/Login.tsx"));
 const Home = lazy(() => import("./pages/Home.tsx"));
@@ -16,6 +14,9 @@ const Account = lazy(() => import("./pages/Account.tsx"));
 const Trade = lazy(() => import("./pages/Trade.tsx"));
 const BuyCheckout = lazy(() => import("./pages/BuyCheckout.tsx"));
 const SellCheckout = lazy(() => import("./pages/SellCheckout.tsx"));
+const ViewTrade = lazy(() => import("./pages/ViewTrade.tsx"));
+const ViewTradeDetail = lazy(() => import("./pages/ViewTradeDetail.tsx"));
+const Notifications = lazy(() => import("./pages/Notifications.tsx"));
 // import About from "./pages/About.tsx";
 // import Market from "./pages/Market.tsx";
 // import Photos from "./pages/Photos.tsx";
@@ -56,6 +57,10 @@ const router = createBrowserRouter([
         element: <Account />,
       },
       {
+        path: "/notifications",
+        element: <Notifications />,
+      },
+      {
         path: "/product",
         element: <Product />,
       },
@@ -84,7 +89,7 @@ const router = createBrowserRouter([
         element: <SellCheckout />,
       },
       {
-        path: "/trades/viewtrades/:productId",
+        path: "/trades/viewtrades/:tradeId",
         element: <ViewTradeDetail />,
       },
       {

@@ -67,7 +67,7 @@ const ViewTradeDetail = () => {
     setTimeout(() => {
       // Simulate completion after release
       setTradeStatus("completed");
-      navigate(`/trades/viewtrade/${tradeId}?status=completed`, {
+      navigate(`/trades/viewtrades/${tradeId}?status=completed`, {
         replace: true,
       });
     }, 1500);
@@ -112,7 +112,7 @@ const ViewTradeDetail = () => {
             }`}
             onClick={() => {
               setTradeStatus("cancelled");
-              navigate(`/trades/viewtrade/${tradeId}?status=cancelled`, {
+              navigate(`/trades/viewtrades/${tradeId}?status=cancelled`, {
                 replace: true,
               });
             }}
@@ -127,7 +127,7 @@ const ViewTradeDetail = () => {
             }`}
             onClick={() => {
               setTradeStatus("pending");
-              navigate(`/trades/viewtrade/${tradeId}?status=pending`, {
+              navigate(`/trades/viewtrades/${tradeId}?status=pending`, {
                 replace: true,
               });
             }}
@@ -142,7 +142,7 @@ const ViewTradeDetail = () => {
             }`}
             onClick={() => {
               setTradeStatus("release");
-              navigate(`/trades/viewtrade/${tradeId}?status=release`, {
+              navigate(`/trades/viewtrades/${tradeId}?status=release`, {
                 replace: true,
               });
             }}
@@ -157,7 +157,7 @@ const ViewTradeDetail = () => {
             }`}
             onClick={() => {
               setTradeStatus("completed");
-              navigate(`/trades/viewtrade/${tradeId}?status=completed`, {
+              navigate(`/trades/viewtrades/${tradeId}?status=completed`, {
                 replace: true,
               });
             }}

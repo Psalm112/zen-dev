@@ -15,23 +15,26 @@ const StatusAlert: FC<StatusAlertProps> = ({
   type = "warning",
 }) => {
   const bgColor = {
-    warning: "bg-amber-950 border-amber-500 text-amber-200",
-    info: "bg-blue-950 border-blue-500 text-blue-200",
-    error: "bg-red-950 border-red-500 text-red-200",
+    warning: "bg-Red/10 ",
+    info: "bg-blue-950 ",
+    error: "bg-red-950 ",
   }[type];
 
   return (
     <motion.div
-      className={`border rounded-lg p-4 flex items-center gap-3 ${bgColor}`}
+      className={`rounded-lg p-4 flex items-center gap-3 text-white-200 w-full ${bgColor}`}
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
       <div className="text-red-500">{icon}</div>
-      <div>
-        <p className="text-sm">{message}</p>
+      <div className="w-full">
+        <p className="text-sm inline">{message}</p>
         {verificationMessage && (
-          <p className="text-sm mt-1">{verificationMessage}</p>
+          <p className="text-sm mt-1 font-bold inline">
+            &nbsp;
+            {verificationMessage}
+          </p>
         )}
       </div>
     </motion.div>

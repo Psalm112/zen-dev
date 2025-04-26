@@ -54,8 +54,8 @@ const CompletedStatus: FC<CompletedStatusProps> = ({
   const actionButtons = (
     <Button
       title="Sell more"
-      className="bg-Red hover:bg-[#e02d37] text-white text-sm px-6 py-3 rounded transition-colors w-full max-w-xs mx-auto"
-      path="/product"
+      className="bg-Red fles items-center justify-center hover:bg-[#e02d37] text-white text-sm px-6 py-3 rounded transition-colors w-full max-w-md mx-auto"
+      path="/trades"
     />
   );
 

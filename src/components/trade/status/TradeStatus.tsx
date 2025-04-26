@@ -1,5 +1,4 @@
 import { FC } from "react";
-import { motion } from "framer-motion";
 import CancelledStatus from "./CancelledStatus";
 import PendingPaymentStatus from "./PendingPaymentStatus";
 import FundsReleaseStatus from "./FundsReleaseStatus";
