@@ -51,3 +51,38 @@ export interface ReferralData extends Omit<ReferralHistoryProps, "onInviteFriend
   usedPoints: number,
   promoCode: string
 }
+
+
+
+
+
+
+export type TradeStatusType = "cancelled" | "pending" | "release" | "completed";
+
+export interface TradeOrderDetails {
+  productName: string;
+  amount: string;
+  quantity: number;
+  orderTime: string;
+  orderNo: string;
+  paymentMethod?: string;
+  tradeType: "BUY" | "SELL";
+}
+
+export interface TradeTransactionInfo {
+  buyerName: string;
+  goodRating: number;
+  completedOrders: number;
+  completionRate: number;
+  avgPaymentTime: number;
+}
+
+export interface TradeStatusProps {
+  status: TradeStatusType;
+  orderDetails: TradeOrderDetails;
+  transactionInfo: TradeTransactionInfo;
+  onContactSeller?: () => void;
+  onContactBuyer?: () => void;
+  onOrderDispute?: () => void;
+  onReleaseNow?: () => void;
+}
