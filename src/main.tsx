@@ -5,6 +5,10 @@ import { createRoot } from "react-dom/client";
 import { Configuration } from "@react-md/layout";
 import Layout from "./components/layout/Layout.tsx";
 import Loadscreen from "./pages/Loadscreen.tsx";
+import { AuthProvider } from "./context/AuthContext.tsx";
+// import GoogleAuthCallback from "./pages/GoogleAuthCallback.tsx";
+import AuthCallback from "./pages/AuthCallback.tsx";
+import ProtectedRoute from "./components/auth/ProtectedRoute.tsx";
 
 const Login = lazy(() => import("./pages/Login.tsx"));
 const Home = lazy(() => import("./pages/Home.tsx"));
@@ -30,11 +34,13 @@ const Notifications = lazy(() => import("./pages/Notifications.tsx"));
 const RouterLayout = () => {
   return (
     <Configuration>
-      <Layout>
-        <Suspense fallback={<Loadscreen />}>
-          <Outlet />
-        </Suspense>
-      </Layout>
+      <AuthProvider>
+        <Layout>
+          <Suspense fallback={<Loadscreen />}>
+            <Outlet />
+          </Suspense>
+        </Layout>
+      </AuthProvider>
     </Configuration>
   );
 };
@@ -53,13 +59,23 @@ const router = createBrowserRouter([
         element: <Login />,
       },
       {
-        path: "/account",
-        element: <Account />,
+        path: "/auth/google/callback",
+        element: <AuthCallback />,
       },
       {
-        path: "/notifications",
-        element: <Notifications />,
+        element: <ProtectedRoute />,
+        children: [
+          {
+            path: "/account",
+            element: <Account />,
+          },
+          {
+            path: "/notifications",
+            element: <Notifications />,
+          },
+        ],
       },
+
       {
         path: "/product",
         element: <Product />,
