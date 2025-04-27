@@ -1,5 +1,5 @@
 import { HiOutlineBell } from "react-icons/hi";
-import { Avatar, Mainlogo } from "../../pages";
+import { Avatar, Logo } from "../../pages";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import Container from "../common/Container";
 import { useNotifications } from "../../utils/hooks/useNotifications";
@@ -36,10 +36,10 @@ const Header = () => {
           to="/"
           className="flex items-center group transition-transform hover:scale-105"
         >
-          <div className="relative overflow-hidden rounded-md">
+          <div className="w-9 h-9 relative overflow-hidden">
             <img
-              src={Mainlogo}
-              className="w-[35px] transition-transform group-hover:scale-110"
+              src={Logo}
+              className="w-full transition-transform group-hover:scale-110 object-cover object-[25%_25%]"
               alt="DezenMart"
             />
           </div>
@@ -50,7 +50,7 @@ const Header = () => {
         {/* </div> */}
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-10">
+        <nav className="hidden sm:flex items-center max-md:gap-6 gap-10">
           {NavList.map(({ title, path }) => (
             <NavLink
               key={path}

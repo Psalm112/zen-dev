@@ -1,11 +1,12 @@
 import { motion } from "framer-motion";
+import { UseFormRegisterReturn } from "react-hook-form";
 import { RiUser3Line, RiCalendarLine, RiMailLine } from "react-icons/ri";
 
 interface ProfileFieldProps {
   label: string;
   icon: "person" | "calendar" | "email";
   placeholder: string;
-  register: any;
+  register: UseFormRegisterReturn<string>;
   error?: string;
   delay: number;
 }

@@ -39,9 +39,12 @@ const Login = () => {
   return (
     <div className="bg-Dark flex justify-center items-center py-10 min-h-screen">
       <div className="flex flex-col items-center w-full max-w-md px-6 md:px-10">
-        <h2 className="text-2xl text-white font-bold mb-6">
-          Log in or sign up
-        </h2>
+        <div className="flex flex-col">
+          <img />
+          <h2 className="text-2xl text-white font-bold mb-6">
+            Log in or sign up
+          </h2>
+        </div>
 
         <form onSubmit={handleContinue} className="w-full">
           <input
@@ -65,11 +68,6 @@ const Login = () => {
         </form>
 
         <div className="w-full">
-          <div className="relative flex items-center justify-center mb-5">
-            <hr className="border-t border-gray-700 w-full" />
-            <span className="text-white text-sm bg-Dark px-3 absolute">OR</span>
-          </div>
-
           {/* Social Login Buttons */}
           <div className="space-y-3 w-full">
             <Button
@@ -90,11 +88,14 @@ const Login = () => {
               className="bg-[#292B30] flex justify-center gap-2 text-white h-12 rounded-md w-full border-none mb-6"
             />
           </div>
-
+          <div className="relative flex items-center justify-center my-12">
+            <hr className="border-t border-gray-700 w-full" />
+            <span className="text-white text-sm bg-Dark px-3 absolute">OR</span>
+          </div>
           {/* Connect Wallet Button */}
           <Button
             title="Connect with a wallet"
-            className="bg-[#292B30] text-white h-12 flex justify-center w-full border-none outline-none text-center my-6"
+            className="bg-[#292B30] text-white h-12 flex justify-center w-full border-none outline-none text-center"
           />
         </div>
 

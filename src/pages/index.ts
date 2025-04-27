@@ -2,7 +2,8 @@ import googleIcon from "/images/google-icon.png"
 import facebookIcon from "/images/facebookicon.png"
 import xIcon from "/images/xicon.png"
 import Logo from "/images/logo.png"
-import Mainlogo from "/images/mainlogo.png"
+import BlackLogo from "/images/logoBlack.png"
+// import Mainlogo from "/images/mainlogo.png"
 import Avatar from "/images/avatar.png";
 import Avatar2 from "/images/avatar2.png";
 import Browseproduct from "/images/bp.png";
@@ -21,4 +22,4 @@ import Product1 from "/images/product1.svg"
 
 
 
-export { googleIcon, TwoFactor, facebookIcon, xIcon, Logo, Mainlogo, Avatar, Avatar2, Browseproduct, Trackorder, Mywallet, Pen, Pen2, Comment, Detail, Product1 }
+export { googleIcon, TwoFactor, facebookIcon, xIcon, Logo, BlackLogo, Avatar, Avatar2, Browseproduct, Trackorder, Mywallet, Pen, Pen2, Comment, Detail, Product1 }

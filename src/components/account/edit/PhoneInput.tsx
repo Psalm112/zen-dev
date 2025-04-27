@@ -3,9 +3,10 @@ import { RiPhoneLine } from "react-icons/ri";
 import { LiaAngleDownSolid } from "react-icons/lia";
 import { useRef, useState, useEffect } from "react";
 import { countryCodes } from "../../../utils/CountryCodes";
+import { UseFormRegisterReturn } from "react-hook-form";
 
 interface PhoneInputProps {
-  register: any;
+  register: UseFormRegisterReturn<string>;
   error?: string;
   countryCode: string;
   setCountryCode: React.Dispatch<React.SetStateAction<string>>;

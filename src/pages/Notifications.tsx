@@ -1,6 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { IoChevronBackOutline } from "react-icons/io5";
-import { Link } from "react-router-dom";
 import { useNotifications } from "../utils/hooks/useNotifications";
 import { HiChevronRight } from "react-icons/hi";
 import NotificationItem from "../components/notifications/NotificationItem";

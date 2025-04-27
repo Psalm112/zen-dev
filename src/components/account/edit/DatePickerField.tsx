@@ -1,9 +1,10 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { RiCalendarLine, RiCloseCircleLine } from "react-icons/ri";
 import { useEffect, useRef, useState } from "react";
+import { UseFormRegisterReturn } from "react-hook-form";
 
 interface DatePickerFieldProps {
-  register: any;
+  register: UseFormRegisterReturn<string>;
   error?: string;
   showDatePicker: boolean;
   setShowDatePicker: React.Dispatch<React.SetStateAction<boolean>>;

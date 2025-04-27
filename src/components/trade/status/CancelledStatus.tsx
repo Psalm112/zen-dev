@@ -1,5 +1,4 @@
 import { FC } from "react";
-import { motion } from "framer-motion";
 import { TradeOrderDetails, TradeTransactionInfo } from "../../../utils/types";
 import BaseStatus from "./BaseStatus";
 import StatusAlert from "./StatusAlert";
