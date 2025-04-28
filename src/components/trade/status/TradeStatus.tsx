@@ -12,6 +12,7 @@ const TradeStatus: FC<TradeStatusProps> = ({
   onContactSeller,
   onOrderDispute,
   onReleaseNow,
+  orderId,
 }) => {
   switch (status) {
     case "cancelled":
@@ -41,6 +42,7 @@ const TradeStatus: FC<TradeStatusProps> = ({
           onContactSeller={onContactSeller}
           onOrderDispute={onOrderDispute}
           onReleaseNow={onReleaseNow}
+          orderId={orderId}
         />
       );
     case "completed":

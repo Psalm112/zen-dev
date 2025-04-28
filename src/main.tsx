@@ -6,9 +6,9 @@ import { Configuration } from "@react-md/layout";
 import Layout from "./components/layout/Layout.tsx";
 import Loadscreen from "./pages/Loadscreen.tsx";
 import { AuthProvider } from "./context/AuthContext.tsx";
-// import GoogleAuthCallback from "./pages/GoogleAuthCallback.tsx";
 import AuthCallback from "./pages/AuthCallback.tsx";
 import ProtectedRoute from "./components/auth/ProtectedRoute.tsx";
+// import GoogleCallback from "./pages/GoogleCallback.tsx";
 
 const Login = lazy(() => import("./pages/Login.tsx"));
 const Home = lazy(() => import("./pages/Home.tsx"));
@@ -62,6 +62,10 @@ const router = createBrowserRouter([
         path: "/auth/google/callback",
         element: <AuthCallback />,
       },
+      // {
+      //   path: "/api/v1/auth/google/callback",
+      //   element: <GoogleCallback />,
+      // },
       {
         element: <ProtectedRoute />,
         children: [

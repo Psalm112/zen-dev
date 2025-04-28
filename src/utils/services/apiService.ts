@@ -15,19 +15,34 @@ export const createApiService = () => {
       ...options.headers,
     };
 
-    const response = await fetch(`${API_URL}${endpoint}`, {
-      ...options,
-      headers,
-    });
+    try {
+      const response = await fetch(`${API_URL}${endpoint}`, {
+        ...options,
+        headers,
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      throw new Error(
-        errorData?.message || `API error: ${response.status}`
-      );
+     if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        return { 
+          ok: false, 
+          status: response.status, 
+          data: errorData,
+          response
+        };
+      }
+
+      const data = await response.json().catch(() => null);
+      return { ok: true, status: response.status, data, response };
+    }catch (error) {
+      return { 
+        ok: false, 
+        status: 0, 
+        error: error instanceof Error ? error.message : 'Unknown error',
+        data: null,
+        response: null
+      };
     }
 
-    return response;
   };
 
   return { fetchWithAuth };
@@ -38,7 +53,7 @@ export const useApi = () => {
   
   const getCurrentUser = async () => {
     const response = await fetchWithAuth('/user/me');
-    return response.json();
+    return response;
   };
   
   // const getProducts = async (category?: string) => {
@@ -48,10 +63,24 @@ export const useApi = () => {
   //   const response = await fetchWithAuth(endpoint);
   //   return response.json();
   // };
+  const createOrder = async (orderData: any) => {
+    return fetchWithAuth('/orders', {
+      method: 'POST',
+      body: JSON.stringify(orderData)
+    });
+  };
   
+  const createTrade = async (tradeData: any) => {
+    return fetchWithAuth('/contracts/trades', {
+      method: 'POST',
+      body: JSON.stringify(tradeData)
+    });
+  };
   
   return {
     getCurrentUser,
+     createOrder,
+    createTrade
     // getProducts,
   };
 };

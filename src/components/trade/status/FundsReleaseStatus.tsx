@@ -4,6 +4,8 @@ import BaseStatus from "./BaseStatus";
 import StatusAlert from "./StatusAlert";
 import Button from "../../common/Button";
 import { BsShieldExclamation } from "react-icons/bs";
+import { toast } from "react-toastify";
+import { useTradeService } from "../../../utils/services/tradeService"; // Import the trade service
 
 interface FundsReleaseStatusProps {
   orderDetails: TradeOrderDetails;
@@ -11,6 +13,7 @@ interface FundsReleaseStatusProps {
   onContactSeller?: () => void;
   onOrderDispute?: () => void;
   onReleaseNow?: () => void;
+  orderId?: string;
 }
 
 const FundsReleaseStatus: FC<FundsReleaseStatusProps> = ({
@@ -19,11 +22,16 @@ const FundsReleaseStatus: FC<FundsReleaseStatusProps> = ({
   onContactSeller,
   onOrderDispute,
   onReleaseNow,
+  orderId,
 }) => {
   const [timeRemaining, setTimeRemaining] = useState({
     minutes: 9,
     seconds: 59,
   });
+  const [isCreatingTrade, setIsCreatingTrade] = useState(false);
+
+  // Use the trade service
+  const { createTrade } = useTradeService();
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -42,10 +50,41 @@ const FundsReleaseStatus: FC<FundsReleaseStatusProps> = ({
     return () => clearInterval(timer);
   }, []);
 
+  const handleReleaseNow = async () => {
+    try {
+      setIsCreatingTrade(true);
+
+      const tradeResponse = await createTrade({
+        orderId: orderId || "",
+        seller: orderDetails.sellerId || "608021b86eda53ead327e0ea",
+        buyer: orderDetails.buyerId || "60804386704fcfe10f451cf",
+        amount: orderDetails.amount || 20000,
+        status: "completed",
+      });
+
+      if (!tradeResponse.ok) {
+        throw new Error(
+          tradeResponse.data?.message || "Failed to create trade"
+        );
+      }
+
+      toast.success("Trade completed successfully!");
+
+      if (onReleaseNow) {
+        onReleaseNow();
+      }
+    } catch (error) {
+      console.error("Error during release process:", error);
+      toast.error("Failed to create trade. Please try again.");
+    } finally {
+      setIsCreatingTrade(false);
+    }
+  };
+
   const statusAlert = (
     <StatusAlert
       icon={<BsShieldExclamation size={18} />}
-      message="To ensure the safety of your funds,please verify the real name of the payer: Femi Cole"
+      message="To ensure the safety of your funds, please verify the real name of the payer: Femi Cole"
       type="warning"
     />
   );
@@ -56,11 +95,26 @@ const FundsReleaseStatus: FC<FundsReleaseStatusProps> = ({
         title="Order Dispute?"
         className="w-fit bg-transparent hover:bg-gray-700 text-white text-sm px-6 py-3 border border-gray-600 rounded transition-colors"
         onClick={onOrderDispute}
+        disabled={isCreatingTrade}
       />
       <Button
-        title="Release Now"
-        className="w-fit bg-Red hover:bg-[#e02d37] text-white text-sm px-6 py-3 border-none rounded transition-colors"
-        onClick={onReleaseNow}
+        title={
+          isCreatingTrade ? (
+            <div className="flex items-center">
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+              Processing...
+            </div>
+          ) : (
+            "Release Now"
+          )
+        }
+        className={`w-fit text-white text-sm px-6 py-3 border-none rounded transition-colors ${
+          isCreatingTrade
+            ? "bg-gray-600 cursor-not-allowed"
+            : "bg-Red hover:bg-[#e02d37]"
+        }`}
+        onClick={handleReleaseNow}
+        disabled={isCreatingTrade}
       />
     </div>
   );

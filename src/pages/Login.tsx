@@ -119,13 +119,14 @@
 
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { googleIcon, facebookIcon, xIcon } from ".";
+import { googleIcon, facebookIcon, xIcon, Logo } from ".";
 import Button from "../components/common/Button";
 import { useAuth } from "../context/AuthContext";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState("");
   const { login } = useAuth();
 
@@ -157,14 +158,21 @@ const Login = () => {
   };
 
   const handleSocialLogin = (provider: string) => {
-    login(provider);
+    if (provider === "google") {
+      setIsGoogleLoading(true);
+      login(provider);
+    }
   };
 
   return (
     <div className="bg-Dark flex justify-center items-center py-10 min-h-screen">
       <div className="flex flex-col items-center w-full max-w-md px-6 md:px-10">
-        <div className="flex flex-col">
-          <img />
+        <div className="flex flex-col gap-8">
+          <img
+            src={Logo}
+            alt="Dezenmart Logo"
+            className="w-[75px] h-[75px] mx-auto"
+          />
           <h2 className="text-2xl text-white font-bold mb-6">
             Log in or sign up
           </h2>
@@ -195,10 +203,17 @@ const Login = () => {
           {/* Social Login Buttons */}
           <div className="space-y-3 w-full">
             <Button
-              title="Sign in with Google"
+              // title="Sign in with Google"
+              title={
+                isGoogleLoading
+                  ? "Redirecting to Google..."
+                  : "Sign in with Google"
+              }
               img={googleIcon}
+              path=""
               className="bg-[#292B30] flex justify-center gap-2 text-white h-12 rounded-md w-full border-none"
               onClick={() => handleSocialLogin("google")}
+              disabled={isGoogleLoading}
             />
 
             <Button

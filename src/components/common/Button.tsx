@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { forwardRef } from "react";
 
 interface Props {
-  title: string;
+  title: string | React.ReactNode;
   icon?: React.ReactNode;
   iconPosition?: "start" | "end";
   path?: string;

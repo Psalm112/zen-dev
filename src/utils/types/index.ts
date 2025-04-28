@@ -73,10 +73,12 @@ export type TradeStatusType = "cancelled" | "pending" | "release" | "completed";
 
 export interface TradeOrderDetails {
   productName: string;
-  amount: string;
+  amount: number;
   quantity: number;
   orderTime: string;
   orderNo: string;
+  sellerId: string;
+  buyerId: string
   paymentMethod?: string;
   tradeType: "BUY" | "SELL";
 }
@@ -97,4 +99,5 @@ export interface TradeStatusProps {
   onContactBuyer?: () => void;
   onOrderDispute?: () => void;
   onReleaseNow?: () => void;
+  orderId : string
 }

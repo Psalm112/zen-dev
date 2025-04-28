@@ -9,22 +9,35 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const isAuthPage = ["/login", "/load"].includes(location.pathname);
 
   const navigate = useNavigate();
-
+  // In Layout.tsx
   useEffect(() => {
     // Check if this is a redirect from Google auth
     if (location.pathname === "/auth/google/callback") {
-      // Extract token from URL if present
+      // Extract token and user data from URL
       const params = new URLSearchParams(location.search);
       const token = params.get("token");
       const userData = params.get("user");
 
       if (token && userData) {
-        // Redirect to our auth callback handler
-        navigate(
-          `/auth-callback?token=${token}&user=${encodeURIComponent(userData)}`,
-          { replace: true }
-        );
+        try {
+          // Log the raw data for debugging
+          console.log("Raw token:", token);
+          console.log("Raw userData:", userData);
+
+          // Redirect to our auth callback handler
+          navigate(
+            `/auth-callback?token=${encodeURIComponent(
+              token
+            )}&user=${encodeURIComponent(userData)}`,
+            { replace: true }
+          );
+        } catch (error) {
+          console.error("Failed to process auth callback:", error);
+          // Something went wrong, redirect to login
+          navigate("/login", { replace: true });
+        }
       } else {
+        console.error("Missing token or user data in callback");
         // Something went wrong, redirect to login
         navigate("/login", { replace: true });
       }

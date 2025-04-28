@@ -18,7 +18,7 @@ import ProductList from "../components/product/ProductList";
 type TabType = "details" | "reviews";
 
 const SingleProduct = () => {
-  const { id } = useParams();
+  const { productId } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>("details");
   const [isFavorite, setIsFavorite] = useState(false);
@@ -57,9 +57,7 @@ const SingleProduct = () => {
         console.error("Error sharing product:", error);
       }
     } else {
-      // Fallback for browsers that don't support share API
       navigator.clipboard.writeText(window.location.href);
-      // Show toast or notification that URL was copied
       alert("Link copied to clipboard!");
     }
   };
@@ -74,7 +72,7 @@ const SingleProduct = () => {
 
         setTimeout(() => {
           const mockProduct = {
-            id,
+            id: productId,
             name: "Vaseline Cocoa Radiant",
             price: 0.0002,
             discountPrice: 0.00015,
@@ -96,7 +94,7 @@ const SingleProduct = () => {
     // Check if product is in favorites
     // Uncomment when implementing context
 
-    if (id) {
+    if (productId) {
       fetchProduct();
       // checkFavoriteStatus();
       // Reset to details tab when product changes
@@ -105,7 +103,7 @@ const SingleProduct = () => {
 
     // Scroll to top when component mounts
     window.scrollTo(0, 0);
-  }, [id]);
+  }, [productId]);
 
   if (loading) {
     return <ProductLoadingSkeleton />;
@@ -165,7 +163,7 @@ const SingleProduct = () => {
               </div>
 
               {/* Product Image */}
-              <ProductImage productId={id} />
+              <ProductImage productId={productId} />
             </div>
           </div>
 

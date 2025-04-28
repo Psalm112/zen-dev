@@ -6,6 +6,8 @@ import ProductInfo from "../components/trade/checkout/ProductInfo";
 import PaymentMethod from "../components/trade/checkout/PaymentMethod";
 import TransactionInfo from "../components/trade/checkout/TransactionInfo";
 import { Product } from "../utils/types";
+import { toast } from "react-toastify";
+import { useOrderService } from "../utils/services/orderService"; // Import the order service
 
 const BuyCheckout = () => {
   const { productId } = useParams();
@@ -14,45 +16,73 @@ const BuyCheckout = () => {
   const [product, setProduct] = useState<Product | null>(null);
   const [paymentAmount, setPaymentAmount] = useState<number>(190);
   const [paymentMethod, setPaymentMethod] = useState<string>("crypto");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // future: fetch from API based on productId
+  const { createOrder } = useOrderService();
+
+  // Fetch product data
   useEffect(() => {
     const fetchProduct = async () => {
-      setTimeout(() => {
-        // Sample data
-        const productData: Product = {
-          id: productId || "1",
-          name: "Car",
-          image: "/images/product1.svg",
-          price: "₦1,200",
-          quantity: "100 Cars",
-          minCost: "1M - 20M NGN",
-          description: "A wine Benz",
-          orders: 129,
-          rating: 99,
-          seller: "DanBike",
-          paymentDuration: "18Min(s)",
-        };
+      try {
+        // API call
+        setTimeout(() => {
+          // Sample data
+          const productData: Product = {
+            id: productId || "1",
+            name: "Car",
+            image: "/images/product1.svg",
+            price: "₦1,200",
+            quantity: "100 Cars",
+            minCost: "1M - 20M NGN",
+            description: "A wine Benz",
+            orders: 129,
+            rating: 99,
+            seller: "DanBike",
+            paymentDuration: "18Min(s)",
+          };
 
-        setProduct(productData);
+          setProduct(productData);
+          setIsLoading(false);
+        }, 600);
+      } catch (error) {
+        console.error("Error fetching product:", error);
+        toast.error("Failed to load product details");
         setIsLoading(false);
-      }, 600);
+      }
     };
 
     fetchProduct();
   }, [productId]);
 
-  const handleBuy = () => {
-    //purchase logic
-    console.log("Purchase initiated for:", product);
-    console.log("Payment amount:", paymentAmount);
-    console.log("Payment method:", paymentMethod);
+  const handleBuy = async () => {
+    if (!product) return;
 
-    // success message
-    // process the payment then redirect
-    setTimeout(() => {
-      navigate("/trades/viewtrades"); // Redirect to view trades page
-    }, 1000);
+    setIsSubmitting(true);
+
+    try {
+      const orderResponse = await createOrder({
+        product: productId as string,
+        buyer: "60804386704fcfe10f451cf",
+        seller: "608021b86eda53ead327e0ea",
+        amount: paymentAmount,
+        status: "pending",
+      });
+
+      if (!orderResponse.ok) {
+        throw new Error(
+          orderResponse.data?.message || "Failed to create order"
+        );
+      }
+
+      toast.success("Order created successfully!");
+
+      navigate(`/trades/viewtrades/${orderResponse.data._id}?status=pending`);
+    } catch (error) {
+      toast.error("Failed to create order. Please try again.");
+      console.error("Order creation error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isLoading || !product) {
@@ -75,6 +105,7 @@ const BuyCheckout = () => {
         <ProductInfo product={product} />
 
         <PaymentMethod onMethodChange={setPaymentMethod} />
+        {paymentMethod == "fiat" && <></>}
 
         <motion.div
           className="mt-6 bg-[#292B30] rounded-lg p-6"
@@ -83,7 +114,9 @@ const BuyCheckout = () => {
           transition={{ duration: 0.5, delay: 0.4 }}
         >
           <div className="flex justify-between items-center">
-            <span className="text-red-400">I will buy: 190 usdt</span>
+            <span className="text-red-400">
+              I will buy: {paymentAmount} usdt
+            </span>
             <div className="flex space-x-2">
               <button className="bg-[#212428] px-3 py-1 rounded-md">
                 USDT
@@ -100,16 +133,32 @@ const BuyCheckout = () => {
               value={paymentAmount}
               onChange={(e) => setPaymentAmount(Number(e.target.value))}
               className="w-full bg-[#212428] text-white p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-Red"
+              aria-label="Payment amount"
             />
           </div>
 
           <motion.button
-            className="w-full bg-Red text-white py-4 rounded-md mt-6 font-medium"
+            className={`w-full text-white py-4 rounded-md mt-6 font-medium 
+              ${
+                isSubmitting
+                  ? "bg-gray-600 cursor-not-allowed"
+                  : "bg-Red hover:bg-[#e02d37]"
+              }`}
             onClick={handleBuy}
-            whileHover={{ backgroundColor: "#e02d37" }}
-            whileTap={{ scale: 0.98 }}
+            disabled={isSubmitting}
+            whileHover={
+              !isSubmitting ? { backgroundColor: "#e02d37" } : undefined
+            }
+            whileTap={!isSubmitting ? { scale: 0.98 } : undefined}
           >
-            BUY
+            {isSubmitting ? (
+              <div className="flex items-center justify-center">
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                Processing...
+              </div>
+            ) : (
+              "BUY NOW"
+            )}
           </motion.button>
 
           <p className="text-sm text-[#AEAEB2] mt-4 text-center">
@@ -117,6 +166,7 @@ const BuyCheckout = () => {
             hours.
           </p>
         </motion.div>
+
         <motion.div
           className="mt-6 bg-[#292B30] rounded-lg p-6"
           initial={{ opacity: 0, y: 20 }}
