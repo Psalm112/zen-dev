@@ -13,6 +13,7 @@ interface Props {
   isCategoryView: boolean;
   category?: string;
   isFeatured?: boolean;
+  maxItems?: number;
 }
 
 const ProductList = ({
@@ -22,6 +23,7 @@ const ProductList = ({
   isCategoryView,
   category,
   isFeatured = false,
+  maxItems = 4,
 }: Props) => {
   const {
     products,
@@ -30,31 +32,41 @@ const ProductList = ({
     error,
     fetchAllProducts,
     fetchSponsoredProducts,
+    getProductsByCategory,
   } = useProductData();
   const [displayProducts, setDisplayProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    if (isFeatured) {
-      fetchSponsoredProducts();
-    } else {
-      fetchAllProducts();
-    }
-  }, [fetchAllProducts, fetchSponsoredProducts, isFeatured]);
+    const loadData = async () => {
+      if (isFeatured) {
+        await fetchSponsoredProducts();
+      } else if (products.length === 0) {
+        await fetchAllProducts();
+      }
+    };
+
+    loadData();
+  }, [fetchAllProducts, fetchSponsoredProducts, isFeatured, products.length]);
 
   useEffect(() => {
     if (isFeatured && sponsoredProducts.length > 0) {
-      setDisplayProducts(sponsoredProducts.slice(0, 5)); // Limit to 5 products for featured section
+      setDisplayProducts(sponsoredProducts.slice(0, maxItems));
     } else if (products.length > 0) {
       if (category) {
-        const filteredProducts = products.filter(
-          (p) => p.category === category
-        );
-        setDisplayProducts(filteredProducts.slice(0, 4)); // Show 4 products per category
+        const filteredProducts = getProductsByCategory(category);
+        setDisplayProducts(filteredProducts.slice(0, maxItems));
       } else {
-        setDisplayProducts(products.slice(0, 4)); // Show 4 products in normal lists
+        setDisplayProducts(products.slice(0, maxItems));
       }
     }
-  }, [products, sponsoredProducts, isFeatured, category]);
+  }, [
+    products,
+    sponsoredProducts,
+    isFeatured,
+    category,
+    maxItems,
+    getProductsByCategory,
+  ]);
 
   const newClass = twMerge("", className);
 
@@ -76,7 +88,7 @@ const ProductList = ({
       <div className="mt-4 md:mt-8 overflow-x-auto scrollbar-hide">
         {loading ? (
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 md:gap-5">
-            {[1, 2, 3, 4].map((i) => (
+            {Array.from({ length: maxItems }).map((_, i) => (
               <div
                 key={i}
                 className="bg-[#292B30] rounded-lg p-4 h-80 animate-pulse"

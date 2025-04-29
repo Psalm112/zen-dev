@@ -13,13 +13,21 @@ import PurchaseSection from "../components/product/singleProduct/PurchaseSection
 import ProductLoadingSkeleton from "../components/product/singleProduct/LoadingSkeleton";
 import ProductList from "../components/product/ProductList";
 import { useProductData } from "../utils/hooks/useProductData";
+import ProductCard from "../components/product/ProductCard";
 
 type TabType = "details" | "reviews";
 
 const SingleProduct = () => {
   const { productId } = useParams();
   const navigate = useNavigate();
-  const { product, loading, error, fetchProductById } = useProductData();
+  const {
+    product,
+    formattedProduct,
+    loading,
+    error,
+    fetchProductById,
+    relatedProducts,
+  } = useProductData();
   const [activeTab, setActiveTab] = useState<TabType>("details");
   const [isFavorite, setIsFavorite] = useState(false);
   const [reviewCount, setReviewCount] = useState(0);
@@ -49,20 +57,20 @@ const SingleProduct = () => {
       alert("Link copied to clipboard!");
     }
   };
-
   useEffect(() => {
     if (productId) {
       fetchProductById(productId);
-      // Reset to details tab when product changes
       setActiveTab("details");
     }
 
     window.scrollTo(0, 0);
-  }, [productId, fetchProductById]);
 
+    // Cleanup
+    return () => {};
+  }, [productId, fetchProductById]);
   useEffect(() => {
     if (product) {
-      // Set review count (mock for now,  API in the future)
+      // Mock review count for now
       setReviewCount(4);
     }
   }, [product]);
@@ -90,8 +98,8 @@ const SingleProduct = () => {
     );
   }
 
-  // Calculate ETH price (example conversion, adjust as needed)
-  const ethPrice = (product.price / 1000000).toFixed(6);
+  const ethPrice =
+    formattedProduct?.formattedPrice || (product.price / 1000000).toFixed(6);
 
   const backgroundStyle = {
     background: `linear-gradient(to bottom, #292B30 0%, rgba(41, 43, 48, 0.95) 100%)`,
@@ -187,12 +195,11 @@ const SingleProduct = () => {
           </div>
         </div>
         <div className="mt-8">
-          <ProductList
-            title="You might also like"
-            className="mt-8"
-            isCategoryView={false}
-            category={product.category}
-          />
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 md:gap-5">
+            {relatedProducts.map((product) => (
+              <ProductCard key={product._id} product={product} />
+            ))}
+          </div>
         </div>
       </div>
     </motion.div>

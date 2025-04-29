@@ -1,151 +1,134 @@
-import { useEffect, useState, useCallback } from "react";
+import { useCallback } from "react";
+import { useAppDispatch, useAppSelector } from "./redux";
+import {
+  fetchAllProducts,
+  fetchProductById,
+  fetchSponsoredProducts,
+  searchProducts,
+  clearCurrentProduct,
+  clearSearchResults,
+} from "../../store/slices/productSlice";
+import {
+  selectAllProducts,
+  selectCurrentProduct,
+  selectSponsoredProducts,
+  selectProductLoading,
+  selectProductError,
+  selectSearchResults,
+  selectProductsByCategory,
+  selectRelatedProducts,
+  selectFormattedProduct,
+} from "../../store/selectors/productSelectors";
 import { useSnackbar } from "../../context/SnackbarContext";
+import { useEffect } from "react";
 import { api } from "../services/apiService";
-import { Product } from "../types";
 
 export const useProductData = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [product, setProduct] = useState<Product | null>(null);
-  const [sponsoredProducts, setSponsoredProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
+  const dispatch = useAppDispatch();
   const { showSnackbar } = useSnackbar();
 
-  const fetchAllProducts = useCallback(
-    async (showNotification = false) => {
-      setLoading(true);
-      setError(null);
+  const products = useAppSelector(selectAllProducts);
+  const product = useAppSelector(selectCurrentProduct);
+  const formattedProduct = useAppSelector(selectFormattedProduct);
+  const sponsoredProducts = useAppSelector(selectSponsoredProducts);
+  const loading = useAppSelector(selectProductLoading) === "pending";
+  const error = useAppSelector(selectProductError);
+  const searchResults = useAppSelector(selectSearchResults);
+  const relatedProducts = useAppSelector(selectRelatedProducts);
+
+  const fetchAllProductsAsync = useCallback(
+    async (showNotification = false, forceRefresh = false) => {
       try {
-        const response = await api.getProducts();
-        if (response.ok) {
-          setProducts(response.data);
-          if (showNotification) {
-            showSnackbar("Products loaded successfully", "success");
-          }
-        } else {
-          setError(response.error || "Failed to fetch products");
-          if (showNotification) {
-            showSnackbar(response.error || "Failed to fetch products", "error");
-          }
-        }
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "An error occurred";
-        setError(errorMessage);
+        await dispatch(fetchAllProducts(forceRefresh)).unwrap();
         if (showNotification) {
-          showSnackbar(errorMessage, "error");
+          showSnackbar("Products loaded successfully", "success");
         }
-      } finally {
-        setLoading(false);
+        return true;
+      } catch (err) {
+        if (showNotification) {
+          showSnackbar((err as string) || "Failed to load products", "error");
+        }
+        return false;
       }
     },
-    [showSnackbar]
+    [dispatch, showSnackbar]
   );
 
-  const fetchProductById = useCallback(
+  const fetchProductByIdAsync = useCallback(
     async (id: string, showNotification = false) => {
-      setLoading(true);
-      setError(null);
       try {
-        const response = await api.getProductById(id);
-        if (response.ok) {
-          setProduct(response.data);
-          if (showNotification) {
-            showSnackbar("Product loaded successfully", "success");
-          }
-          return response.data;
-        } else {
-          setError(response.error || "Failed to fetch product");
-          if (showNotification) {
-            showSnackbar(response.error || "Failed to fetch product", "error");
-          }
-          return null;
-        }
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "An error occurred";
-        setError(errorMessage);
+        const result = await dispatch(fetchProductById(id)).unwrap();
         if (showNotification) {
-          showSnackbar(errorMessage, "error");
+          showSnackbar("Product loaded successfully", "success");
+        }
+        return result;
+      } catch (err) {
+        if (showNotification) {
+          showSnackbar((err as string) || "Failed to load product", "error");
         }
         return null;
-      } finally {
-        setLoading(false);
       }
     },
-    [showSnackbar]
+    [dispatch, showSnackbar]
   );
 
-  const searchProducts = useCallback(
-    async (query: string, showNotification = false) => {
-      setLoading(true);
-      setError(null);
+  const fetchSponsoredProductsAsync = useCallback(
+    async (showNotification = false, forceRefresh = false) => {
       try {
-        const response = await api.searchProducts(query);
-        if (response.ok) {
-          setProducts(response.data);
-          if (showNotification) {
-            showSnackbar("Search completed successfully", "success");
-          }
-          return response.data;
-        } else {
-          setError(response.error || "Failed to search products");
-          if (showNotification) {
-            showSnackbar(
-              response.error || "Failed to search products",
-              "error"
-            );
-          }
-          return [];
-        }
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "An error occurred";
-        setError(errorMessage);
+        await dispatch(fetchSponsoredProducts(forceRefresh)).unwrap();
         if (showNotification) {
-          showSnackbar(errorMessage, "error");
+          showSnackbar("Featured products loaded successfully", "success");
+        }
+        return true;
+      } catch (err) {
+        if (showNotification) {
+          showSnackbar(
+            (err as string) || "Failed to load featured products",
+            "error"
+          );
+        }
+        return false;
+      }
+    },
+    [dispatch, showSnackbar]
+  );
+
+  const searchProductsAsync = useCallback(
+    async (query: string, showNotification = false) => {
+      if (!query.trim()) {
+        dispatch(clearSearchResults());
+        return [];
+      }
+
+      try {
+        const result = await dispatch(searchProducts(query)).unwrap();
+        if (showNotification) {
+          showSnackbar("Search completed successfully", "success");
+        }
+        return result.results;
+      } catch (err) {
+        if (showNotification) {
+          showSnackbar((err as string) || "Failed to search products", "error");
         }
         return [];
-      } finally {
-        setLoading(false);
       }
     },
-    [showSnackbar]
+    [dispatch, showSnackbar]
   );
 
-  const fetchSponsoredProducts = useCallback(
-    async (showNotification = false) => {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await api.getSponsoredProducts();
-        if (response.ok) {
-          setSponsoredProducts(response.data);
-          if (showNotification) {
-            showSnackbar("Featured products loaded successfully", "success");
-          }
-        } else {
-          setError(response.error || "Failed to fetch featured products");
-          if (showNotification) {
-            showSnackbar(
-              response.error || "Failed to fetch featured products",
-              "error"
-            );
-          }
-        }
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "An error occurred";
-        setError(errorMessage);
-        if (showNotification) {
-          showSnackbar(errorMessage, "error");
-        }
-      } finally {
-        setLoading(false);
-      }
+  const getProductsByCategory = useCallback(
+    (category: string) => {
+      return selectProductsByCategory(
+        { products: { products } } as any,
+        category
+      );
     },
-    [showSnackbar]
+    [products]
   );
+
+  const clearProduct = useCallback(() => {
+    dispatch(clearCurrentProduct());
+  }, [dispatch]);
 
   // Clean up on unmount
   useEffect(() => {
@@ -158,12 +141,19 @@ export const useProductData = () => {
   return {
     products,
     product,
+    formattedProduct,
     sponsoredProducts,
+    searchResults,
+    relatedProducts,
+
     loading,
     error,
-    fetchAllProducts,
-    fetchProductById,
-    searchProducts,
-    fetchSponsoredProducts,
+
+    fetchAllProducts: fetchAllProductsAsync,
+    fetchProductById: fetchProductByIdAsync,
+    fetchSponsoredProducts: fetchSponsoredProductsAsync,
+    searchProducts: searchProductsAsync,
+    getProductsByCategory,
+    clearProduct,
   };
 };

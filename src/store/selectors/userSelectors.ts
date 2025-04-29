@@ -1,5 +1,5 @@
 import { createSelector } from "@reduxjs/toolkit";
-import { RootState } from "../index";
+import { RootState } from "../store";
 
 export const selectUserProfile = (state: RootState) => state.user.profile;
 export const selectUserLoading = (state: RootState) => state.user.loading;
