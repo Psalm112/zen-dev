@@ -183,6 +183,209 @@ export const api = {
 
     return result;
   },
+  createProduct: async (productData: FormData) => {
+    return fetchWithAuth("/products", {
+      method: "POST",
+      body: productData,
+    });
+  },
+
+  updateProduct: async (productId: string, productData: FormData) => {
+    // Clear cache on update
+    requestCache.delete(cacheKey("/products"));
+    requestCache.delete(cacheKey(`/products/${productId}`));
+
+    return fetchWithAuth(`/products/${productId}`, {
+      method: "PUT",
+      body: productData,
+    });
+  },
+
+  deleteProduct: async (productId: string) => {
+    // Clear cache on delete
+    requestCache.delete(cacheKey("/products"));
+    requestCache.delete(cacheKey(`/products/${productId}`));
+
+    return fetchWithAuth(`/products/${productId}`, {
+      method: "DELETE",
+    });
+  },
+
+  // Reviews API endpoints
+  createReview: async (reviewData: {
+    reviewed: string;
+    order: string;
+    rating: number;
+    comment: string;
+  }) => {
+    return fetchWithAuth("/reviews", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(reviewData),
+    });
+  },
+
+  updateUserRating: async (productId: string) => {
+    return fetchWithAuth(`/reviews/user-rating/${productId}`, {
+      method: "PUT",
+    });
+  },
+
+  getUserReviews: async (productId: string, skipCache = false) => {
+    const key = cacheKey(`/reviews/user/${productId}`);
+
+    if (!skipCache && requestCache.has(key)) {
+      return requestCache.get(key);
+    }
+
+    if (abortControllers.has(key)) {
+      abortControllers.get(key).abort();
+    }
+
+    const controller = new AbortController();
+    abortControllers.set(key, controller);
+
+    const result = await fetchWithAuth(`/reviews/user/${productId}`, {
+      signal: controller.signal,
+    });
+
+    if (result.ok) {
+      requestCache.set(key, result);
+    }
+
+    return result;
+  },
+
+  getOrderReview: async (productId: string) => {
+    const key = cacheKey(`/reviews/order/${productId}`);
+
+    if (abortControllers.has(key)) {
+      abortControllers.get(key).abort();
+    }
+
+    const controller = new AbortController();
+    abortControllers.set(key, controller);
+
+    return fetchWithAuth(`/reviews/order/${productId}`, {
+      signal: controller.signal,
+    });
+  },
+
+  // Referrals API endpoints
+  applyReferralCode: async (referralCode: string) => {
+    return fetchWithAuth("/referral/apply", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ referralCode }),
+    });
+  },
+
+  getReferralInfo: async (skipCache = false) => {
+    const key = cacheKey("/referral/info");
+
+    if (!skipCache && requestCache.has(key)) {
+      return requestCache.get(key);
+    }
+
+    if (abortControllers.has(key)) {
+      abortControllers.get(key).abort();
+    }
+
+    const controller = new AbortController();
+    abortControllers.set(key, controller);
+
+    const result = await fetchWithAuth("/referral/info", {
+      signal: controller.signal,
+    });
+
+    if (result.ok) {
+      requestCache.set(key, result);
+    }
+
+    return result;
+  },
+
+  // Orders API endpoints
+  createOrder: async (orderData: {
+    product: string;
+    seller: string;
+    amount: number;
+  }) => {
+    return fetchWithAuth("/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(orderData),
+    });
+  },
+
+  getUserOrders: async (
+    type: "buyer" | "seller" = "buyer",
+    skipCache = false
+  ) => {
+    const key = cacheKey(`/orders?type=${type}`);
+
+    if (!skipCache && requestCache.has(key)) {
+      return requestCache.get(key);
+    }
+
+    if (abortControllers.has(key)) {
+      abortControllers.get(key).abort();
+    }
+
+    const controller = new AbortController();
+    abortControllers.set(key, controller);
+
+    const result = await fetchWithAuth(`/orders?type=${type}`, {
+      signal: controller.signal,
+    });
+
+    if (result.ok) {
+      requestCache.set(key, result);
+    }
+
+    return result;
+  },
+
+  getOrderById: async (orderId: string) => {
+    const key = cacheKey(`/orders/${orderId}`);
+
+    if (abortControllers.has(key)) {
+      abortControllers.get(key).abort();
+    }
+
+    const controller = new AbortController();
+    abortControllers.set(key, controller);
+
+    return fetchWithAuth(`/orders/${orderId}`, {
+      signal: controller.signal,
+    });
+  },
+
+  updateOrderStatus: async (orderId: string, status: string) => {
+    // Clear cache on update
+    requestCache.delete(cacheKey("/orders?type=buyer"));
+    requestCache.delete(cacheKey("/orders?type=seller"));
+    requestCache.delete(cacheKey(`/orders/${orderId}`));
+
+    return fetchWithAuth(`/orders/${orderId}/status`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+  },
+
+  raiseDispute: async (orderId: string, reason: string) => {
+    // Clear cache on update
+    requestCache.delete(cacheKey("/orders?type=buyer"));
+    requestCache.delete(cacheKey("/orders?type=seller"));
+    requestCache.delete(cacheKey(`/orders/${orderId}`));
+
+    return fetchWithAuth(`/orders/${orderId}/dispute`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reason }),
+    });
+  },
 
   clearCache: () => {
     requestCache.clear();

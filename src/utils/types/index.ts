@@ -36,6 +36,73 @@ export interface Product {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface Review {
+  _id: string;
+  reviewer:
+    | {
+        _id: string;
+        name: string;
+        profileImage: string;
+      }
+    | string;
+  reviewed:
+    | {
+        _id: string;
+        name: string;
+        profileImage: string;
+      }
+    | string;
+  order:
+    | {
+        _id: string;
+        product: string;
+      }
+    | string;
+  rating: 1 | 2 | 3 | 4 | 5;
+  comment: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Order {
+  _id: string;
+  product:
+    | {
+        _id: string;
+        name: string;
+        price: number;
+        images: string[];
+      }
+    | string;
+  buyer:
+    | {
+        _id: string;
+        profileImage: string;
+      }
+    | string;
+  seller:
+    | {
+        _id: string;
+        profileImage: string;
+        rating?: number;
+      }
+    | string;
+  amount: number;
+  status: "pending" | "completed" | "disputed";
+  dispute?: {
+    raisedBy: string;
+    reason: string;
+    resolved: boolean;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ReferralInfo {
+  referralCode: string;
+  referralCount: number;
+}
 export type NotificationType = "update" | "funds" | "buyer" | "system";
 
 export interface Notification {

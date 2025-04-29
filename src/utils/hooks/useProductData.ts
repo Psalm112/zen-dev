@@ -116,6 +116,101 @@ export const useProductData = () => {
     [dispatch, showSnackbar]
   );
 
+  const createProductAsync = useCallback(
+    async (productData: FormData, showNotification = true) => {
+      try {
+        const response = await api.createProduct(productData);
+
+        if (!response.ok) {
+          if (showNotification) {
+            showSnackbar(response.error || "Failed to create product", "error");
+          }
+          return null;
+        }
+
+        // Refresh products list after successful creation
+        await dispatch(fetchAllProducts(true)).unwrap();
+
+        if (showNotification) {
+          showSnackbar("Product created successfully", "success");
+        }
+
+        return response.data;
+      } catch (err) {
+        if (showNotification) {
+          showSnackbar((err as string) || "Failed to create product", "error");
+        }
+        return null;
+      }
+    },
+    [dispatch, showSnackbar]
+  );
+
+  const updateProductAsync = useCallback(
+    async (
+      productId: string,
+      productData: FormData,
+      showNotification = true
+    ) => {
+      try {
+        const response = await api.updateProduct(productId, productData);
+
+        if (!response.ok) {
+          if (showNotification) {
+            showSnackbar(response.error || "Failed to update product", "error");
+          }
+          return null;
+        }
+
+        // Refresh product details and list after successful update
+        await dispatch(fetchProductById(productId)).unwrap();
+        await dispatch(fetchAllProducts(true)).unwrap();
+
+        if (showNotification) {
+          showSnackbar("Product updated successfully", "success");
+        }
+
+        return response.data;
+      } catch (err) {
+        if (showNotification) {
+          showSnackbar((err as string) || "Failed to update product", "error");
+        }
+        return null;
+      }
+    },
+    [dispatch, showSnackbar]
+  );
+
+  const deleteProductAsync = useCallback(
+    async (productId: string, showNotification = true) => {
+      try {
+        const response = await api.deleteProduct(productId);
+
+        if (!response.ok) {
+          if (showNotification) {
+            showSnackbar(response.error || "Failed to delete product", "error");
+          }
+          return false;
+        }
+
+        // Refresh products list after successful deletion
+        await dispatch(fetchAllProducts(true)).unwrap();
+
+        if (showNotification) {
+          showSnackbar("Product deleted successfully", "success");
+        }
+
+        return true;
+      } catch (err) {
+        if (showNotification) {
+          showSnackbar((err as string) || "Failed to delete product", "error");
+        }
+        return false;
+      }
+    },
+    [dispatch, showSnackbar]
+  );
+
   const getProductsByCategory = useCallback(
     (category: string) => {
       return selectProductsByCategory(
@@ -153,6 +248,9 @@ export const useProductData = () => {
     fetchProductById: fetchProductByIdAsync,
     fetchSponsoredProducts: fetchSponsoredProductsAsync,
     searchProducts: searchProductsAsync,
+    createProduct: createProductAsync,
+    updateProduct: updateProductAsync,
+    deleteProduct: deleteProductAsync,
     getProductsByCategory,
     clearProduct,
   };
