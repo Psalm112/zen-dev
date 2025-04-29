@@ -1,16 +1,15 @@
-
-import { useAuth } from '../../context/AuthContext';
+import { store } from "../../store";
+import { useAuth } from "../../context/AuthContext";
 
 const API_URL = import.meta.env.VITE_API_URL;
-
-export const createApiService = () => {
-  const { getToken } = useAuth();
-  
-  const fetchWithAuth = async (endpoint: string, options: RequestInit = {}) => {
+const { getToken } = useAuth();
+export const api = {
+  fetchWithAuth: async (endpoint: string, options: RequestInit = {}) => {
+    // Get token from localStorage or other auth storage
     const token = getToken();
-    
+
     const headers = {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       ...(token && { Authorization: `Bearer ${token}` }),
       ...options.headers,
     };
@@ -21,71 +20,48 @@ export const createApiService = () => {
         headers,
       });
 
-     if (!response.ok) {
+      if (!response.ok) {
         const errorData = await response.json().catch(() => null);
-        return { 
-          ok: false, 
-          status: response.status, 
+        return {
+          ok: false,
+          status: response.status,
           data: errorData,
-          response
+          response,
         };
       }
 
       const data = await response.json().catch(() => null);
       return { ok: true, status: response.status, data, response };
-    }catch (error) {
-      return { 
-        ok: false, 
-        status: 0, 
-        error: error instanceof Error ? error.message : 'Unknown error',
+    } catch (error) {
+      return {
+        ok: false,
+        status: 0,
+        error: error instanceof Error ? error.message : "Unknown error",
         data: null,
-        response: null
+        response: null,
       };
     }
-
-  };
-
-  return { fetchWithAuth };
-};
-
-export const useApi = () => {
-  const { fetchWithAuth } = createApiService();
-  
-  // const getCurrentUser = async () => {
-  //   const response = await fetchWithAuth('/user/me');
-  //   return response;
-  // };
-   const getUserProfile = async () => {
-    const response = await fetchWithAuth('/users/profile');
-    return response;
-  };
-  
-  // const getProducts = async (category?: string) => {
-  //   const endpoint = category 
-  //     ? `/products?category=${encodeURIComponent(category)}` 
-  //     : '/products';
-  //   const response = await fetchWithAuth(endpoint);
-  //   return response.json();
-  // };
-  const createOrder = async (orderData: any) => {
-    return fetchWithAuth('/orders', {
-      method: 'POST',
-      body: JSON.stringify(orderData)
+  },
+  getUserProfile: async () => {
+    return await api.fetchWithAuth("/users/profile");
+  },
+  updateUserProfile: async (profileData: any) => {
+    return await api.fetchWithAuth("/users/profile", {
+      method: "PUT",
+      body: JSON.stringify(profileData),
     });
-  };
-  
-  const createTrade = async (tradeData: any) => {
-    return fetchWithAuth('/contracts/trades', {
-      method: 'POST',
-      body: JSON.stringify(tradeData)
+  },
+  createOrder: async (orderData: any) => {
+    return await api.fetchWithAuth("/orders", {
+      method: "POST",
+      body: JSON.stringify(orderData),
     });
-  };
-  
-  return {
-    // getCurrentUser,
-    getUserProfile,
-     createOrder,
-    createTrade
-    // getProducts,
-  };
+  },
+
+  createTrade: async (tradeData: any) => {
+    return await api.fetchWithAuth("/contracts/trades", {
+      method: "POST",
+      body: JSON.stringify(tradeData),
+    });
+  },
 };

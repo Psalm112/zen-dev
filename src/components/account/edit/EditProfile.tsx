@@ -11,6 +11,9 @@ import DatePickerField from "./DatePickerField";
 import Button from "../../common/Button";
 import { BsPlus } from "react-icons/bs";
 import { IoCloseOutline } from "react-icons/io5";
+import { useAppDispatch } from "../../../utils/hooks/redux";
+import { useSnackbar } from "../../../context/SnackbarContext";
+import { updateUserProfile } from "../../../store/slices/userSlice";
 
 // Validation schema
 const profileSchema = z.object({
@@ -51,6 +54,8 @@ const EditProfile: React.FC<EditProfileProps> = ({
   showEditProfile,
   currentProfile,
 }) => {
+  const dispatch = useAppDispatch();
+  const { showSnackbar } = useSnackbar();
   const [countryCode, setCountryCode] = useState("US");
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState({
@@ -58,7 +63,6 @@ const EditProfile: React.FC<EditProfileProps> = ({
     month: "January",
     year: 1988,
   });
-  // State for managing addresses and address form
   const [addresses, setAddresses] = useState([
     "19, amore street, Ikeja, Lagos",
     "Plot VI, Ogudu GRA, Ogudu, Lagos",
@@ -117,15 +121,18 @@ const EditProfile: React.FC<EditProfileProps> = ({
     setShowDatePicker(false);
   };
 
-  const onSubmit = (data: ProfileFormData) => {
+  const onSubmit = async (data: ProfileFormData) => {
     console.log("Profile data submitted:", data);
-    // Future:Here I would update the user profile data through the API
-    // On success, navigate back to profile page
-    showEditProfile(false);
+    try {
+      await dispatch(updateUserProfile(data)).unwrap();
+      showSnackbar("Profile updated successfully", "success");
+      showEditProfile(false);
+    } catch (error) {
+      showSnackbar((error as string) || "Failed to update profile", "error");
+    }
   };
 
   const onAddressSubmit = (data: ShippingAddressFormData) => {
-    // Format the address as a single string for display
     const formattedAddress = `${data.addressLine1}${
       data.addressLine2 ? ", " + data.addressLine2 : ""
     }, ${data.city}, ${data.state}, ${data.zipCode}, ${data.country}`;

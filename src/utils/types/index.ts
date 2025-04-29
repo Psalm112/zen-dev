@@ -1,4 +1,3 @@
-
 export interface UserProfile {
   milestones: {
     sales: number;
@@ -19,13 +18,12 @@ export interface UserProfile {
   createdAt: string;
   updatedAt: string;
   __v: number;
+  addres?: string;
+  dateOfBirth?: string;
+  phoneNumber?: string;
 }
 
-
-export type NotificationType = 'update' | 'funds' | 'buyer' | 'system';
-
-
-
+export type NotificationType = "update" | "funds" | "buyer" | "system";
 
 export interface Notification {
   id: string;
@@ -33,8 +31,8 @@ export interface Notification {
   message: string;
   isRead: boolean;
   timestamp: Date;
-  icon?: string; 
-  link?: string; 
+  icon?: string;
+  link?: string;
 }
 
 export type TabType = "1" | "2" | "3" | "4";
@@ -51,7 +49,6 @@ export interface TabNavigationProps {
   options: TabOption[];
 }
 
-
 export interface Product {
   id: string;
   name: string;
@@ -67,7 +64,7 @@ export interface Product {
   timeRemaining?: string;
   escrowStatus?: string;
   paymentStatus?: string;
-  paymentDuration? : string
+  paymentDuration?: string;
 }
 
 export interface ReferralItem {
@@ -85,16 +82,12 @@ export interface ReferralHistoryProps {
   onInviteFriends: () => void;
 }
 
-export interface ReferralData extends Omit<ReferralHistoryProps, "onInviteFriends"> {
+export interface ReferralData
+  extends Omit<ReferralHistoryProps, "onInviteFriends"> {
   activePoints: number;
-  usedPoints: number,
-  promoCode: string
+  usedPoints: number;
+  promoCode: string;
 }
-
-
-
-
-
 
 export type TradeStatusType = "cancelled" | "pending" | "release" | "completed";
 
@@ -105,7 +98,7 @@ export interface TradeOrderDetails {
   orderTime: string;
   orderNo: string;
   sellerId: string;
-  buyerId: string
+  buyerId: string;
   paymentMethod?: string;
   tradeType: "BUY" | "SELL";
 }
@@ -122,9 +115,9 @@ export interface TradeStatusProps {
   status: TradeStatusType;
   orderDetails: TradeOrderDetails;
   transactionInfo: TradeTransactionInfo;
-  onContactSeller?:  () => void;
+  onContactSeller?: () => void;
   onContactBuyer?: () => void;
   onOrderDispute?: () => void;
   onReleaseNow?: () => void;
-  orderId : string
+  orderId: string;
 }

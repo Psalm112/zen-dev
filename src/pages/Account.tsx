@@ -1,3 +1,4 @@
+// src/pages/Account.tsx with simplified implementation
 import { useState, useEffect, lazy, Suspense, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Container from "../components/common/Container";
@@ -5,8 +6,8 @@ import ProfileHeader from "../components/account/ProfileHeader";
 import TabNavigation from "../components/account/overview/TabNavigation.tsx";
 import { LiaAngleDownSolid } from "react-icons/lia";
 import Button from "../components/common/Button";
-import { useUserProfile } from "../utils/hooks/useUserProfile";
 import LoadingSpinner from "../components/common/LoadingSpinner";
+import { useUserData } from "../utils/hooks/useUserData";
 
 const TabContent = lazy(
   () => import("../components/account/overview/TabContent.tsx")
@@ -26,15 +27,13 @@ const TAB_OPTIONS: TabOption[] = [
 ];
 
 const Account = () => {
+  const { profile, formattedProfile, isLoading, error, fetchProfile, isError } =
+    useUserData();
+
   const [tab, setTab] = useState<TabType>("1");
+  const [pageLoading, setPageLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
-  const {
-    profile,
-    isLoading: isProfileLoading,
-    error: profileError,
-  } = useUserProfile();
-  const [pageLoading, setPageLoading] = useState(true);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -50,7 +49,7 @@ const Account = () => {
 
   const handleShowEditProfile = useCallback(() => setShowEditProfile(true), []);
 
-  if (isProfileLoading || pageLoading) {
+  if (isLoading || pageLoading) {
     return (
       <div className="bg-Dark min-h-screen text-white flex items-center justify-center">
         <LoadingSpinner />
@@ -58,35 +57,21 @@ const Account = () => {
     );
   }
 
-  if (profileError) {
+  if (isError) {
     return (
       <div className="bg-Dark min-h-screen text-white flex items-center justify-center">
         <div className="text-center p-8 bg-[#292B30] rounded-lg">
           <h2 className="text-xl font-bold mb-4">Unable to load profile</h2>
-          <p className="text-gray-400 mb-4">{profileError}</p>
+          <p className="text-gray-400 mb-4">{error}</p>
           <Button
             title="Retry"
-            onClick={() => window.location.reload()}
-            className="mx-auto bg-Red hover:bg-[#e02d37] text-white px-6 py-2 rounded-lg transition-colors"
+            onClick={() => fetchProfile()}
+            className="bg-Red hover:bg-[#e02d37] text-white px-6 py-2 rounded-lg transition-colors"
           />
         </div>
       </div>
     );
   }
-
-  const formattedProfile = profile
-    ? {
-        name: profile.name,
-        dob: "",
-        email: profile.email,
-        phone: "",
-      }
-    : {
-        name: "",
-        dob: "",
-        email: "",
-        phone: "",
-      };
 
   return (
     <div className="bg-Dark min-h-screen text-white">

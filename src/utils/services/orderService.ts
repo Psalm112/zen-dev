@@ -1,9 +1,6 @@
-
-import { createApiService } from './apiService';
+import { api } from "./apiService";
 
 export const useOrderService = () => {
-  const { fetchWithAuth } = createApiService();
-
   const createOrder = async (orderData: {
     product: string;
     buyer: string;
@@ -11,21 +8,21 @@ export const useOrderService = () => {
     amount: number;
     status: string;
   }) => {
-    const response = await fetchWithAuth('/orders', {
-      method: 'POST',
+    const response = await api.fetchWithAuth("/orders", {
+      method: "POST",
       body: JSON.stringify(orderData),
     });
-    return response
+    return response;
   };
 
   const getOrderById = async (orderId: string) => {
-    const response = await fetchWithAuth(`/orders/${orderId}`);
+    const response = await api.fetchWithAuth(`/orders/${orderId}`);
     return response;
   };
 
   const updateOrderStatus = async (orderId: string, status: string) => {
-    const response = await fetchWithAuth(`/orders/${orderId}`, {
-      method: 'PATCH',
+    const response = await api.fetchWithAuth(`/orders/${orderId}`, {
+      method: "PATCH",
       body: JSON.stringify({ status }),
     });
     return response;
