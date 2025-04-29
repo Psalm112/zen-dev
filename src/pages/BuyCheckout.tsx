@@ -28,17 +28,20 @@ const BuyCheckout = () => {
         setTimeout(() => {
           // Sample data
           const productData: Product = {
-            id: productId || "1",
-            name: "Car",
-            image: "/images/product1.svg",
-            price: "₦1,200",
-            quantity: "100 Cars",
-            minCost: "1M - 20M NGN",
-            description: "A wine Benz",
-            orders: 129,
-            rating: 99,
-            seller: "DanBike",
-            paymentDuration: "18Min(s)",
+            _id: "68082f7a7d3f057ab0fafd5c",
+            name: "Wood Carving",
+            description: "Neat carved wood art works",
+            price: 20000,
+            category: "Art Work",
+            seller: "680821b06eda53ead327e0ea",
+            images: [
+              "images-1745366906480-810449189.jpeg",
+              "images-1745366906494-585992412.jpeg",
+            ],
+            isSponsored: false,
+            isActive: true,
+            createdAt: "2025-04-23T00:08:26.519Z",
+            updatedAt: "2025-04-23T00:08:26.519Z",
           };
 
           setProduct(productData);

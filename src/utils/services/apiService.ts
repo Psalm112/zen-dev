@@ -99,6 +99,91 @@ export const api = {
     });
   },
 
+  // New product methods
+  getProducts: async (skipCache = false) => {
+    const key = cacheKey("/products");
+
+    if (!skipCache && requestCache.has(key)) {
+      return requestCache.get(key);
+    }
+
+    // Cancel any existing request
+    if (abortControllers.has(key)) {
+      abortControllers.get(key).abort();
+    }
+
+    const controller = new AbortController();
+    abortControllers.set(key, controller);
+
+    const result = await fetchWithAuth("/products", {
+      signal: controller.signal,
+    });
+
+    if (result.ok) {
+      requestCache.set(key, result);
+    }
+
+    return result;
+  },
+
+  getProductById: async (productId: string) => {
+    const key = cacheKey(`/products/${productId}`);
+
+    // Cancel any existing request
+    if (abortControllers.has(key)) {
+      abortControllers.get(key).abort();
+    }
+
+    const controller = new AbortController();
+    abortControllers.set(key, controller);
+
+    return fetchWithAuth(`/products/${productId}`, {
+      signal: controller.signal,
+    });
+  },
+
+  searchProducts: async (query: string) => {
+    const key = cacheKey(`/products/search?q=${query}`);
+
+    // Cancel any existing request
+    if (abortControllers.has(key)) {
+      abortControllers.get(key).abort();
+    }
+
+    const controller = new AbortController();
+    abortControllers.set(key, controller);
+
+    return fetchWithAuth(`/products/search?q=${query}`, {
+      signal: controller.signal,
+    });
+  },
+
+  getSponsoredProducts: async (skipCache = false) => {
+    const key = cacheKey("/products/sponsored");
+
+    if (!skipCache && requestCache.has(key)) {
+      return requestCache.get(key);
+    }
+
+    // Cancel any existing request
+    if (abortControllers.has(key)) {
+      abortControllers.get(key).abort();
+    }
+
+    const controller = new AbortController();
+    abortControllers.set(key, controller);
+
+    const result = await fetchWithAuth("/products/sponsored", {
+      signal: controller.signal,
+    });
+
+    if (result.ok) {
+      requestCache.set(key, result);
+    }
+
+    return result;
+  },
+
   clearCache: () => {
     requestCache.clear();
   },

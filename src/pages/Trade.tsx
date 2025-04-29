@@ -37,45 +37,53 @@ const Trade = () => {
   // Sample data for products
   const products: Product[] = [
     {
-      id: "1",
-      name: "Vaseline",
-      image: "/images/product1.svg",
-      price: "₦1,200",
-      quantity: "100 Cars",
-      minCost: "1M - 20M NGN",
-      description: "A wine Benz",
-      orders: 129,
-      rating: 99,
-      seller: "DanBike",
+      _id: "68082c3efae576e05502c04b",
+      name: "Test Product",
+      description: "Testing product endpoint",
+      price: 20000,
+      category: "Item",
+      seller: "680821b06eda53ead327e0ea",
+      images: [],
+      isSponsored: false,
+      isActive: true,
+      createdAt: "2025-04-22T23:54:38.445Z",
+      updatedAt: "2025-04-22T23:54:38.445Z",
     },
     {
-      id: "2",
-      name: "RFD Car",
-      image: "/images/product2.svg",
-      price: "₦1,200",
-      quantity: "100 Cars",
-      minCost: "1M - 20M NGN",
-      description: "A white PS5 Console",
-      orders: 129,
-      rating: 99,
-      seller: "DanBike",
+      _id: "68082f7a7d3f057ab0fafd5c",
+      name: "Wood Carving",
+      description: "Neat carved wood art works",
+      price: 20000,
+      category: "Art Work",
+      seller: "680821b06eda53ead327e0ea",
+      images: [
+        "images-1745366906480-810449189.jpeg",
+        "images-1745366906494-585992412.jpeg",
+      ],
+      isSponsored: false,
+      isActive: true,
+      createdAt: "2025-04-23T00:08:26.519Z",
+      updatedAt: "2025-04-23T00:08:26.519Z",
     },
   ];
 
   // Sample data for incoming orders (sell)
   const incomingOrders: Product[] = [
     {
-      id: "5",
-      name: "Vaseline",
-      image: "/images/product1.svg",
-      price: "₦1,350",
-      quantity: "35 Cars",
-      minCost: "800K - 8M NGN",
-      description: "A wine Benz",
-      orders: 53,
-      rating: 97,
-      seller: "You",
-      status: "Pending acceptance",
+      _id: "68082f7a7d3f057ab0fafd5c",
+      name: "Wood Carving",
+      description: "Neat carved wood art works",
+      price: 20000,
+      category: "Art Work",
+      seller: "680821b06eda53ead327e0ea",
+      images: [
+        "images-1745366906480-810449189.jpeg",
+        "images-1745366906494-585992412.jpeg",
+      ],
+      isSponsored: false,
+      isActive: true,
+      createdAt: "2025-04-23T00:08:26.519Z",
+      updatedAt: "2025-04-23T00:08:26.519Z",
     },
   ];
 
@@ -267,7 +275,7 @@ const Trade = () => {
                   {activeTab === "buy" &&
                     products.map((product) => (
                       <ProductCard
-                        key={product.id}
+                        key={product._id}
                         product={product}
                         // onBuyClick={() => handleBuyClick(product)}
                         actionType="buy"
@@ -285,7 +293,7 @@ const Trade = () => {
                       //   isSellTab={true}
                       // />
                       <IncomingOrderCard
-                        key={order.id}
+                        key={order._id}
                         product={order}
                         // onAccept={() => handleAcceptOrder(order)}
                         onReject={() => handleRejectOrder(order)}

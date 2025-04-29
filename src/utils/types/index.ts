@@ -23,6 +23,19 @@ export interface UserProfile {
   phoneNumber?: string;
 }
 
+export interface Product {
+  _id: string;
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+  seller: string;
+  images: string[];
+  isSponsored: boolean;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 export type NotificationType = "update" | "funds" | "buyer" | "system";
 
 export interface Notification {
@@ -47,24 +60,6 @@ export interface TabNavigationProps {
   activeTab: TabType;
   onTabChange: (tab: TabType) => void;
   options: TabOption[];
-}
-
-export interface Product {
-  id: string;
-  name: string;
-  image: string;
-  price: string;
-  quantity: string;
-  minCost: string;
-  description: string;
-  orders: number;
-  rating: number;
-  seller: string;
-  status?: string;
-  timeRemaining?: string;
-  escrowStatus?: string;
-  paymentStatus?: string;
-  paymentDuration?: string;
 }
 
 export interface ReferralItem {
