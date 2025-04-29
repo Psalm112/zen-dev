@@ -66,19 +66,19 @@ const router = createBrowserRouter([
       //   path: "/api/v1/auth/google/callback",
       //   element: <GoogleCallback />,
       // },
+      // {
+      //   element: <ProtectedRoute />,
+      //   children: [
       {
-        element: <ProtectedRoute />,
-        children: [
-          {
-            path: "/account",
-            element: <Account />,
-          },
-          {
-            path: "/notifications",
-            element: <Notifications />,
-          },
-        ],
+        path: "/account",
+        element: <Account />,
       },
+      {
+        path: "/notifications",
+        element: <Notifications />,
+      },
+      //   ],
+      // },
 
       {
         path: "/product",
