@@ -1,14 +1,20 @@
 import { motion } from "framer-motion";
 import { UseFormRegisterReturn } from "react-hook-form";
-import { RiUser3Line, RiCalendarLine, RiMailLine } from "react-icons/ri";
+import {
+  RiUser3Line,
+  RiCalendarLine,
+  RiMailLine,
+  RiUserLocationLine,
+} from "react-icons/ri";
 
 interface ProfileFieldProps {
   label: string;
-  icon: "person" | "calendar" | "email";
+  icon: "person" | "calendar" | "email" | "location";
   placeholder: string;
   register: UseFormRegisterReturn<string>;
   error?: string;
   delay: number;
+  disabled?: boolean;
 }
 
 const ProfileField: React.FC<ProfileFieldProps> = ({
@@ -18,6 +24,7 @@ const ProfileField: React.FC<ProfileFieldProps> = ({
   register,
   error,
   delay,
+  disabled,
 }) => {
   const getIcon = () => {
     switch (icon) {
@@ -27,6 +34,8 @@ const ProfileField: React.FC<ProfileFieldProps> = ({
         return <RiCalendarLine className="text-gray-400" />;
       case "email":
         return <RiMailLine className="text-gray-400" />;
+      case "location":
+        return <RiUserLocationLine className="text-gray-400" />;
       default:
         return null;
     }
@@ -49,6 +58,7 @@ const ProfileField: React.FC<ProfileFieldProps> = ({
         <input
           type={icon === "email" ? "email" : "text"}
           placeholder={placeholder}
+          disabled={disabled}
           className={`w-full bg-[#292B30] text-white py-3 pl-10 pr-4 rounded border ${
             error ? "border-red-500" : "border-white/20"
           } transition-colors focus:border-white outline-none`}

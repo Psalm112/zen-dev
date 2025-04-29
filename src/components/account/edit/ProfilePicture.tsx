@@ -1,21 +1,47 @@
 import { motion } from "framer-motion";
 import { RiEdit2Fill } from "react-icons/ri";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 
 interface ProfilePictureProps {
   avatar: string;
+  onImageChange?: (file: File | null) => void;
 }
 
-const ProfilePicture: React.FC<ProfilePictureProps> = ({ avatar }) => {
+const ProfilePicture: React.FC<ProfilePictureProps> = ({
+  avatar,
+  onImageChange,
+}) => {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Update preview when avatar changes from parent
+  useEffect(() => {
+    if (avatar && !previewImage) {
+      setPreviewImage(avatar);
+    }
+  }, [avatar]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Validate file type
+      if (!file.type.match(/image\/(jpeg|jpg|png|gif|webp)/i)) {
+        alert("Please select a valid image file (JPG, PNG, GIF, WEBP)");
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Image size should be less than 5MB");
+        return;
+      }
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreviewImage(reader.result as string);
+        if (onImageChange) {
+          onImageChange(file);
+        }
       };
       reader.readAsDataURL(file);
     }

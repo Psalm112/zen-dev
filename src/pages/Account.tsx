@@ -66,7 +66,7 @@ const Account = () => {
           <Button
             title="Retry"
             onClick={() => fetchProfile()}
-            className="bg-Red hover:bg-[#e02d37] text-white px-6 py-2 rounded-lg transition-colors"
+            className="mx-auto bg-Red hover:bg-[#e02d37] text-white px-6 py-2 rounded-lg transition-colors"
           />
         </div>
       </div>
@@ -86,7 +86,11 @@ const Account = () => {
         ) : showEditProfile ? (
           <Suspense fallback={<LoadingSpinner />}>
             <EditProfile
-              avatar={profile?.profileImage || ""}
+              avatar={
+                typeof profile?.profileImage === "string"
+                  ? profile?.profileImage
+                  : ""
+              }
               showEditProfile={setShowEditProfile}
               currentProfile={formattedProfile}
             />
@@ -95,7 +99,11 @@ const Account = () => {
           profile && (
             <>
               <ProfileHeader
-                avatar={profile.profileImage}
+                avatar={
+                  typeof profile?.profileImage === "string"
+                    ? profile?.profileImage
+                    : ""
+                }
                 name={profile.name}
                 email={profile.email}
                 showSettings={setShowSettings}

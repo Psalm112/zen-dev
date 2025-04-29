@@ -1,67 +1,113 @@
-import { store } from "../../store";
-import { useAuth } from "../../context/AuthContext";
+import { UserProfile } from "../types";
 
 const API_URL = import.meta.env.VITE_API_URL;
-const { getToken } = useAuth();
-export const api = {
-  fetchWithAuth: async (endpoint: string, options: RequestInit = {}) => {
-    // Get token from localStorage or other auth storage
-    const token = getToken();
 
-    const headers = {
-      "Content-Type": "application/json",
-      ...(token && { Authorization: `Bearer ${token}` }),
-      ...options.headers,
-    };
+export const fetchWithAuth = async (
+  endpoint: string,
+  options: RequestInit = {}
+) => {
+  const token = localStorage.getItem("auth_token");
 
-    try {
-      const response = await fetch(`${API_URL}${endpoint}`, {
-        ...options,
-        headers,
-      });
+  const headers = {
+    ...(options.headers || {}),
+    ...(token && { Authorization: `Bearer ${token}` }),
+  };
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        return {
-          ok: false,
-          status: response.status,
-          data: errorData,
-          response,
-        };
-      }
+  try {
+    const response = await fetch(`${API_URL}${endpoint}`, {
+      ...options,
+      headers,
+    });
 
-      const data = await response.json().catch(() => null);
-      return { ok: true, status: response.status, data, response };
-    } catch (error) {
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
       return {
         ok: false,
-        status: 0,
-        error: error instanceof Error ? error.message : "Unknown error",
+        status: response.status,
+        error: errorData?.message || `Error: ${response.status}`,
         data: null,
-        response: null,
       };
     }
-  },
-  getUserProfile: async () => {
-    return await api.fetchWithAuth("/users/profile");
-  },
-  updateUserProfile: async (profileData: any) => {
-    return await api.fetchWithAuth("/users/profile", {
-      method: "PUT",
-      body: JSON.stringify(profileData),
+
+    const data = await response.json().catch(() => null);
+    return { ok: true, status: response.status, data, error: null };
+  } catch (error) {
+    return {
+      ok: false,
+      status: 0,
+      error: error instanceof Error ? error.message : "Unknown error",
+      data: null,
+    };
+  }
+};
+
+const requestCache = new Map();
+const cacheKey = (endpoint: string, options?: RequestInit) =>
+  `${endpoint}:${options?.method || "GET"}`;
+
+// Abort controller map for cancellation
+const abortControllers = new Map();
+
+export const api = {
+  getUserProfile: async (skipCache = false) => {
+    const key = cacheKey("/users/profile");
+
+    if (!skipCache && requestCache.has(key)) {
+      return requestCache.get(key);
+    }
+
+    // Cancel any existing request
+    if (abortControllers.has(key)) {
+      abortControllers.get(key).abort();
+    }
+
+    const controller = new AbortController();
+    abortControllers.set(key, controller);
+
+    const result = await fetchWithAuth("/users/profile", {
+      signal: controller.signal,
     });
+
+    if (result.ok) {
+      requestCache.set(key, result);
+    }
+
+    return result;
   },
-  createOrder: async (orderData: any) => {
-    return await api.fetchWithAuth("/orders", {
-      method: "POST",
-      body: JSON.stringify(orderData),
+
+  updateUserProfile: async (profileData: Partial<UserProfile>) => {
+    // Clear cache on update
+    requestCache.delete(cacheKey("/users/profile"));
+
+    // Handle form data
+    const formData = new FormData();
+
+    if (profileData.name) formData.append("name", profileData.name);
+    if (profileData.dateOfBirth)
+      formData.append("dateOfBirth", profileData.dateOfBirth);
+    if (profileData.phoneNumber)
+      formData.append("phoneNumber", profileData.phoneNumber);
+    if (profileData.address) formData.append("address", profileData.address);
+
+    if (profileData.profileImage instanceof File) {
+      formData.append("profileImage", profileData.profileImage);
+    }
+
+    return fetchWithAuth("/users/profile", {
+      method: "PUT",
+      body: formData,
     });
   },
 
-  createTrade: async (tradeData: any) => {
-    return await api.fetchWithAuth("/contracts/trades", {
-      method: "POST",
-      body: JSON.stringify(tradeData),
-    });
+  clearCache: () => {
+    requestCache.clear();
+  },
+
+  cancelRequest: (endpoint: string, method = "GET") => {
+    const key = cacheKey(endpoint, { method });
+    if (abortControllers.has(key)) {
+      abortControllers.get(key).abort();
+      abortControllers.delete(key);
+    }
   },
 };

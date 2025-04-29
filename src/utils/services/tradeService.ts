@@ -1,4 +1,4 @@
-import { api } from "./apiService";
+import { fetchWithAuth } from "./apiService";
 
 export const useTradeService = () => {
   const createTrade = async (tradeData: {
@@ -8,7 +8,7 @@ export const useTradeService = () => {
     amount: number;
     status: string;
   }) => {
-    const response = await api.fetchWithAuth("/contracts/trades", {
+    const response = await fetchWithAuth("/contracts/trades", {
       method: "POST",
       body: JSON.stringify(tradeData),
     });
@@ -16,7 +16,7 @@ export const useTradeService = () => {
   };
 
   const getTradeById = async (tradeId: string) => {
-    const response = await api.fetchWithAuth(`/contracts/trades/${tradeId}`);
+    const response = await fetchWithAuth(`/contracts/trades/${tradeId}`);
     return response;
   };
 

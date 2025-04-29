@@ -7,7 +7,7 @@ export interface UserProfile {
   googleId: string;
   email: string;
   name: string;
-  profileImage: string;
+  profileImage: File | string;
   isMerchant: boolean;
   rating: number;
   totalPoints: number;
@@ -18,7 +18,7 @@ export interface UserProfile {
   createdAt: string;
   updatedAt: string;
   __v: number;
-  addres?: string;
+  address?: string;
   dateOfBirth?: string;
   phoneNumber?: string;
 }
