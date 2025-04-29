@@ -5,9 +5,20 @@ import EmptyState from "./EmptyState";
 import { TabType } from "../../../utils/types";
 import ReferralsTab from "./referrals";
 
+// Then update the component to use these props where appropriate
 interface TabContentProps {
   activeTab: TabType;
   productImage: string;
+  milestones?: {
+    sales: number;
+    purchases: number;
+  };
+  referralCode?: string;
+  referralCount?: number;
+  points?: {
+    total: number;
+    available: number;
+  };
 }
 
 const TabContent: React.FC<TabContentProps> = ({ activeTab, productImage }) => {

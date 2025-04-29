@@ -8,6 +8,7 @@ import Loadscreen from "./pages/Loadscreen.tsx";
 import { AuthProvider } from "./context/AuthContext.tsx";
 import AuthCallback from "./pages/AuthCallback.tsx";
 import ProtectedRoute from "./components/auth/ProtectedRoute.tsx";
+import { SnackbarProvider } from "./context/SnackbarContext.tsx";
 // import GoogleCallback from "./pages/GoogleCallback.tsx";
 
 const Login = lazy(() => import("./pages/Login.tsx"));
@@ -35,11 +36,13 @@ const RouterLayout = () => {
   return (
     <Configuration>
       <AuthProvider>
-        <Layout>
-          <Suspense fallback={<Loadscreen />}>
-            <Outlet />
-          </Suspense>
-        </Layout>
+        <SnackbarProvider>
+          <Layout>
+            <Suspense fallback={<Loadscreen />}>
+              <Outlet />
+            </Suspense>
+          </Layout>
+        </SnackbarProvider>
       </AuthProvider>
     </Configuration>
   );

@@ -1,4 +1,31 @@
+
+export interface UserProfile {
+  milestones: {
+    sales: number;
+    purchases: number;
+  };
+  _id: string;
+  googleId: string;
+  email: string;
+  name: string;
+  profileImage: string;
+  isMerchant: boolean;
+  rating: number;
+  totalPoints: number;
+  availablePoints: number;
+  referralCount: number;
+  isReferralCodeUsed: boolean;
+  referralCode: string;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
+
 export type NotificationType = 'update' | 'funds' | 'buyer' | 'system';
+
+
+
 
 export interface Notification {
   id: string;
@@ -95,7 +122,7 @@ export interface TradeStatusProps {
   status: TradeStatusType;
   orderDetails: TradeOrderDetails;
   transactionInfo: TradeTransactionInfo;
-  onContactSeller?: () => void;
+  onContactSeller?:  () => void;
   onContactBuyer?: () => void;
   onOrderDispute?: () => void;
   onReleaseNow?: () => void;

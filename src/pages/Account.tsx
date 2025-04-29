@@ -3,10 +3,10 @@ import { AnimatePresence, motion } from "framer-motion";
 import Container from "../components/common/Container";
 import ProfileHeader from "../components/account/ProfileHeader";
 import TabNavigation from "../components/account/overview/TabNavigation.tsx";
-// import Settings from "../components/account/settings/Settings";
-// import EditProfile from "../components/account/edit/EditProfile";
 import { LiaAngleDownSolid } from "react-icons/lia";
 import Button from "../components/common/Button";
+import { useUserProfile } from "../utils/hooks/useUserProfile";
+import LoadingSpinner from "../components/common/LoadingSpinner";
 
 const TabContent = lazy(
   () => import("../components/account/overview/TabContent.tsx")
@@ -15,7 +15,7 @@ const EditProfile = lazy(
   () => import("../components/account/edit/EditProfile")
 );
 const Settings = lazy(() => import("../components/account/settings/Settings"));
-import { Avatar2, Product1 } from ".";
+import { Product1 } from ".";
 import { TabOption, TabType } from "../utils/types";
 
 const TAB_OPTIONS: TabOption[] = [
@@ -27,82 +27,133 @@ const TAB_OPTIONS: TabOption[] = [
 
 const Account = () => {
   const [tab, setTab] = useState<TabType>("1");
-  const [isLoading, setIsLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
-
-  const profileData = {
-    name: "Albert Flores",
-    dob: "01/01/1988",
-    email: "albertflores@mail.com",
-    phone: "(308) 555-0121",
-  };
+  const {
+    profile,
+    isLoading: isProfileLoading,
+    error: profileError,
+  } = useUserProfile();
+  const [pageLoading, setPageLoading] = useState(true);
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setIsLoading(false);
+      setPageLoading(false);
     }, 600);
 
     return () => clearTimeout(timer);
   }, []);
 
-  // Reset to top of page when tab changes
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [tab]);
+
   const handleShowEditProfile = useCallback(() => setShowEditProfile(true), []);
+
+  if (isProfileLoading || pageLoading) {
+    return (
+      <div className="bg-Dark min-h-screen text-white flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  if (profileError) {
+    return (
+      <div className="bg-Dark min-h-screen text-white flex items-center justify-center">
+        <div className="text-center p-8 bg-[#292B30] rounded-lg">
+          <h2 className="text-xl font-bold mb-4">Unable to load profile</h2>
+          <p className="text-gray-400 mb-4">{profileError}</p>
+          <Button
+            title="Retry"
+            onClick={() => window.location.reload()}
+            className="mx-auto bg-Red hover:bg-[#e02d37] text-white px-6 py-2 rounded-lg transition-colors"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  const formattedProfile = profile
+    ? {
+        name: profile.name,
+        dob: "",
+        email: profile.email,
+        phone: "",
+      }
+    : {
+        name: "",
+        dob: "",
+        email: "",
+        phone: "",
+      };
 
   return (
     <div className="bg-Dark min-h-screen text-white">
       <Container className="py-6 md:py-10">
         {showSettings ? (
-          <Settings showSettings={setShowSettings} profileData={profileData} />
-        ) : showEditProfile ? (
-          <EditProfile
-            avatar={Avatar2}
-            showEditProfile={setShowEditProfile}
-            currentProfile={profileData}
-          />
-        ) : (
-          <>
-            <ProfileHeader
-              avatar={Avatar2}
-              name="Albert Flores"
-              email="albertflores@mail.com"
+          <Suspense fallback={<LoadingSpinner />}>
+            <Settings
               showSettings={setShowSettings}
+              profileData={formattedProfile}
             />
-
-            <motion.div
-              className="w-full max-w-[650px] mx-auto"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-            >
-              <Button
-                title="Edit Profile"
-                icon={<LiaAngleDownSolid />}
-                path=""
-                onClick={handleShowEditProfile}
-                className="bg-white text-black text-lg font-bold h-11 rounded-none flex justify-center w-full border-none outline-none text-center my-2 hover:bg-gray-100 transition-colors"
+          </Suspense>
+        ) : showEditProfile ? (
+          <Suspense fallback={<LoadingSpinner />}>
+            <EditProfile
+              avatar={profile?.profileImage || ""}
+              showEditProfile={setShowEditProfile}
+              currentProfile={formattedProfile}
+            />
+          </Suspense>
+        ) : (
+          profile && (
+            <>
+              <ProfileHeader
+                avatar={profile.profileImage}
+                name={profile.name}
+                email={profile.email}
+                showSettings={setShowSettings}
               />
-            </motion.div>
 
-            <TabNavigation
-              activeTab={tab}
-              onTabChange={setTab}
-              options={TAB_OPTIONS}
-            />
+              <motion.div
+                className="w-full max-w-[650px] mx-auto"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+              >
+                <Button
+                  title="Edit Profile"
+                  icon={<LiaAngleDownSolid />}
+                  path=""
+                  onClick={handleShowEditProfile}
+                  className="bg-white text-black text-lg font-bold h-11 rounded-none flex justify-center w-full border-none outline-none text-center my-2 hover:bg-gray-100 transition-colors"
+                />
+              </motion.div>
 
-            <AnimatePresence mode="wait">
-              {isLoading ? (
-                <div>Loading...</div>
-              ) : (
-                <Suspense fallback={<div>Loading...</div>}>
-                  <TabContent activeTab={tab} productImage={Product1} />
+              <TabNavigation
+                activeTab={tab}
+                onTabChange={setTab}
+                options={TAB_OPTIONS}
+              />
+
+              <AnimatePresence mode="wait">
+                <Suspense fallback={<LoadingSpinner />}>
+                  <TabContent
+                    activeTab={tab}
+                    productImage={Product1}
+                    milestones={profile.milestones}
+                    referralCode={profile.referralCode}
+                    referralCount={profile.referralCount}
+                    points={{
+                      total: profile.totalPoints,
+                      available: profile.availablePoints,
+                    }}
+                  />
                 </Suspense>
-              )}
-            </AnimatePresence>
-          </>
+              </AnimatePresence>
+            </>
+          )
         )}
       </Container>
     </div>

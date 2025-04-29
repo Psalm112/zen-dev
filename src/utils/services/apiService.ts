@@ -51,8 +51,12 @@ export const createApiService = () => {
 export const useApi = () => {
   const { fetchWithAuth } = createApiService();
   
-  const getCurrentUser = async () => {
-    const response = await fetchWithAuth('/user/me');
+  // const getCurrentUser = async () => {
+  //   const response = await fetchWithAuth('/user/me');
+  //   return response;
+  // };
+   const getUserProfile = async () => {
+    const response = await fetchWithAuth('/users/profile');
     return response;
   };
   
@@ -78,7 +82,8 @@ export const useApi = () => {
   };
   
   return {
-    getCurrentUser,
+    // getCurrentUser,
+    getUserProfile,
      createOrder,
     createTrade
     // getProducts,
