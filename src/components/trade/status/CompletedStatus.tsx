@@ -1,357 +1,377 @@
-// import { FC } from "react";
-// import { motion } from "framer-motion";
-// import { TradeOrderDetails, TradeTransactionInfo } from "../../../utils/types";
-// import BaseStatus from "./BaseStatus";
-// import StatusAlert from "./StatusAlert";
-// import Button from "../../common/Button";
-// import { FaExclamationTriangle, FaCheck } from "react-icons/fa";
-
-// interface CompletedStatusProps {
-//   orderDetails: TradeOrderDetails;
-//   transactionInfo: TradeTransactionInfo;
-//   onContactBuyer?: () => void;
-// }
-
-// const CompletedStatus: FC<CompletedStatusProps> = ({
-//   orderDetails,
-//   transactionInfo,
-//   onContactBuyer,
-// }) => {
-//   // Show success notification at the top
-//   const SuccessNotification = () => (
-//     <motion.div
-//       className="bg-green-50 border border-green-200 text-green-800 rounded-md p-4 flex items-center justify-between mb-6"
-//       initial={{ opacity: 0, y: -20 }}
-//       animate={{ opacity: 1, y: 0 }}
-//       transition={{ duration: 0.4 }}
-//     >
-//       <div className="flex items-center gap-2">
-//         <FaCheck className="text-green-500" />
-//         <span>Your payment is complete</span>
-//       </div>
-//       <button className="text-gray-500 hover:text-gray-700">
-//         <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-//           <path
-//             d="M15 5L5 15M5 5L15 15"
-//             stroke="currentColor"
-//             strokeWidth="1.5"
-//             strokeLinecap="round"
-//             strokeLinejoin="round"
-//           />
-//         </svg>
-//       </button>
-//     </motion.div>
-//   );
-
-//   const statusAlert = (
-//     <StatusAlert
-//       icon={<FaExclamationTriangle size={18} />}
-//       message="This order has concluded and the assets are no longer locked in Desemnart escrow system. Do not trust strangers or release funds without confirming."
-//       type="warning"
-//     />
-//   );
-
-//   const actionButtons = (
-//     <Button
-//       title="Sell more"
-//       className="bg-Red fles items-center justify-center hover:bg-[#e02d37] text-white text-sm px-6 py-3 rounded transition-colors w-full max-w-md mx-auto"
-//       path="/trades"
-//     />
-//   );
-
-//   return (
-//     <>
-//       <SuccessNotification />
-//       <BaseStatus
-//         statusTitle="Completed"
-//         statusDescription="This order has concluded and the assets are no longer locked in Desemnart escrow system."
-//         statusAlert={statusAlert}
-//         orderDetails={orderDetails}
-//         transactionInfo={transactionInfo}
-//         contactLabel="Contact Buyer"
-//         onContact={onContactBuyer}
-//         actionButtons={actionButtons}
-//       />
-//     </>
-//   );
-// };
-
-// export default CompletedStatus;
-
-import { FC } from "react";
-import { motion } from "framer-motion";
-import { TradeOrderDetails, TradeTransactionInfo } from "../../../utils/types";
-import { FaCheck } from "react-icons/fa";
-import { IoChevronBack, IoChevronForward } from "react-icons/io5";
+import { FC, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { OrderDetails, TradeDetails } from "../../../utils/types";
+import { FaCheck, FaStar } from "react-icons/fa";
+import { IoChevronBack } from "react-icons/io5";
 import { LuMessageSquare } from "react-icons/lu";
-import { BsShieldExclamation } from "react-icons/bs";
 import Button from "../../common/Button";
+import { useReviewData } from "../../../utils/hooks/useReviewData";
 
 interface CompletedStatusProps {
-  orderDetails: TradeOrderDetails;
-  transactionInfo: TradeTransactionInfo;
+  orderDetails?: OrderDetails;
+  tradeDetails?: TradeDetails;
   onContactBuyer?: () => void;
-  onLeaveReview?: () => void;
-  onViewFAQ?: () => void;
+  //   onViewFAQ?: () => void;
 }
 
 const CompletedStatus: FC<CompletedStatusProps> = ({
   orderDetails,
+  tradeDetails,
   onContactBuyer,
-  onLeaveReview,
-  onViewFAQ,
 }) => {
-  // Success notification component
-  const SuccessNotification = () => (
-    <motion.div
-      className="bg-green-50 border border-green-200 text-green-800 rounded-md p-4 flex items-center justify-between mb-6"
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-    >
-      <div className="flex items-center gap-2">
-        <FaCheck className="text-green-500" />
-        <span>Your payment is complete</span>
-      </div>
-      <button className="text-gray-500 hover:text-gray-700">
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-          <path
-            d="M15 5L5 15M5 5L15 15"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </button>
-    </motion.div>
-  );
+  const details = tradeDetails || (orderDetails as unknown as TradeDetails);
+  const [showFaq, setShowFaq] = useState(false);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState("");
+  const [hoveredRating, setHoveredRating] = useState(0);
+  const { submitReview, loading } = useReviewData();
+
+  if (!details) {
+    return <div>Order information not available</div>;
+  }
+
+  const handleReviewSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (rating === 0) {
+      alert("Please select a rating");
+      return;
+    }
+    const productId = tradeDetails
+      ? details.productId
+      : orderDetails?.product?._id || "";
+    const orderId = tradeDetails ? details?.orderNo : orderDetails?._id || "";
+    await submitReview({
+      reviewed: productId,
+      order: orderId,
+      rating,
+      comment,
+    });
+
+    setRating(0);
+    setComment("");
+    setShowReviewForm(false);
+  };
 
   return (
     <>
-      <SuccessNotification />
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="bg-green-100 text-green-800 p-4 rounded-lg mb-6 flex items-center gap-2"
+      >
+        <motion.div
+          className="bg-green-500 rounded-full p-1 flex items-center justify-center"
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
+        >
+          <FaCheck className="text-white" size={14} />
+        </motion.div>
+        <span className="font-medium">Your payment is complete</span>
+      </motion.div>
 
       <motion.div
-        className="flex items-center mb-8 justify-between flex-col sm:flex-row gap-4"
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="bg-neutral-900 text-white p-4 rounded-lg mb-6"
       >
-        <div className="w-full">
-          <motion.button
-            className="flex items-center text-gray-400 hover:text-white mb-4"
-            whileHover={{ x: -3 }}
-            transition={{ type: "spring", stiffness: 400 }}
+        <div className="flex flex-col gap-4">
+          <button
+            className="flex items-center text-gray-400 hover:text-white transition-colors"
             onClick={() => window.history.back()}
           >
-            <IoChevronBack className="w-5 h-5" />
-          </motion.button>
-          <motion.h1
-            className="text-2xl font-medium text-white"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.1 }}
-          >
-            Completed
-          </motion.h1>
-          <div>
-            <motion.p
-              className="text-gray-400 text-sm mt-2 w-full inline"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-            >
+            <IoChevronBack className="mr-1" />
+            Back
+          </button>
+
+          <h2 className="text-2xl font-bold">Completed</h2>
+
+          <div className="text-gray-300">
+            <p className="mb-2">
               This order has concluded and the assets are no longer locked in
               Desemnart escrow system.
-            </motion.p>
-            &nbsp;
-            <motion.p
-              className="text-Red text-sm mt-2 w-full inline"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-            >
+            </p>
+            <hr className="my-4 border-gray-700" />
+            <p className="text-red-500 font-medium">
               Do not trust strangers or release funds without confirming.
-            </motion.p>
+            </p>
           </div>
         </div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="self-end sm:self-auto"
-        >
-          <Button
-            title="Contact Buyer"
-            className="bg-transparent hover:bg-gray-700 text-white text-sm px-4 py-2 border border-Red rounded-2xl transition-colors flex items-center gap-x-2 justify-center"
-            onClick={onContactBuyer}
-            icon={<LuMessageSquare className="w-5 h-5 text-Red" />}
-            iconPosition="start"
-          />
-        </motion.div>
       </motion.div>
 
-      {/* alert */}
       <motion.div
-        className="rounded-lg p-4 flex items-center gap-3 text-white-200 bg-Red/10 mb-6"
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        <div className="text-red-500">
-          <BsShieldExclamation size={18} />
-        </div>
-        <div className="w-full">
-          <p className="text-sm">
-            This order has concluded and the assets are no longer locked in
-            Desemnart escrow system. Do not trust strangers or release funds
-            without confirming.
-          </p>
-        </div>
-      </motion.div>
-
-      {/* Order details */}
-      <motion.div
-        className="bg-[#292B30] rounded-lg overflow-hidden shadow-lg mb-6"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4, duration: 0.5 }}
+        transition={{ duration: 0.5, delay: 0.4 }}
+        className="bg-neutral-900 rounded-lg mb-6"
       >
-        <div className="py-4 px-6 md:px-12">
-          <div className="flex flex-wrap items-center gap-4 mb-6">
-            <div className="w-fit flex flex-col gap-2">
-              <div className="w-full flex gap-4 items-center">
-                <motion.h3
-                  className="font-medium text-xl text-white"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.1 }}
-                >
-                  {orderDetails.productName}
-                </motion.h3>
-                <motion.span
-                  className="bg-green-500 text-white text-xs px-3 py-1 rounded-full"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.2 }}
-                >
-                  {orderDetails.tradeType}
-                </motion.span>
+        <div className="p-6">
+          <div className="mb-6">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <span className="bg-green-600 text-white text-xs px-2 py-1 rounded-md">
+                  SOLD
+                </span>
+                <h3 className="text-xl font-bold text-white">
+                  {details?.productName}
+                </h3>
               </div>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Button
+                  title="Contact Buyer"
+                  onClick={onContactBuyer}
+                  className="bg-transparent border border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+                  icon={<LuMessageSquare />}
+                />
+              </motion.div>
             </div>
           </div>
 
-          <div className="border-t border-gray-700 py-8">
-            <motion.div
-              className="space-y-4"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <div className="flex justify-between items-center">
-                <span className="text-gray-400 text-sm">Amount</span>
-                <span className="text-red-500 text-xl font-bold">
-                  {orderDetails.amount}
+          <div className="space-y-4">
+            <div className="flex flex-col gap-4">
+              <div className="bg-neutral-800 p-4 rounded-lg">
+                <span className="text-gray-400 block mb-1">Amount</span>
+                <span className="font-bold text-xl text-red-500">
+                  {details?.amount?.toLocaleString()}
                 </span>
               </div>
 
-              <div className="space-y-2">
-                <div className="flex justify-between py-2">
-                  <span className="text-gray-400 text-sm">Total Quantity</span>
-                  <span className="text-white">{orderDetails.quantity}</span>
-                </div>
-
-                <div className="flex justify-between py-2">
-                  <span className="text-gray-400 text-sm">Order Time</span>
-                  <span className="text-white">{orderDetails.orderTime}</span>
-                </div>
-
-                <div className="flex justify-between py-2">
-                  <span className="text-gray-400 text-sm">Order No.</span>
-                  <div className="flex items-center">
-                    <span className="text-white mr-2">
-                      {orderDetails.orderNo}
+              <div className="grid grid-cols-2 gap-4">
+                <motion.div
+                  className="bg-neutral-800 p-3 rounded-lg"
+                  whileHover={{ backgroundColor: "rgba(38, 38, 38, 1)" }}
+                >
+                  <span className="text-gray-400 block text-sm">
+                    Total Quantity
+                  </span>
+                  <span className="font-semibold text-white">
+                    {details?.quantity}
+                  </span>
+                </motion.div>
+                <motion.div
+                  className="bg-neutral-800 p-3 rounded-lg"
+                  whileHover={{ backgroundColor: "rgba(38, 38, 38, 1)" }}
+                >
+                  <span className="text-gray-400 block text-sm">
+                    Order Time
+                  </span>
+                  <span className="font-semibold text-white">
+                    {details?.orderTime}
+                  </span>
+                </motion.div>
+                <motion.div
+                  className="bg-neutral-800 p-3 rounded-lg"
+                  whileHover={{ backgroundColor: "rgba(38, 38, 38, 1)" }}
+                >
+                  <span className="text-gray-400 block text-sm">Order No.</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-white">
+                      {details?.orderNo}
                     </span>
                     <motion.button
-                      whileHover={{ scale: 1.1 }}
+                      onClick={() =>
+                        navigator.clipboard.writeText(details?.orderNo || "")
+                      }
+                      className="text-gray-400 hover:text-white"
+                      whileHover={{ scale: 1.2 }}
                       whileTap={{ scale: 0.9 }}
                     >
-                      <svg
-                        className="w-4 h-4 text-gray-400 hover:text-white transition-colors"
-                        fill="currentColor"
-                        viewBox="0 0 16 16"
-                      >
-                        <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z" />
-                        <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z" />
-                      </svg>
+                      <FaCheck size={14} />
                     </motion.button>
                   </div>
-                </div>
-
-                <div className="flex justify-between py-2">
-                  <span className="text-gray-400 text-sm">Payment Method</span>
-                  <span className="text-white">
-                    {orderDetails.paymentMethod}
+                </motion.div>
+                <motion.div
+                  className="bg-neutral-800 p-3 rounded-lg"
+                  whileHover={{ backgroundColor: "rgba(38, 38, 38, 1)" }}
+                >
+                  <span className="text-gray-400 block text-sm">
+                    Payment Method
                   </span>
-                </div>
+                  <span className="font-semibold text-white">
+                    {details?.paymentMethod}
+                  </span>
+                </motion.div>
               </div>
-            </motion.div>
+            </div>
           </div>
         </div>
       </motion.div>
 
-      {/*  Review section */}
       <motion.div
-        className="bg-[#292B30] rounded-lg overflow-hidden shadow-lg mb-6 cursor-pointer"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5, duration: 0.4 }}
-        whileHover={{ scale: 1.01 }}
-        onClick={onLeaveReview}
+        transition={{ duration: 0.5, delay: 0.6 }}
+        className="bg-neutral-900 rounded-lg p-6 mb-6"
       >
-        <div className="py-4 px-6 flex justify-between items-center">
-          <h3 className="text-white font-medium">Leave A Review</h3>
-          <motion.div
-            whileHover={{ x: 3 }}
-            transition={{ type: "spring", stiffness: 400 }}
-          >
-            <IoChevronForward className="text-gray-400" />
-          </motion.div>
-        </div>
+        <motion.button
+          onClick={() => setShowReviewForm(!showReviewForm)}
+          className="flex justify-between items-center w-full text-xl font-bold text-white"
+          whileHover={{ color: "#f87171" }}
+          transition={{ duration: 0.2 }}
+        >
+          <span>Leave A Review</span>
+          <span>{showReviewForm ? "▲" : "▼"}</span>
+        </motion.button>
+
+        <AnimatePresence>
+          {showReviewForm && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+              className="overflow-hidden"
+            >
+              <form onSubmit={handleReviewSubmit} className="space-y-4 mt-4">
+                <div>
+                  <label className="block text-gray-300 mb-2">Rating</label>
+                  <div className="flex space-x-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <motion.button
+                        key={star}
+                        type="button"
+                        onClick={() => setRating(star)}
+                        onMouseEnter={() => setHoveredRating(star)}
+                        onMouseLeave={() => setHoveredRating(0)}
+                        whileHover={{ scale: 1.2 }}
+                        whileTap={{ scale: 0.9 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <FaStar
+                          size={24}
+                          className={`${
+                            (hoveredRating || rating) >= star
+                              ? "text-yellow-400"
+                              : "text-gray-400"
+                          } 
+                           cursor-pointer`}
+                        />
+                      </motion.button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label htmlFor="comment" className="block text-gray-300 mb-2">
+                    Comment
+                  </label>
+                  <textarea
+                    id="comment"
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    className="w-full px-3 py-2 bg-neutral-800 text-white border border-neutral-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                    rows={4}
+                    placeholder="Share your experience with this product and seller"
+                  />
+                </div>
+
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Button
+                    title="Submit Review"
+                    type="submit"
+                    className={`${
+                      loading ? "bg-Red/20" : "bg-Red"
+                    } hover:bg-red-600 text-white w-full`}
+                  />
+                </motion.div>
+              </form>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
 
-      {/* FAQ section */}
       <motion.div
-        className="bg-[#292B30] rounded-lg overflow-hidden shadow-lg mb-6 cursor-pointer"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6, duration: 0.4 }}
-        whileHover={{ scale: 1.01 }}
-        onClick={onViewFAQ}
+        transition={{ duration: 0.5, delay: 0.8 }}
+        className="bg-neutral-900 rounded-lg p-6 mb-6"
       >
-        <div className="py-4 px-6 flex justify-between items-center">
-          <h3 className="text-white font-medium">FAQ</h3>
-          <motion.div
-            whileHover={{ x: 3 }}
-            transition={{ type: "spring", stiffness: 400 }}
-          >
-            <IoChevronForward className="text-gray-400" />
-          </motion.div>
-        </div>
+        <motion.button
+          className="flex justify-between items-center w-full text-xl font-bold text-white"
+          onClick={() => setShowFaq(!showFaq)}
+          whileHover={{ color: "#f87171" }}
+          transition={{ duration: 0.2 }}
+        >
+          <span>FAQ</span>
+          <span>{showFaq ? "▲" : "▼"}</span>
+        </motion.button>
+
+        <AnimatePresence>
+          {showFaq && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+              className="overflow-hidden"
+            >
+              <div className="mt-4 space-y-4">
+                {[
+                  {
+                    question: "How do I contact the buyer?",
+                    answer:
+                      'Click on the "Contact Buyer" button to open a direct messaging channel.',
+                  },
+                  {
+                    question: "When will I receive my payment?",
+                    answer:
+                      "Payments are typically processed within 24-48 hours after the order is marked as completed.",
+                  },
+                  {
+                    question: "Can I cancel a completed order?",
+                    answer:
+                      "Once an order is marked as completed, it cannot be canceled. Please contact support if you have any issues.",
+                  },
+                  {
+                    question: "How are reviews used?",
+                    answer:
+                      "Reviews help build trust in the marketplace. They're displayed on product pages to help buyers make informed decisions.",
+                  },
+                ].map((faq, index) => (
+                  <motion.div
+                    key={index}
+                    className={`${
+                      index < 3 ? "border-b border-neutral-800" : ""
+                    } pb-3`}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 * index }}
+                  >
+                    <h4 className="font-medium text-white mb-2">
+                      {faq.question}
+                    </h4>
+                    <p className="text-gray-300">{faq.answer}</p>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
 
-      <motion.a
-        className="max-w-md mx-auto bg-Red hover:bg-[#e02d37] text-white text-sm px-6 py-3 rounded transition-colors w-full flex items-center justify-center"
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.7, duration: 0.4 }}
+        transition={{ duration: 0.5, delay: 1 }}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
-        href="/trades"
       >
-        Sell more
-      </motion.a>
+        <Button
+          title="Sell more"
+          onClick={() => (window.location.href = "/trades")}
+          className="bg-red-500 hover:bg-red-600 text-white w-full"
+        />
+      </motion.div>
     </>
   );
 };

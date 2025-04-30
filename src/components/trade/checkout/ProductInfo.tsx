@@ -22,7 +22,7 @@ const ProductInfo: FC<ProductInfoProps> = ({ product, className = "" }) => {
         transition={{ type: "spring", stiffness: 300, damping: 15 }}
       >
         <img
-          src={product.image}
+          src={product.images[0]}
           alt={product.description}
           className="w-[60%] md:w-full h-auto rounded-lg mx-auto"
           loading="lazy"
@@ -50,7 +50,8 @@ const ProductInfo: FC<ProductInfoProps> = ({ product, className = "" }) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 mt-4">
           <div className="flex justify-between text-sm">
             <span className="text-[#AEAEB2]">Quantity:</span>
-            <span>{product.quantity}</span>
+            {/* <span>{product.quantity}</span> */}
+            <span>2</span>
           </div>
           {/* <div className="flex justify-between text-sm">
             <span className="text-[#AEAEB2]">Min. Cost:</span>
@@ -62,7 +63,8 @@ const ProductInfo: FC<ProductInfoProps> = ({ product, className = "" }) => {
           </div> */}
           <div className="flex justify-between text-sm">
             <span className="text-[#AEAEB2]">Payment Duration:</span>
-            <span>{product.paymentDuration || "18Min(s)"}</span>
+            {/* <span>{product.paymentDuration || "18Min(s)"}</span> */}
+            <span>18Min(s)</span>
           </div>
         </div>
       </div>

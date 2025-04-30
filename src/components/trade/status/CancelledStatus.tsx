@@ -1,49 +1,46 @@
 import { FC } from "react";
-import { TradeOrderDetails, TradeTransactionInfo } from "../../../utils/types";
+import {
+  OrderDetails,
+  TradeDetails,
+  TradeTransactionInfo,
+} from "../../../utils/types";
 import BaseStatus from "./BaseStatus";
 import StatusAlert from "./StatusAlert";
-import Button from "../../common/Button";
 import { BsShieldExclamation } from "react-icons/bs";
 
 interface CancelledStatusProps {
-  orderDetails: TradeOrderDetails;
+  tradeDetails: TradeDetails;
+  orderDetails?: OrderDetails;
   transactionInfo: TradeTransactionInfo;
   onContactSeller?: () => void;
   onOrderDispute?: () => void;
 }
 
 const CancelledStatus: FC<CancelledStatusProps> = ({
-  orderDetails,
+  tradeDetails,
+  //   orderDetails,
   transactionInfo,
   onContactSeller,
-  onOrderDispute,
+  //   onOrderDispute,
 }) => {
-  const statusAlert = (
-    <StatusAlert
-      icon={<BsShieldExclamation size={18} />}
-      message="This order has been concluded, and the assets are no longer locked by Desemnart. Do not blindly trust strangers or release funds without confirming."
-      verificationMessage="To ensure the safety of your funds,please verify the real name of the payer: Femi Cole"
-      type="warning"
-    />
-  );
-
-  const actionButtons = (
-    <Button
-      title="Order Dispute?"
-      className="mx-auto bg-transparent hover:bg-gray-700 text-white text-sm px-6 py-3 border border-gray-600 rounded transition-colors"
-      onClick={onOrderDispute}
-    />
-  );
-
   return (
     <BaseStatus
-      statusTitle="Your order has been cancelled."
-      statusDescription="This order has been concluded, and the assets are no longer locked by Desemnart."
-      statusAlert={statusAlert}
-      orderDetails={orderDetails}
+      statusTitle="Order Cancelled"
+      statusDescription="This order has been cancelled and is no longer active."
+      statusAlert={
+        <StatusAlert
+          icon={<BsShieldExclamation size={20} className="text-red-600" />}
+          message="This order has been concluded, and the assets are no longer locked by Desemnart. Do not blindly trust strangers or release funds without confirming."
+          verificationMessage="To ensure the safety of your funds, please verify the real name of the payer: Femi Cole"
+          type="warning"
+        />
+      }
+      tradeDetails={tradeDetails}
+      //   orderDetails={orderDetails}
       transactionInfo={transactionInfo}
+      contactLabel="Contact Support"
       onContact={onContactSeller}
-      actionButtons={actionButtons}
+      actionButtons={null}
     />
   );
 };

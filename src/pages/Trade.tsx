@@ -307,15 +307,15 @@ const Trade = () => {
       </Container>
 
       {/* Order Summary Modal */}
-      <AnimatePresence>
-        {/* {showOrderSummary && selectedProduct && (
+      {/* <AnimatePresence>
+        {showOrderSummary && selectedProduct && (
           <OrderSummaryModal
             product={selectedProduct}
             onClose={handleCloseOrderSummary}
             onConfirm={handleConfirmPurchase}
           />
-        )} */}
-      </AnimatePresence>
+        )}
+      </AnimatePresence> */}
 
       <Suspense fallback={<ButtonPlaceholder />}>
         <FloatingActionButton

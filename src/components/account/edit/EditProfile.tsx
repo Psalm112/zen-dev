@@ -15,7 +15,7 @@ import { updateUserProfile } from "../../../store/slices/userSlice";
 import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallback from "../../common/ErrorFallback";
 
-// Validation schema with updated field names to match API
+// Validation schema
 const profileSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters long"),
   dateOfBirth: z
@@ -90,7 +90,7 @@ const EditProfile: React.FC<EditProfileProps> = ({
     handleSubmit,
     setValue,
     formState: { errors, isDirty, isSubmitting },
-    watch,
+    // watch,
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {

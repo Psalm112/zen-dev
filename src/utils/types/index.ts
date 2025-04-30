@@ -67,27 +67,22 @@ export interface Review {
 
 export interface Order {
   _id: string;
-  product:
-    | {
-        _id: string;
-        name: string;
-        price: number;
-        images: string[];
-      }
-    | string;
-  buyer:
-    | {
-        _id: string;
-        profileImage: string;
-      }
-    | string;
-  seller:
-    | {
-        _id: string;
-        profileImage: string;
-        rating?: number;
-      }
-    | string;
+  product: {
+    _id: string;
+    name: string;
+    price: number;
+    images: string[];
+  };
+  buyer: {
+    _id: string;
+    profileImage: string;
+  };
+  seller: {
+    _id: string;
+    name: string;
+    profileImage: string;
+    rating?: number;
+  };
   amount: number;
   status: "pending" | "completed" | "disputed";
   dispute?: {
@@ -96,6 +91,7 @@ export interface Order {
     resolved: boolean;
   };
   createdAt: string;
+  quantity: number;
   updatedAt: string;
 }
 
@@ -153,8 +149,18 @@ export interface ReferralData
 
 export type TradeStatusType = "cancelled" | "pending" | "release" | "completed";
 
-export interface TradeOrderDetails {
+export type OrderStatus =
+  | "pending"
+  | "in escrow"
+  | "processing"
+  | "shipped"
+  | "completed"
+  | "cancelled"
+  | "disputed";
+
+export interface TradeDetails {
   productName: string;
+  productId: string;
   amount: number;
   quantity: number;
   orderTime: string;
@@ -163,6 +169,10 @@ export interface TradeOrderDetails {
   buyerId: string;
   paymentMethod?: string;
   tradeType: "BUY" | "SELL";
+}
+export interface OrderDetails extends Order {
+  formattedDate: string;
+  formattedAmount: string;
 }
 
 export interface TradeTransactionInfo {
@@ -173,13 +183,13 @@ export interface TradeTransactionInfo {
   avgPaymentTime: number;
 }
 
-export interface TradeStatusProps {
+export interface StatusProps {
   status: TradeStatusType;
-  orderDetails: TradeOrderDetails;
-  transactionInfo: TradeTransactionInfo;
+  tradeDetails?: TradeDetails;
+  transactionInfo?: TradeTransactionInfo;
   onContactSeller?: () => void;
   onContactBuyer?: () => void;
   onOrderDispute?: () => void;
   onReleaseNow?: () => void;
-  orderId: string;
+  orderId?: string;
 }

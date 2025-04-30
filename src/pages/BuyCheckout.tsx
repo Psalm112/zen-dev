@@ -5,57 +5,82 @@ import CheckoutLayout from "../components/trade/checkout/CheckoutLayout";
 import ProductInfo from "../components/trade/checkout/ProductInfo";
 import PaymentMethod from "../components/trade/checkout/PaymentMethod";
 import TransactionInfo from "../components/trade/checkout/TransactionInfo";
-import { Product } from "../utils/types";
-import { toast } from "react-toastify";
-import { useOrderService } from "../utils/services/orderService"; // Import the order service
+// import { Product } from "../utils/types";
+// import { toast } from "react-toastify";
+import { useOrderData } from "../utils/hooks/useOrderData";
+import { useProductData } from "../utils/hooks/useProductData";
+import LoadingSpinner from "../components/common/LoadingSpinner";
 
 const BuyCheckout = () => {
   const { productId } = useParams();
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(true);
-  const [product, setProduct] = useState<Product | null>(null);
+  //   const [isLoading, setIsLoading] = useState(true);
+  //   const [product, setProduct] = useState<Product | null>(null);
   const [paymentAmount, setPaymentAmount] = useState<number>(190);
   const [paymentMethod, setPaymentMethod] = useState<string>("crypto");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { createOrder } = useOrderService();
-
+  const { placeOrder, loading } = useOrderData();
+  const {
+    product,
+    // formattedProduct,
+    loading: loadingProduct,
+    error,
+    fetchProductById,
+  } = useProductData();
   // Fetch product data
   useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        // API call
-        setTimeout(() => {
-          // Sample data
-          const productData: Product = {
-            _id: "68082f7a7d3f057ab0fafd5c",
-            name: "Wood Carving",
-            description: "Neat carved wood art works",
-            price: 20000,
-            category: "Art Work",
-            seller: "680821b06eda53ead327e0ea",
-            images: [
-              "images-1745366906480-810449189.jpeg",
-              "images-1745366906494-585992412.jpeg",
-            ],
-            isSponsored: false,
-            isActive: true,
-            createdAt: "2025-04-23T00:08:26.519Z",
-            updatedAt: "2025-04-23T00:08:26.519Z",
-          };
+    if (productId) {
+      fetchProductById(productId);
+    }
 
-          setProduct(productData);
-          setIsLoading(false);
-        }, 600);
-      } catch (error) {
-        console.error("Error fetching product:", error);
-        toast.error("Failed to load product details");
-        setIsLoading(false);
-      }
-    };
+    // Cleanup
+    return () => {};
+  }, [productId, fetchProductById]);
+  const handleRetry = () => {
+    if (productId) {
+      fetchProductById(productId);
+    }
 
-    fetchProduct();
-  }, [productId]);
+    // Cleanup
+    return () => {};
+  };
+
+  //   useEffect(() => {
+  //     const fetchProduct = async () => {
+  //       try {
+  //         // API call
+  //         setTimeout(() => {
+  //           // Sample data
+  //           const productData: Product = {
+  //             _id: "68082f7a7d3f057ab0fafd5c",
+  //             name: "Wood Carving",
+  //             description: "Neat carved wood art works",
+  //             price: 20000,
+  //             category: "Art Work",
+  //             seller: "680821b06eda53ead327e0ea",
+  //             images: [
+  //               "images-1745366906480-810449189.jpeg",
+  //               "images-1745366906494-585992412.jpeg",
+  //             ],
+  //             isSponsored: false,
+  //             isActive: true,
+  //             createdAt: "2025-04-23T00:08:26.519Z",
+  //             updatedAt: "2025-04-23T00:08:26.519Z",
+  //           };
+
+  //           setProduct(productData);
+  //           setIsLoading(false);
+  //         }, 600);
+  //       } catch (error) {
+  //         console.error("Error fetching product:", error);
+  //         toast.error("Failed to load product details");
+  //         setIsLoading(false);
+  //       }
+  //     };
+
+  //     fetchProduct();
+  //   }, [productId]);
 
   const handleBuy = async () => {
     if (!product) return;
@@ -63,42 +88,48 @@ const BuyCheckout = () => {
     setIsSubmitting(true);
 
     try {
-      const orderResponse = await createOrder({
+      const result = await placeOrder({
         product: productId as string,
-        buyer: "60804386704fcfe10f451cf",
-        seller: "608021b86eda53ead327e0ea",
+        seller: product.seller,
         amount: paymentAmount,
-        status: "pending",
       });
 
-      if (!orderResponse.ok) {
-        throw new Error(
-          orderResponse.data?.message || "Failed to create order"
-        );
+      if (result) {
+        navigate(`/orders/${result._id}?status=pending`);
       }
-
-      toast.success("Order created successfully!");
-
-      navigate(`/trades/viewtrades/${orderResponse.data._id}?status=pending`);
     } catch (error) {
-      toast.error("Failed to create order. Please try again.");
       console.error("Order creation error:", error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (isLoading || !product) {
+  if (loadingProduct || !product) {
     return (
-      <CheckoutLayout title="Buy Car">
-        <div className="flex justify-center items-center min-h-[50vh]">
-          <motion.div
-            className="w-16 h-16 border-4 border-Red border-t-transparent rounded-full"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          />
+      <div className="flex justify-center items-center py-12">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-Dark min-h-screen flex items-center justify-center">
+        <div className="bg-[#292B30] p-8 rounded-xl shadow-lg">
+          <h2 className="text-Red text-xl font-bold mb-4">
+            Error Loading Product
+          </h2>
+          <p className="text-white mb-6">{error}</p>
+          <button
+            onClick={handleRetry}
+            className={`${
+              loadingProduct ? "bg-Red/20" : "bg-Red"
+            } text-white py-2 px-6 rounded-md hover:bg-[#d52a33] transition-colors`}
+          >
+            Retry
+          </button>
         </div>
-      </CheckoutLayout>
+      </div>
     );
   }
 
@@ -108,7 +139,7 @@ const BuyCheckout = () => {
         <ProductInfo product={product} />
 
         <PaymentMethod onMethodChange={setPaymentMethod} />
-        {paymentMethod == "fiat" && <></>}
+        {paymentMethod === "fiat" && <></>}
 
         <motion.div
           className="mt-6 bg-[#292B30] rounded-lg p-6"
@@ -148,13 +179,15 @@ const BuyCheckout = () => {
                   : "bg-Red hover:bg-[#e02d37]"
               }`}
             onClick={handleBuy}
-            disabled={isSubmitting}
+            disabled={isSubmitting || loading}
             whileHover={
-              !isSubmitting ? { backgroundColor: "#e02d37" } : undefined
+              !isSubmitting && !loading
+                ? { backgroundColor: "#e02d37" }
+                : undefined
             }
-            whileTap={!isSubmitting ? { scale: 0.98 } : undefined}
+            whileTap={!isSubmitting && !loading ? { scale: 0.98 } : undefined}
           >
-            {isSubmitting ? (
+            {isSubmitting || loading ? (
               <div className="flex items-center justify-center">
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
                 Processing...

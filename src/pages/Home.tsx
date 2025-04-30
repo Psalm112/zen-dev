@@ -162,6 +162,7 @@ const Home = () => {
           path="/product"
           className="mt-6 md:mt-10"
           isCategoryView={false}
+          isFeatured={true}
         />
       </Container>
     </div>

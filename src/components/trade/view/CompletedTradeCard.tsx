@@ -1,17 +1,19 @@
-import { FC, useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Product } from "../../../utils/types";
+// import { Product } from "../../../utils/types";
 import Button from "../../common/Button";
 import TradeCardBase from "./TradeCardBase";
 import TradeDetailRow from "./TradeDetailRow";
 import { FaCopy } from "react-icons/fa";
 import { LuMessageSquare } from "react-icons/lu";
 
-interface CompletedTradeCardProps {
-  trade: Product;
-}
+// interface CompletedTradeCardProps {
+//   trade: Product;
+// }
 
-const CompletedTradeCard: FC<CompletedTradeCardProps> = ({ trade }) => {
+// const CompletedTradeCard: FC<CompletedTradeCardProps> = ({ trade }) => {
+
+const CompletedTradeCard = () => {
   const [copied, setCopied] = useState(false);
   const copyOrderId = (id: string) => {
     navigator.clipboard.writeText(id);
@@ -103,7 +105,7 @@ const CompletedTradeCard: FC<CompletedTradeCardProps> = ({ trade }) => {
                 )
               }
             />
-            {trade.paymentStatus && (
+            {/* {trade.paymentStatus && (
               <TradeDetailRow
                 label="Payment Status"
                 value={
@@ -118,7 +120,7 @@ const CompletedTradeCard: FC<CompletedTradeCardProps> = ({ trade }) => {
                   <span className="text-green-400">{trade.escrowStatus}</span>
                 }
               />
-            )}
+            )} */}
           </div>
         </motion.div>
       </div>

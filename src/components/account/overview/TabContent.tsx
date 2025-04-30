@@ -4,8 +4,10 @@ import DisputeItem from "./DisputeItem";
 import EmptyState from "./EmptyState";
 import { TabType } from "../../../utils/types";
 import ReferralsTab from "./referrals";
+import { useEffect, useState } from "react";
+import LoadingSpinner from "../../common/LoadingSpinner";
+import { useOrderData } from "../../../utils/hooks/useOrderData";
 
-// Then update the component to use these props where appropriate
 interface TabContentProps {
   activeTab: TabType;
   productImage: string;
@@ -22,6 +24,26 @@ interface TabContentProps {
 }
 
 const TabContent: React.FC<TabContentProps> = ({ activeTab, productImage }) => {
+  const { fetchBuyerOrders, formattedOrders, loading, error } = useOrderData();
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+
+  // Fetch orders when component mounts or when the active tab is "1" (Orders)
+  useEffect(() => {
+    if (activeTab === "1") {
+      const loadOrders = async () => {
+        await fetchBuyerOrders(false, isInitialLoad);
+        setIsInitialLoad(false);
+      };
+
+      loadOrders();
+    }
+
+    // Cleanup function
+    return () => {
+      // No need to cleanup since the API cancel is handled in useOrderData hook
+    };
+  }, [activeTab, fetchBuyerOrders, isInitialLoad]);
+
   return (
     <LazyMotion features={domAnimation}>
       {activeTab === "1" && (
@@ -32,26 +54,38 @@ const TabContent: React.FC<TabContentProps> = ({ activeTab, productImage }) => {
           exit={{ opacity: 0, x: 20 }}
           transition={{ duration: 0.3 }}
         >
-          <OrderHistoryItem
-            productImage={productImage}
-            productName="Vaseline Lotion"
-            vendor="DanBike"
-            quantity={300}
-            price="0.0002"
-            orderDate="Jan 20, 2025"
-            status="In Escrow"
-            index={0}
-          />
-          <OrderHistoryItem
-            productImage={productImage}
-            productName="Vaseline Lotion"
-            vendor="DanBike"
-            quantity={300}
-            price="0.0002"
-            orderDate="Jan 20, 2025"
-            status="Shipped"
-            index={1}
-          />
+          {loading && (
+            <div className="flex justify-center items-center py-12">
+              <LoadingSpinner size="lg" />
+            </div>
+          )}
+
+          {!loading && error && (
+            <div className="text-center py-8">
+              <p className="text-Red mb-2">Error loading orders</p>
+              <button
+                onClick={() => fetchBuyerOrders(false, true)}
+                className="text-white underline hover:text-gray-300"
+              >
+                Try Again
+              </button>
+            </div>
+          )}
+
+          {!loading && !error && formattedOrders?.length === 0 && (
+            <EmptyState
+              message="You haven't placed any orders yet."
+              buttonText="Browse Products"
+              buttonPath="/product"
+            />
+          )}
+
+          {!loading &&
+            !error &&
+            formattedOrders?.length > 0 &&
+            formattedOrders.map((order, index) => (
+              <OrderHistoryItem key={order._id} {...order} index={index} />
+            ))}
         </m.div>
       )}
 
@@ -86,6 +120,7 @@ const TabContent: React.FC<TabContentProps> = ({ activeTab, productImage }) => {
           />
         </m.div>
       )}
+
       {activeTab === "4" && (
         <m.div
           initial={{ opacity: 0, x: -20 }}

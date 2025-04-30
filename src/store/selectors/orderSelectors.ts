@@ -47,6 +47,7 @@ export const selectFormattedCurrentOrder = createSelector(
 );
 
 export const selectOrdersByStatus = createSelector(
+  //   [selectAllOrders, (state: RootState, status: string) => status],
   [selectAllOrders, (state: RootState, status: string) => status],
   (orders, status) => {
     return orders.filter((order: Order) => order.status === status);

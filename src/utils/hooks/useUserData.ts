@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef } from "react";
+import { useEffect, useCallback } from "react";
 import { useAppDispatch, useAppSelector } from "./redux";
 import {
   fetchUserProfile,
@@ -17,7 +17,7 @@ import { debounce } from "../helpers";
 export const useUserData = () => {
   const dispatch = useAppDispatch();
   const { showSnackbar } = useSnackbar();
-  const abortControllerRef = useRef<AbortController | null>(null);
+  //   const abortControllerRef = useRef<AbortController | null>(null);
 
   const profile = useAppSelector(selectUserProfile);
   const loading = useAppSelector(selectUserLoading);

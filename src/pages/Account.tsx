@@ -1,4 +1,3 @@
-// src/pages/Account.tsx with simplified implementation
 import { useState, useEffect, lazy, Suspense, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Container from "../components/common/Container";

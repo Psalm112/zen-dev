@@ -159,7 +159,9 @@ const ViewTrade = () => {
                             )
                           }
                         >
-                          <CompletedTradeCard trade={trade} />
+                          <CompletedTradeCard
+                          // trade={trade}
+                          />
                         </div>
                       ))
                     ) : (

@@ -130,15 +130,16 @@ import {
   ReactNode,
 } from "react";
 import { jwtDecode } from "jwt-decode";
+import { UserProfile } from "../utils/types";
 
-interface User {
-  id: string;
-  email: string;
-  name?: string;
-  avatar?: string;
-  googleId?: string;
-  profileImage?: string;
-}
+// interface User {
+//   id: string;
+//   email: string;
+//   name?: string;
+//   avatar?: string;
+//   googleId?: string;
+//   profileImage?: string;
+// }
 
 interface JwtPayload {
   sub: string;
@@ -149,7 +150,7 @@ interface JwtPayload {
 }
 
 interface AuthContextType {
-  user: User | null;
+  user: UserProfile | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (provider: string) => void;
@@ -165,7 +166,7 @@ const TOKEN_KEY = "auth_token";
 const USER_KEY = "auth_user";
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -209,21 +210,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = (provider: string) => {
     const API_URL = import.meta.env.VITE_API_URL;
-    // const FRONTEND_URL = window.location.origin;
+    const FRONTEND_URL = window.location.origin;
 
     if (provider === "google") {
       storage.setItem("auth_redirect", window.location.pathname);
+      //localhost:5177/auth/google?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTIyZWRlMzVjODBlYzc0NWVjMzE4OSIsImVtYWlsIjoic2VhN2FtQGdtYWlsLmNvbSIsImlhdCI6MTc0NjAyMjExMCwiZXhwIjoxNzQ2NjI2OTEwfQ.gduRlRRSopEfh9cBPb7gw5rEICkM2XlT-gnfEAoHpdg&userId=68122ede35c80ec745ec3189
 
-      window.location.href = `${API_URL}/auth/google`;
+      window.location.href = `${API_URL}/auth/google?frontend=${FRONTEND_URL}`;
     }
-    // if (provider === "google") {
-    //   window.location.href = `${API_URL}/auth/google?redirect_url=${encodeURIComponent(
-    //     FRONTEND_URL
-    //   )}`;
-    // }
   };
 
-  const handleAuthCallback = (token: string, userData: User) => {
+  const handleAuthCallback = (token: string, userData: UserProfile) => {
     storage.setItem(TOKEN_KEY, token);
     storage.setItem(USER_KEY, JSON.stringify(userData));
     setUser(userData);

@@ -41,7 +41,7 @@ const ProductCard = React.memo(
             aria-label="Add to favorites"
             onClick={(e) => {
               e.preventDefault();
-              // Add wishlist logic here
+              // Add wishlist logic
             }}
           >
             <FaRegHeart className="text-xl md:text-2xl text-white hover:text-Red transition-colors" />
@@ -73,7 +73,7 @@ const ProductCard = React.memo(
             className="mt-[5px] gap-3 lg:gap-7 font-bold text-white bg-Red py-2 hidden group-hover:flex justify-center items-center w-full transition-all duration-300"
             onClick={(e) => {
               e.preventDefault();
-              // Add to cart logic here
+              // Add to cart logic
             }}
           >
             <div>Buy Now</div>

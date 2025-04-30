@@ -23,6 +23,7 @@ const BuyCheckout = lazy(() => import("./pages/BuyCheckout.tsx"));
 const SellCheckout = lazy(() => import("./pages/SellCheckout.tsx"));
 const ViewTrade = lazy(() => import("./pages/ViewTrade.tsx"));
 const ViewTradeDetail = lazy(() => import("./pages/ViewTradeDetail.tsx"));
+const ViewOrderDetail = lazy(() => import("./pages/ViewOrderDetail.tsx"));
 const Notifications = lazy(() => import("./pages/Notifications.tsx"));
 // import About from "./pages/About.tsx";
 // import Market from "./pages/Market.tsx";
@@ -66,26 +67,26 @@ const router = createBrowserRouter([
         element: <Login />,
       },
       {
-        path: "/auth/google/callback",
+        path: "/auth/google/",
         element: <AuthCallback />,
       },
       // {
       //   path: "/api/v1/auth/google/callback",
       //   element: <GoogleCallback />,
       // },
-      // {
-      //   element: <ProtectedRoute />,
-      //   children: [
       {
-        path: "/account",
-        element: <Account />,
+        element: <ProtectedRoute />,
+        children: [
+          {
+            path: "/account",
+            element: <Account />,
+          },
+          {
+            path: "/notifications",
+            element: <Notifications />,
+          },
+        ],
       },
-      {
-        path: "/notifications",
-        element: <Notifications />,
-      },
-      //   ],
-      // },
 
       {
         path: "/product",
@@ -118,6 +119,10 @@ const router = createBrowserRouter([
       {
         path: "/trades/viewtrades/:tradeId",
         element: <ViewTradeDetail />,
+      },
+      {
+        path: "/orders/:orderId",
+        element: <ViewOrderDetail />,
       },
       {
         path: "/load",

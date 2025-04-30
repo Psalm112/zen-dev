@@ -11,7 +11,7 @@ import ProductDetails from "../components/product/singleProduct/ProductDetails";
 import CustomerReviews from "../components/product/singleProduct/CustomerReviews";
 import PurchaseSection from "../components/product/singleProduct/PurchaseSection";
 import ProductLoadingSkeleton from "../components/product/singleProduct/LoadingSkeleton";
-import ProductList from "../components/product/ProductList";
+// import ProductList from "../components/product/ProductList";
 import { useProductData } from "../utils/hooks/useProductData";
 import ProductCard from "../components/product/ProductCard";
 
@@ -68,12 +68,12 @@ const SingleProduct = () => {
     // Cleanup
     return () => {};
   }, [productId, fetchProductById]);
-  useEffect(() => {
-    if (product) {
-      // Mock review count for now
-      setReviewCount(4);
-    }
-  }, [product]);
+  // useEffect(() => {
+  //   if (product) {
+  //     // Mock review count for now
+  //     setReviewCount(4);
+  //   }
+  // }, [product]);
 
   if (loading || !product) {
     return <ProductLoadingSkeleton />;
@@ -155,7 +155,7 @@ const SingleProduct = () => {
               </div>
 
               {/* Product Image */}
-              <ProductImage productId={productId} images={product.images} />
+              <ProductImage images={product.images} />
             </div>
           </div>
 
@@ -186,7 +186,10 @@ const SingleProduct = () => {
                 {activeTab === "details" ? (
                   <ProductDetails product={product} ethPrice={ethPrice} />
                 ) : (
-                  <CustomerReviews productId={product._id} />
+                  <CustomerReviews
+                    productId={product._id}
+                    reviewcount={setReviewCount}
+                  />
                 )}
               </div>
 

@@ -12,7 +12,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   // In Layout.tsx
   useEffect(() => {
     // Check if this is a redirect from Google auth
-    if (location.pathname === "/auth/google/callback") {
+    if (location.pathname === "/auth/google") {
       // Extract token and user data from URL
       const params = new URLSearchParams(location.search);
       const token = params.get("token");
