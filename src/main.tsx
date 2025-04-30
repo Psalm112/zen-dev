@@ -11,6 +11,7 @@ import ProtectedRoute from "./components/auth/ProtectedRoute.tsx";
 import { SnackbarProvider } from "./context/SnackbarContext.tsx";
 import { Provider } from "react-redux";
 import { store } from "./store/store.ts";
+import { WalletProvider } from "./context/WalletContext.tsx";
 // import GoogleCallback from "./pages/GoogleCallback.tsx";
 
 const Login = lazy(() => import("./pages/Login.tsx"));
@@ -40,13 +41,15 @@ const RouterLayout = () => {
     <Configuration>
       <Provider store={store}>
         <AuthProvider>
-          <SnackbarProvider>
-            <Layout>
-              <Suspense fallback={<Loadscreen />}>
-                <Outlet />
-              </Suspense>
-            </Layout>
-          </SnackbarProvider>
+          <WalletProvider defaultChainId={4202}>
+            <SnackbarProvider>
+              <Layout>
+                <Suspense fallback={<Loadscreen />}>
+                  <Outlet />
+                </Suspense>
+              </Layout>
+            </SnackbarProvider>
+          </WalletProvider>
         </AuthProvider>
       </Provider>
     </Configuration>

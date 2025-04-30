@@ -30,9 +30,7 @@ const ButtonPlaceholder: FC = () => (
 const Trade = () => {
   const [activeTab, setActiveTab] = useState<TradeTab>("buy");
   const [isLoading, setIsLoading] = useState(true);
-  // const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  // const [showOrderSummary, setShowOrderSummary] = useState(false);
-  const { isConnected, connect, isConnecting } = useWallet(); // Custom hook for wallet management
+  const { isConnected, connectMetaMask, isConnecting } = useWallet();
 
   // Sample data for products
   const products: Product[] = [
@@ -169,22 +167,6 @@ const Trade = () => {
     return () => window.clearTimeout(loadTimer);
   }, []);
 
-  // Handle product selection and order summary display
-  // const handleBuyClick = (product: Product) => {
-  //   if (!isConnected) {
-  //     return;
-  //   }
-  //   // setSelectedProduct(product);
-  //   // setShowOrderSummary(true);
-  // };
-
-  // Handle order acceptance (for sellers)
-  // const handleAcceptOrder = (product: Product) => {
-  //   // Implementation for accepting an order
-  //   console.log("Order accepted:", product);
-  //   // Logic to update order status
-  // };
-
   // Handle order rejection (for sellers)
   const handleRejectOrder = (product: Product) => {
     // Implementation for rejecting an order
@@ -216,7 +198,10 @@ const Trade = () => {
           >
             <Title text="P2P Trading" className="text-center my-8 text-3xl" />
           </motion.div>
-          <ConnectWallet onConnect={connect} isConnecting={isConnecting} />
+          <ConnectWallet
+            onConnect={connectMetaMask}
+            isConnecting={isConnecting}
+          />
         </Container>
       </div>
     );

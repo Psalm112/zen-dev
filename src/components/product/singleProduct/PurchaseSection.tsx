@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { FaWallet, FaSpinner } from "react-icons/fa";
 import { Product } from "../../../utils/types";
+import { useWallet } from "../../../context/WalletContext";
 
 interface PurchaseSectionProps {
   product?: Product;
@@ -8,43 +9,37 @@ interface PurchaseSectionProps {
 
 const PurchaseSection = ({ product }: PurchaseSectionProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
-  const [walletConnected, setWalletConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    // Check if wallet is already connected (placeholder for real implementation)
-    const checkWalletConnection = async () => {
-      try {
-        //wallet connection check
-        const connected = localStorage.getItem("walletConnected") === "true";
-        setWalletConnected(connected);
-      } catch (err) {
-        console.error("Error checking wallet connection:", err);
-        setWalletConnected(false);
-      }
-    };
-
-    checkWalletConnection();
-  }, []);
-
+  const { isConnected, connectMetaMask, balance, account } = useWallet();
   const handleConnectWallet = async () => {
     setIsProcessing(true);
     setError(null);
 
     try {
-      // Simulating wallet connection process
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      // In a real implementation this would connect to MetaMask or other wallet
-      localStorage.setItem("walletConnected", "true");
-      setWalletConnected(true);
-    } catch (err) {
+      await connectMetaMask();
+    } catch (err: any) {
       console.error("Error connecting wallet:", err);
-      setError("Failed to connect wallet. Please try again.");
+      setError(`Failed to connect wallet: ${err.message || "Unknown error"}`);
     } finally {
       setIsProcessing(false);
     }
   };
+
+  // useEffect(() => {
+  //   // Check if wallet is already connected (placeholder for real implementation)
+  //   const checkWalletConnection = async () => {
+  //     try {
+  //       //wallet connection check
+  //       const connected = localStorage.getItem("walletConnected") === "true";
+  //       setWalletConnected(connected);
+  //     } catch (err) {
+  //       console.error("Error checking wallet connection:", err);
+  //       setWalletConnected(false);
+  //     }
+  //   };
+
+  //   checkWalletConnection();
+  // }, []);
 
   const handlePurchase = async () => {
     if (!product) return;
@@ -59,8 +54,7 @@ const PurchaseSection = ({ product }: PurchaseSectionProps) => {
       // In a real implementation this would send a transaction
       // Show success notification or redirect
     } catch (err) {
-      console.error("Error processing purchase:", err);
-      setError("Transaction failed. Please try again.");
+      setError(`Transaction failed: ${(err as string) || "Please try again"}`);
     } finally {
       setIsProcessing(false);
     }
@@ -77,7 +71,7 @@ const PurchaseSection = ({ product }: PurchaseSectionProps) => {
       <div className="flex gap-3 w-full">
         <button
           className="bg-Red text-white py-3 px-6 md:px-10 font-bold flex-1 rounded-md transition-all hover:bg-[#d52a33] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:bg-Red flex items-center justify-center gap-2"
-          onClick={walletConnected ? handlePurchase : handleConnectWallet}
+          onClick={isConnected ? handlePurchase : handleConnectWallet}
           disabled={isProcessing || !product}
         >
           {isProcessing ? (
@@ -88,17 +82,20 @@ const PurchaseSection = ({ product }: PurchaseSectionProps) => {
           ) : (
             <>
               <FaWallet className="text-lg" />
-              <span>
-                {walletConnected ? "Buy Now" : "Connect wallet to buy"}
-              </span>
+              <span>{isConnected ? "Buy Now" : "Connect wallet to buy"}</span>
             </>
           )}
         </button>
       </div>
 
-      {walletConnected && (
+      {isConnected && (
         <div className="text-center text-xs text-gray-400">
-          Connected to wallet. Make sure you have enough ETH for this purchase.
+          {balance ? `Balance: ${balance}` : "Checking balance..."} ·{" "}
+          {account
+            ? `${account.substring(0, 6)}...${account.substring(
+                account.length - 4
+              )}`
+            : ""}
         </div>
       )}
     </div>
