@@ -6,23 +6,27 @@
 //   ReactNode,
 // } from "react";
 // import { jwtDecode } from "jwt-decode";
+// import { UserProfile } from "../utils/types";
 
-// interface User {
-//   id: string;
-//   email: string;
-//   name?: string;
-//   avatar?: string;
-// }
+// // interface User {
+// //   id: string;
+// //   email: string;
+// //   name?: string;
+// //   avatar?: string;
+// //   googleId?: string;
+// //   profileImage?: string;
+// // }
 
 // interface JwtPayload {
 //   sub: string;
 //   email: string;
 //   name?: string;
 //   exp: number;
+//   id?: string;
 // }
 
 // interface AuthContextType {
-//   user: User | null;
+//   user: UserProfile | null;
 //   isAuthenticated: boolean;
 //   isLoading: boolean;
 //   login: (provider: string) => void;
@@ -34,43 +38,38 @@
 // const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // const storage = localStorage;
+// const TOKEN_KEY = "auth_token";
+// const USER_KEY = "auth_user";
 
 // export const AuthProvider = ({ children }: { children: ReactNode }) => {
-//   const [user, setUser] = useState<User | null>(null);
+//   const [user, setUser] = useState<UserProfile | null>(null);
 //   const [isLoading, setIsLoading] = useState(true);
 
 //   useEffect(() => {
 //     const checkAuthStatus = async () => {
 //       try {
-//         const token = storage.getItem("auth_token");
+//         const token = storage.getItem(TOKEN_KEY);
+//         const storedUser = storage.getItem(USER_KEY);
 
-//         if (token) {
+//         if (token && storedUser) {
 //           // Verify token hasn't expired
 //           try {
 //             const decoded = jwtDecode<JwtPayload>(token);
 //             const currentTime = Date.now() / 1000;
 
 //             if (decoded.exp < currentTime) {
-//               // Token expired
-//               storage.removeItem("auth_token");
-//               setUser(null);
+//               clearAuthState();
 //             } else {
-//               // Valid token, set user
-//               const userData: User = {
-//                 id: decoded.sub,
-//                 email: decoded.email,
-//                 name: decoded.name,
-//               };
-
-//               setUser(userData);
+//               setUser(JSON.parse(storedUser));
 //             }
 //           } catch (error) {
 //             console.error("Invalid token:", error);
-//             storage.removeItem("auth_token");
+//             clearAuthState();
 //           }
 //         }
 //       } catch (error) {
 //         console.error("Error checking auth status:", error);
+//         clearAuthState();
 //       } finally {
 //         setIsLoading(false);
 //       }
@@ -79,26 +78,36 @@
 //     checkAuthStatus();
 //   }, []);
 
+//   const clearAuthState = () => {
+//     storage.removeItem(TOKEN_KEY);
+//     storage.removeItem(USER_KEY);
+//     setUser(null);
+//   };
+
 //   const login = (provider: string) => {
 //     const API_URL = import.meta.env.VITE_API_URL;
+//     const FRONTEND_URL = window.location.origin;
 
 //     if (provider === "google") {
-//       window.location.href = `${API_URL}/auth/google`;
+//       storage.setItem("auth_redirect", window.location.pathname);
+//       //localhost:5177/auth/google?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTIyZWRlMzVjODBlYzc0NWVjMzE4OSIsImVtYWlsIjoic2VhN2FtQGdtYWlsLmNvbSIsImlhdCI6MTc0NjAyMjExMCwiZXhwIjoxNzQ2NjI2OTEwfQ.gduRlRRSopEfh9cBPb7gw5rEICkM2XlT-gnfEAoHpdg&userId=68122ede35c80ec745ec3189
+
+//       window.location.href = `${API_URL}/auth/google?frontend=${FRONTEND_URL}`;
 //     }
 //   };
 
-//   const handleAuthCallback = (token: string, userData: User) => {
-//     storage.setItem("auth_token", token);
+//   const handleAuthCallback = (token: string, userData: UserProfile) => {
+//     storage.setItem(TOKEN_KEY, token);
+//     storage.setItem(USER_KEY, JSON.stringify(userData));
 //     setUser(userData);
 //   };
 
 //   const logout = () => {
-//     storage.removeItem("auth_token");
-//     setUser(null);
+//     clearAuthState();
 //   };
 
 //   const getToken = (): string | null => {
-//     return storage.getItem("auth_token");
+//     return storage.getItem(TOKEN_KEY);
 //   };
 
 //   const value = {
@@ -117,7 +126,7 @@
 // export const useAuth = () => {
 //   const context = useContext(AuthContext);
 //   if (context === undefined) {
-//     throw new Error("useAuth must be used within an AuthProvider");
+//     throw new Error("Error from useAuth");
 //   }
 //   return context;
 // };
@@ -131,15 +140,7 @@ import {
 } from "react";
 import { jwtDecode } from "jwt-decode";
 import { UserProfile } from "../utils/types";
-
-// interface User {
-//   id: string;
-//   email: string;
-//   name?: string;
-//   avatar?: string;
-//   googleId?: string;
-//   profileImage?: string;
-// }
+import { useWallet } from "../utils/hooks/useWallet";
 
 interface JwtPayload {
   sub: string;
@@ -147,6 +148,7 @@ interface JwtPayload {
   name?: string;
   exp: number;
   id?: string;
+  walletAddress?: string;
 }
 
 interface AuthContextType {
@@ -154,6 +156,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (provider: string) => void;
+  loginWithWallet: (walletAddress: string) => Promise<void>;
   handleAuthCallback: (token: string, userData: any) => void;
   logout: () => void;
   getToken: () => string | null;
@@ -168,6 +171,7 @@ const USER_KEY = "auth_user";
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { account } = useWallet();
 
   useEffect(() => {
     const checkAuthStatus = async () => {
@@ -213,12 +217,54 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const FRONTEND_URL = window.location.origin;
 
     if (provider === "google") {
-      storage.setItem("auth_redirect", window.location.pathname);
-      //localhost:5177/auth/google?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTIyZWRlMzVjODBlYzc0NWVjMzE4OSIsImVtYWlsIjoic2VhN2FtQGdtYWlsLmNvbSIsImlhdCI6MTc0NjAyMjExMCwiZXhwIjoxNzQ2NjI2OTEwfQ.gduRlRRSopEfh9cBPb7gw5rEICkM2XlT-gnfEAoHpdg&userId=68122ede35c80ec745ec3189
-
+      //   storage.setItem("auth_redirect", window.location.pathname);
       window.location.href = `${API_URL}/auth/google?frontend=${FRONTEND_URL}`;
     }
   };
+
+  const loginWithWallet = async (walletAddress: any) => {
+    try {
+      setIsLoading(true);
+      //   const API_URL: any = import.meta.env.VITE_API_URL;
+
+      //   const response = await fetch(`${API_URL}/auth/wallet`, {
+      //     method: "POST",
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //     },
+      //     body: JSON.stringify({ walletAddress }),
+      //   });
+
+      //   if (!response.ok) {
+      //     throw new Error("Wallet authentication failed");
+      //   }
+
+      //   const data = await response.json();
+      //   handleAuthCallback(data.token, data.user);
+
+      return walletAddress;
+    } catch (error) {
+      console.error("Error logging in with wallet:", error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Auto-login with wallet if connected but not authenticated
+  useEffect(() => {
+    const attemptWalletLogin = async () => {
+      if (account && !user && !isLoading) {
+        try {
+          await loginWithWallet(account);
+        } catch (error) {
+          console.error("Auto wallet login failed:", error);
+        }
+      }
+    };
+
+    attemptWalletLogin();
+  }, [account, user, isLoading]);
 
   const handleAuthCallback = (token: string, userData: UserProfile) => {
     storage.setItem(TOKEN_KEY, token);
@@ -239,6 +285,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     isAuthenticated: !!user,
     isLoading,
     login,
+    loginWithWallet,
     handleAuthCallback,
     logout,
     getToken,

@@ -71,7 +71,7 @@ const ProductDetails = ({ product, ethPrice }: ProductDetailsProps) => {
 
   return (
     <div className="space-y-px">
-      {renderSection("About this product", ProductAbout({ product }))}
+      {renderSection("About this product", ProductAbout)}
       {renderSection("Properties", ProductProperties)}
       {renderSection("Description", ProductDescription)}
     </div>

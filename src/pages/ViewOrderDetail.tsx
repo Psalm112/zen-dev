@@ -98,7 +98,9 @@ const ViewOrderDetail = () => {
       toast.success("Dispute has been filed successfully");
     } catch (error) {
       toast.error("Failed to file dispute. Please try again.");
+      console.log(error);
     } finally {
+      console.log("done");
       //   setIsProcessing(false);
     }
   };
@@ -116,6 +118,7 @@ const ViewOrderDetail = () => {
       toast.success("Order has been completed successfully!");
     } catch (error) {
       toast.error("Failed to complete the order. Please try again.");
+      console.log(error);
     } finally {
       //   setIsProcessing(false);
     }

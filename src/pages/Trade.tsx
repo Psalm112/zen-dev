@@ -30,7 +30,7 @@ const ButtonPlaceholder: FC = () => (
 const Trade = () => {
   const [activeTab, setActiveTab] = useState<TradeTab>("buy");
   const [isLoading, setIsLoading] = useState(true);
-  const { isConnected, connectMetaMask, isConnecting } = useWallet();
+  const { isConnected } = useWallet();
 
   // Sample data for products
   const products: Product[] = [
@@ -198,10 +198,7 @@ const Trade = () => {
           >
             <Title text="P2P Trading" className="text-center my-8 text-3xl" />
           </motion.div>
-          <ConnectWallet
-            onConnect={connectMetaMask}
-            isConnecting={isConnecting}
-          />
+          <ConnectWallet showAlternatives={true} />
         </Container>
       </div>
     );
@@ -270,13 +267,6 @@ const Trade = () => {
 
                   {activeTab === "sell" &&
                     incomingOrders.map((order) => (
-                      // <ProductCard
-                      //   key={order.id}
-                      //   product={order}
-                      //   onBuyClick={() => "kk"}
-                      //   actionType="buy"
-                      //   isSellTab={true}
-                      // />
                       <IncomingOrderCard
                         key={order._id}
                         product={order}

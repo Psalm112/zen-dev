@@ -4,6 +4,8 @@ import { RootState } from "../store";
 export const selectUserProfile = (state: RootState) => state.user.profile;
 export const selectUserLoading = (state: RootState) => state.user.loading;
 export const selectUserError = (state: RootState) => state.user.error;
+export const selectAllUsers = (state: RootState) => state.user.users;
+export const selectSelectedUser = (state: RootState) => state.user.selectedUser;
 
 // Format date as MM/DD/YYYY
 const formatDate = (dateString: string | undefined): string => {
@@ -39,6 +41,28 @@ export const selectFormattedProfile = createSelector(
       phone: profile.phoneNumber || "",
       address: profile.address || "",
       profileImage: profile.profileImage || "",
+    };
+  }
+);
+
+export const selectFormattedSelectedUser = createSelector(
+  [selectSelectedUser],
+  (selectedUser) => {
+    if (!selectedUser)
+      return {
+        name: "",
+        dob: "",
+        email: "",
+        phone: "",
+      };
+
+    return {
+      name: selectedUser.name || "",
+      dob: formatDate(selectedUser.dateOfBirth),
+      email: selectedUser.email || "",
+      phone: selectedUser.phoneNumber || "",
+      address: selectedUser.address || "",
+      profileImage: selectedUser.profileImage || "",
     };
   }
 );

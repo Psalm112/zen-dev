@@ -16,7 +16,7 @@ const ViewTrade = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TradeTab>("active");
   const [isLoading, setIsLoading] = useState(true);
-  const { isConnected, connect, isConnecting } = useWallet();
+  const { isConnected } = useWallet();
 
   // Sample data for active trades
   const activeTrades: Product[] = [
@@ -64,7 +64,6 @@ const ViewTrade = () => {
 
     return () => window.clearTimeout(loadTimer);
   }, []);
-
   if (!isConnected) {
     return (
       <div className="bg-Dark min-h-screen text-white">
@@ -76,7 +75,7 @@ const ViewTrade = () => {
           >
             <Title text="Trade" className="text-center my-8 text-3xl" />
           </motion.div>
-          <ConnectWallet onConnect={connect} isConnecting={isConnecting} />
+          <ConnectWallet showAlternatives={true} />
         </Container>
       </div>
     );

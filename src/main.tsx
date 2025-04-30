@@ -40,8 +40,8 @@ const RouterLayout = () => {
   return (
     <Configuration>
       <Provider store={store}>
-        <AuthProvider>
-          <WalletProvider defaultChainId={4202}>
+        <WalletProvider>
+          <AuthProvider>
             <SnackbarProvider>
               <Layout>
                 <Suspense fallback={<Loadscreen />}>
@@ -49,8 +49,8 @@ const RouterLayout = () => {
                 </Suspense>
               </Layout>
             </SnackbarProvider>
-          </WalletProvider>
-        </AuthProvider>
+          </AuthProvider>
+        </WalletProvider>
       </Provider>
     </Configuration>
   );
@@ -70,7 +70,7 @@ const router = createBrowserRouter([
         element: <Login />,
       },
       {
-        path: "/auth/google/",
+        path: "/auth/google",
         element: <AuthCallback />,
       },
       // {

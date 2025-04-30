@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { FaWallet, FaSpinner } from "react-icons/fa";
 import { Product } from "../../../utils/types";
 import { useWallet } from "../../../context/WalletContext";

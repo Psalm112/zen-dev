@@ -6,8 +6,7 @@ import TabNavigation from "../components/account/overview/TabNavigation.tsx";
 import { LiaAngleDownSolid } from "react-icons/lia";
 import Button from "../components/common/Button";
 import LoadingSpinner from "../components/common/LoadingSpinner";
-import { useUserData } from "../utils/hooks/useUserData";
-
+import { useUserManagement } from "../utils/hooks/useUserManagement.ts";
 const TabContent = lazy(
   () => import("../components/account/overview/TabContent.tsx")
 );
@@ -26,8 +25,15 @@ const TAB_OPTIONS: TabOption[] = [
 ];
 
 const Account = () => {
-  const { profile, formattedProfile, isLoading, error, fetchProfile, isError } =
-    useUserData();
+  const {
+    selectedUser,
+    formattedSelectedUser,
+    isLoading,
+    error,
+    fetchUserById,
+    isError,
+    resetSelectedUser,
+  } = useUserManagement();
 
   const [tab, setTab] = useState<TabType>("1");
   const [pageLoading, setPageLoading] = useState(true);
@@ -35,12 +41,21 @@ const Account = () => {
   const [showEditProfile, setShowEditProfile] = useState(false);
 
   useEffect(() => {
+    // Fetch current user profile
+    const userId = localStorage.getItem("userId");
+    if (userId) {
+      fetchUserById(userId, false);
+    }
+
     const timer = setTimeout(() => {
       setPageLoading(false);
     }, 600);
 
-    return () => clearTimeout(timer);
-  }, []);
+    return () => {
+      clearTimeout(timer);
+      resetSelectedUser();
+    };
+  }, [fetchUserById, resetSelectedUser]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -64,7 +79,10 @@ const Account = () => {
           <p className="text-gray-400 mb-4">{error}</p>
           <Button
             title="Retry"
-            onClick={() => fetchProfile()}
+            onClick={() => {
+              const userId = localStorage.getItem("userId");
+              if (userId) fetchUserById(userId);
+            }}
             className="mx-auto bg-Red hover:bg-[#e02d37] text-white px-6 py-2 rounded-lg transition-colors"
           />
         </div>
@@ -79,35 +97,34 @@ const Account = () => {
           <Suspense fallback={<LoadingSpinner />}>
             <Settings
               showSettings={setShowSettings}
-              profileData={formattedProfile}
+              profileData={formattedSelectedUser}
             />
           </Suspense>
         ) : showEditProfile ? (
           <Suspense fallback={<LoadingSpinner />}>
             <EditProfile
               avatar={
-                typeof profile?.profileImage === "string"
-                  ? profile?.profileImage
+                typeof selectedUser?.profileImage === "string"
+                  ? selectedUser?.profileImage
                   : ""
               }
               showEditProfile={setShowEditProfile}
-              currentProfile={formattedProfile}
+              currentProfile={formattedSelectedUser}
             />
           </Suspense>
         ) : (
-          profile && (
+          selectedUser && (
             <>
               <ProfileHeader
                 avatar={
-                  typeof profile?.profileImage === "string"
-                    ? profile?.profileImage
+                  typeof selectedUser?.profileImage === "string"
+                    ? selectedUser?.profileImage
                     : ""
                 }
-                name={profile.name}
-                email={profile.email}
+                name={selectedUser.name}
+                email={selectedUser.email}
                 showSettings={setShowSettings}
               />
-
               <motion.div
                 className="w-full max-w-[650px] mx-auto"
                 initial={{ opacity: 0, y: 20 }}
@@ -122,24 +139,22 @@ const Account = () => {
                   className="bg-white text-black text-lg font-bold h-11 rounded-none flex justify-center w-full border-none outline-none text-center my-2 hover:bg-gray-100 transition-colors"
                 />
               </motion.div>
-
               <TabNavigation
                 activeTab={tab}
                 onTabChange={setTab}
                 options={TAB_OPTIONS}
               />
-
               <AnimatePresence mode="wait">
                 <Suspense fallback={<LoadingSpinner />}>
                   <TabContent
                     activeTab={tab}
                     productImage={Product1}
-                    milestones={profile.milestones}
-                    referralCode={profile.referralCode}
-                    referralCount={profile.referralCount}
+                    milestones={selectedUser.milestones}
+                    referralCode={selectedUser.referralCode}
+                    referralCount={selectedUser.referralCount}
                     points={{
-                      total: profile.totalPoints,
-                      available: profile.availablePoints,
+                      total: selectedUser.totalPoints,
+                      available: selectedUser.availablePoints,
                     }}
                   />
                 </Suspense>
