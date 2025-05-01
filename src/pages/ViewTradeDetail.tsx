@@ -16,7 +16,7 @@ const ViewTradeDetail = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [tradeStatus, setTradeStatus] = useState<TradeStatusType>("pending");
-  const [isProcessing, setIsProcessing] = useState(false);
+  // const [isProcessing, setIsProcessing] = useState(false);
 
   // Mock data - future: from API
   const tradeDetails: TradeDetails = {
@@ -91,7 +91,7 @@ const ViewTradeDetail = () => {
   };
 
   const handleReleaseNow = () => {
-    setIsProcessing(true);
+    // setIsProcessing(true);
 
     // Simulate API call
     setTimeout(() => {
@@ -99,7 +99,7 @@ const ViewTradeDetail = () => {
       navigate(`/trades/viewtrades/${tradeId}?status=completed`, {
         replace: true,
       });
-      setIsProcessing(false);
+      // setIsProcessing(false);
       toast.success("Trade completed successfully!");
     }, 1500);
   };

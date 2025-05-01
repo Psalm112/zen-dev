@@ -9,7 +9,7 @@ import ProductCard from "../components/product/ProductCard";
 
 // categories
 const categories = [
-  "All",
+  // "All",
   "Electronics",
   "Clothing",
   "Home & Garden",
@@ -97,13 +97,19 @@ const Product = () => {
             {/* Categories */}
             <div className="mt-8 overflow-x-auto scrollbar-hide">
               <div className="flex space-x-4 py-2 min-w-max">
+                <Link
+                  to="/product"
+                  className={`px-4 py-2 rounded-full transition-colors whitespace-nowrap ${
+                    activeCategory === "All"
+                      ? "bg-Red text-white"
+                      : "bg-[#292B30] text-[#AEAEB2] hover:bg-[#343539]"
+                  }`}
+                >
+                  All
+                </Link>
                 {categories.map((category) => (
                   <Link
-                    to={
-                      category === "All"
-                        ? "/product"
-                        : `/product/category/${category.toLowerCase()}`
-                    }
+                    to={`/product/category/${category.toLowerCase()}`}
                     key={`${category}-productbutton`}
                     className={`px-4 py-2 rounded-full transition-colors whitespace-nowrap ${
                       activeCategory === category
@@ -116,6 +122,12 @@ const Product = () => {
                 ))}
               </div>
             </div>
+            {/* <ProductList
+              title="All"
+              className="mt-8"
+              isCategoryView={false}
+              maxItems={8}
+            /> */}
             {categories.map((category) => (
               <ProductList
                 key={`${category}-productlist`}
@@ -123,6 +135,7 @@ const Product = () => {
                 path={`/product/category/${category.toLowerCase()}`}
                 className="mt-8"
                 isCategoryView={false}
+                maxItems={8}
               />
             ))}
           </>

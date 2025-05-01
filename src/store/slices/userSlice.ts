@@ -63,24 +63,21 @@ export const updateUserProfile = createAsyncThunk<
   UserProfile,
   Partial<UserProfile>,
   { rejectValue: string; state: { user: UserState } }
->(
-  "user/updateProfile",
-  async (profileData, { rejectWithValue, getState, dispatch }) => {
-    try {
-      const response = await api.updateUserProfile(profileData);
+>("user/updateProfile", async (profileData, { rejectWithValue }) => {
+  try {
+    const response = await api.updateUserProfile(profileData);
 
-      if (!response.ok) {
-        return rejectWithValue(response.error || "Failed to update profile");
-      }
-
-      return response.data;
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "An unknown error occurred";
-      return rejectWithValue(message);
+    if (!response.ok) {
+      return rejectWithValue(response.error || "Failed to update profile");
     }
+
+    return response.data;
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "An unknown error occurred";
+    return rejectWithValue(message);
   }
-);
+});
 
 export const getUserById = createAsyncThunk<
   UserProfile,

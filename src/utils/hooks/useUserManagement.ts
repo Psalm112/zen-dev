@@ -20,7 +20,6 @@ import {
   selectUserProfile,
 } from "../../store/selectors/userSelectors";
 import { useSnackbar } from "../../context/SnackbarContext";
-import { RootState } from "../../store/store";
 import { useAuth } from "../../context/AuthContext";
 import { UserProfile } from "../types";
 

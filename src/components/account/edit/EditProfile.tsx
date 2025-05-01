@@ -9,9 +9,7 @@ import ProfileField from "./ProfileField";
 import PhoneInput from "./PhoneInput";
 import DatePickerField from "./DatePickerField";
 // import Button from "../../common/Button";
-import { useAppDispatch } from "../../../utils/hooks/redux";
 import { useSnackbar } from "../../../context/SnackbarContext";
-import { updateUserProfile } from "../../../store/slices/userSlice";
 import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallback from "../../common/ErrorFallback";
 import { useUserManagement } from "../../../utils/hooks/useUserManagement";
@@ -47,7 +45,6 @@ const EditProfile: React.FC<EditProfileProps> = ({
   setViewState,
   currentProfile,
 }) => {
-  const dispatch = useAppDispatch();
   const { updateProfile } = useUserManagement();
   const { showSnackbar } = useSnackbar();
   const [countryCode, setCountryCode] = useState("US");

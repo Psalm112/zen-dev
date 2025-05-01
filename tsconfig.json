@@ -6,7 +6,9 @@
   ],
   "compilerOptions": {
     "types": ["node"],
-    "noUnusedLocals": false,
-    "noUnusedParameters": false
+    // "noUnusedLocals": false,
+    // "noUnusedParameters": false
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
   }
 }

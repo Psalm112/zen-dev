@@ -78,7 +78,7 @@ const Account = () => {
     []
   );
   const handleShowSettings = useCallback(() => setViewState("settings"), []);
-  const handleBackToOverview = useCallback(() => setViewState("overview"), []);
+  // const handleBackToOverview = useCallback(() => setViewState("overview"), []);
 
   const handleRetryFetch = useCallback(() => {
     fetchProfile(true, true);
