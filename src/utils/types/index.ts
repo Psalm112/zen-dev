@@ -94,6 +94,20 @@ export interface Order {
   quantity: number;
   updatedAt: string;
 }
+export interface CreateTradeParams {
+  seller: string;
+  productCost: string;
+  logisticsProvider: string;
+  logisticsCost: string;
+  useUSDT: boolean;
+  orderId: string;
+}
+
+export interface TradeResponse {
+  status: "success" | "error";
+  message: string;
+  data?: any;
+}
 
 export interface ReferralInfo {
   referralCode: string;
