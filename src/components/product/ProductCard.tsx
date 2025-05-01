@@ -25,7 +25,7 @@ const ProductCard = React.memo(
 
     // const sellerName =
     //   typeof seller === "object" && seller !== null
-    //     ? seller.name || "Unknown Seller"
+    //     ? seller?.name || "Unknown Seller"
     //     : seller || "Unknown Seller";
 
     return (
@@ -63,7 +63,7 @@ const ProductCard = React.memo(
             {name}
           </h4>
           <h4 className="flex items-center gap-1 text-xs md:text-sm text-[#AEAEB2] py-1">
-            By {seller}
+            By {typeof seller === "string" ? seller : "Unknown Seller"}
             <RiVerifiedBadgeFill className="text-[#4FA3FF] text-xs" />
           </h4>
           <h4 className="text-white text-xs md:text-sm py-0 line-clamp-1">

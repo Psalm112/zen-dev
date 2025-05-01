@@ -210,13 +210,13 @@ const Home = () => {
           isCategoryView={false}
           isFeatured={true}
         />
-        {/* <ProductList
+        <ProductList
           title=""
           path="/product"
           className="mt-6 md:mt-10"
           isCategoryView={false}
           maxItems={8}
-        /> */}
+        />
       </Container>
       {showWallet && (
         <Modal onClose={() => setShowWallet(false)} isOpen>
