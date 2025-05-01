@@ -24,16 +24,21 @@ const Product = () => {
   const location = useLocation();
   const params = useParams();
   const categoryParam = params.categoryName;
-  const { searchProducts, searchResults, loading } = useProductData();
+  const { searchProducts, searchResults, loading, fetchAllProducts } =
+    useProductData();
 
   const [activeCategory, setActiveCategory] = useState(categoryParam || "All");
+
   const debouncedSearch = debounce(async (query: string) => {
     if (query.trim()) {
       await searchProducts(query);
     }
   }, 300);
 
-  // Update active category when URL changes
+  useEffect(() => {
+    fetchAllProducts();
+  }, [fetchAllProducts]);
+
   useEffect(() => {
     if (categoryParam) {
       const formattedCategory =
@@ -122,12 +127,17 @@ const Product = () => {
                 ))}
               </div>
             </div>
-            {/* <ProductList
-              title="All"
+
+            {/* Show all products */}
+            <ProductList
+              title="All Products"
               className="mt-8"
               isCategoryView={false}
+              category="All"
               maxItems={8}
-            /> */}
+            />
+
+            {/* Show category specific products */}
             {categories.map((category) => (
               <ProductList
                 key={`${category}-productlist`}
@@ -135,7 +145,8 @@ const Product = () => {
                 path={`/product/category/${category.toLowerCase()}`}
                 className="mt-8"
                 isCategoryView={false}
-                maxItems={8}
+                category={category}
+                maxItems={4}
               />
             ))}
           </>
@@ -150,15 +161,16 @@ const Product = () => {
                 <IoChevronBackOutline className="h-6 w-6 align-middle" />
               </button>
 
-              <h2 className="text-white font-bold text-[34px]  px-4 md:px-0 mx-auto align-middle text-center">
+              <h2 className="text-white font-bold text-[34px] px-4 md:px-0 mx-auto align-middle text-center">
                 {activeCategory}
               </h2>
             </div>
             <ProductList
               title={activeCategory}
-              path={`/product/category/${activeCategory.toLowerCase()}`}
               className="mt-8"
               isCategoryView={true}
+              category={activeCategory}
+              maxItems={20}
             />
           </>
         )}

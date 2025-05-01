@@ -1,4 +1,3 @@
-// Modified version of useProductData with more consistent handling
 import { useCallback } from "react";
 import { useAppDispatch, useAppSelector } from "./redux";
 import {
@@ -203,9 +202,12 @@ export const useProductData = () => {
 
   const getProductsByCategory = useCallback(
     (category: string) => {
-      return (
-        selectProductsByCategory({ products: { products } } as any, category) ||
-        []
+      if (category === "All") return products || [];
+
+      return products.filter(
+        (product) =>
+          product.category &&
+          product.category.toLowerCase() === category.toLowerCase()
       );
     },
     [products]

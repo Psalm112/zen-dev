@@ -55,7 +55,12 @@ const ProductList = ({
     } else if (products && products.length > 0) {
       if (category) {
         const filteredProducts = getProductsByCategory(category);
-        setDisplayProducts(filteredProducts.slice(0, maxItems));
+        setDisplayProducts(
+          filteredProducts.slice(
+            0,
+            isCategoryView ? filteredProducts.length : maxItems
+          )
+        );
       } else {
         setDisplayProducts(products.slice(0, maxItems));
       }
@@ -67,6 +72,7 @@ const ProductList = ({
     maxItems,
     products,
     sponsoredProducts,
+    isCategoryView,
   ]);
 
   const newClass = twMerge("", className);
@@ -107,7 +113,7 @@ const ProductList = ({
           </div>
         ) : displayProducts.length === 0 ? (
           <div className="text-gray-400 text-center py-8">
-            No products found.
+            No products found{category ? ` in ${category}` : ""}.
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 md:gap-5">

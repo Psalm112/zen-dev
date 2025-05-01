@@ -16,14 +16,17 @@ const ProductCard = React.memo(
   ({ product, isNew = false }: ProductCardProps) => {
     const { _id, name, description, price, images, seller } = product;
 
-    // Calculate ETH price (example conversion, adjust as needed)
     const ethPrice = (price / 1000000).toFixed(6);
 
-    // Format image URL
     const imageUrl =
       images && images.length > 0
         ? `${API_URL}/uploads/${images[0]}`
         : "https://placehold.co/300x300?text=No+Image";
+
+    // const sellerName =
+    //   typeof seller === "object" && seller !== null
+    //     ? seller.name || "Unknown Seller"
+    //     : seller || "Unknown Seller";
 
     return (
       <Link
