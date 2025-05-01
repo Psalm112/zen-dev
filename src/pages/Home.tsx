@@ -203,14 +203,14 @@ const Home = () => {
           rotationInterval={6000}
         />
 
-        {/* <ProductList
+        <ProductList
           title="Featured Product"
           path="/product"
           className="mt-6 md:mt-10"
           isCategoryView={false}
           isFeatured={true}
         />
-        <ProductList
+        {/* <ProductList
           title=""
           path="/product"
           className="mt-6 md:mt-10"

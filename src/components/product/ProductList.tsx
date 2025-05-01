@@ -5,6 +5,7 @@ import Title from "../common/Title";
 import { Link } from "react-router-dom";
 import { useProductData } from "../../utils/hooks/useProductData";
 import { Product } from "../../utils/types";
+import LoadingSpinner from "../common/LoadingSpinner";
 
 interface Props {
   title: string;
@@ -97,18 +98,8 @@ const ProductList = ({
       )}
       <div className="mt-4 md:mt-8 overflow-x-auto scrollbar-hide">
         {loading ? (
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 md:gap-5">
-            {Array.from({ length: maxItems }).map((_, i) => (
-              <div
-                key={i}
-                className="bg-[#292B30] rounded-lg p-4 h-80 animate-pulse"
-              >
-                <div className="h-40 bg-gray-700/30 rounded-md mb-4"></div>
-                <div className="h-5 bg-gray-700/30 rounded-md mb-2 w-3/4"></div>
-                <div className="h-4 bg-gray-700/30 rounded-md mb-2 w-1/2"></div>
-                <div className="h-4 bg-gray-700/30 rounded-md w-5/6"></div>
-              </div>
-            ))}
+          <div className="flex justify-center items-center py-12">
+            <LoadingSpinner size="md" />
           </div>
         ) : error ? (
           <div className="text-Red text-center py-8">
@@ -120,13 +111,23 @@ const ProductList = ({
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 md:gap-5">
-            {displayProducts.map((product, index) => (
-              <ProductCard
-                key={product._id}
-                product={product}
-                isNew={index === 0 && isFeatured}
-              />
-            ))}
+            {displayProducts.map((product) => {
+              const isNew = (() => {
+                const createdDate = new Date(product.createdAt);
+                const now = new Date();
+                const diffInMs = now.getTime() - createdDate.getTime();
+                const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
+                return diffInDays < 7;
+              })();
+
+              return (
+                <ProductCard
+                  key={product._id}
+                  product={product}
+                  isNew={isNew}
+                />
+              );
+            })}
           </div>
         )}
       </div>

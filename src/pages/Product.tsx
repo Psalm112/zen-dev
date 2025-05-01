@@ -6,6 +6,7 @@ import ProductList from "../components/product/ProductList";
 import { useProductData } from "../utils/hooks/useProductData";
 import { debounce } from "../utils/helpers";
 import ProductCard from "../components/product/ProductCard";
+import LoadingSpinner from "../components/common/LoadingSpinner";
 
 // categories
 const categories = [
@@ -26,7 +27,7 @@ const Product = () => {
   const categoryParam = params.categoryName;
   const { searchProducts, searchResults, loading, fetchAllProducts } =
     useProductData();
-
+  const [isLoading, setIsLoading] = useState(loading);
   const [activeCategory, setActiveCategory] = useState(categoryParam || "All");
 
   const debouncedSearch = debounce(async (query: string) => {
@@ -37,6 +38,7 @@ const Product = () => {
 
   useEffect(() => {
     fetchAllProducts();
+    setIsLoading(false);
   }, [fetchAllProducts]);
 
   useEffect(() => {
@@ -130,6 +132,11 @@ const Product = () => {
             </div>
 
             {/* Show all products */}
+            {/* {isLoading || loading ? (
+              <div className="flex justify-center items-center py-12">
+                <LoadingSpinner size="md" />
+              </div>
+            ) : ( */}
             <ProductList
               title="All Products"
               className="mt-8"
@@ -137,19 +144,21 @@ const Product = () => {
               category="All"
               maxItems={8}
             />
+            {/* )} */}
 
             {/* Show category specific products */}
-            {categories.map((category) => (
-              <ProductList
-                key={`${category}-productlist`}
-                title={category}
-                path={`/product/category/${category.toLowerCase()}`}
-                className="mt-8"
-                isCategoryView={false}
-                category={category}
-                maxItems={4}
-              />
-            ))}
+            {/* {activeCategory !== "All" &&
+              categories.map((category) => (
+                <ProductList
+                  key={`${category}-productlist`}
+                  title={category}
+                  path={`/product/category/${category.toLowerCase()}`}
+                  className="mt-8"
+                  isCategoryView={false}
+                  category={category}
+                  maxItems={4}
+                />
+              ))} */}
           </>
         ) : (
           <>
