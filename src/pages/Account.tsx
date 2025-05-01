@@ -23,6 +23,7 @@ const TAB_OPTIONS: TabOption[] = [
   { id: "2", label: "Saved Items" },
   { id: "3", label: "Dispute Center" },
   { id: "4", label: "Referrals" },
+  { id: "5", label: "Create Product" },
 ];
 
 const LoadingFallback = () => (

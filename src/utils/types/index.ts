@@ -125,7 +125,7 @@ export interface Notification {
   link?: string;
 }
 
-export type TabType = "1" | "2" | "3" | "4";
+export type TabType = "1" | "2" | "3" | "4" | "5";
 export type TradeTab = "buy" | "sell" | "active" | "completed";
 
 export interface TabOption {
