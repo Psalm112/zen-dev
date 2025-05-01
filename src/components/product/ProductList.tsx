@@ -47,12 +47,16 @@ const ProductList = ({
 
       try {
         if (isFeatured) {
-          await fetchSponsoredProducts();
+          await fetchSponsoredProducts(false, true);
         } else {
-          await fetchAllProducts();
+          await fetchAllProducts(false, true);
         }
-      } catch (err) {
-        setLoadError("Failed to load products. Please try again later.");
+      } catch (err: any) {
+        if (err.name === "AbortError") {
+          setLoadError("Request was cancelled");
+        } else {
+          setLoadError("Failed to load products. Please try again later.");
+        }
       } finally {
         setIsLoading(false);
       }
@@ -71,7 +75,9 @@ const ProductList = ({
           setDisplayProducts(
             filteredProducts.slice(
               0,
-              isCategoryView ? filteredProducts.length : maxItems
+              isCategoryView || category === "All"
+                ? filteredProducts.length
+                : maxItems
             )
           );
         } else {

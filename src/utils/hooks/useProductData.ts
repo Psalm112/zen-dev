@@ -220,8 +220,8 @@ export const useProductData = () => {
   // Clean up on unmount
   useEffect(() => {
     return () => {
-      api.cancelRequest("/products");
-      api.cancelRequest("/products/sponsored");
+      // api.cancelRequest("/products");
+      // api.cancelRequest("/products/sponsored");
     };
   }, []);
 
