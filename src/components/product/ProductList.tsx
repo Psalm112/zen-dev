@@ -77,6 +77,9 @@ const ProductList = ({
 
   const newClass = twMerge("", className);
 
+  if (!isCategoryView && displayProducts.length === 0) {
+    return <></>;
+  }
   return (
     <section className={newClass}>
       {!isCategoryView && (

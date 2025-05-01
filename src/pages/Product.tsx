@@ -87,7 +87,8 @@ const Product = () => {
                 {!loading && searchResults.length > 0 ? (
                   <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 md:gap-5">
                     {searchResults.map((product) => (
-                      <ProductCard key={product._id} product={product} />
+                      // <ProductCard key={product._id} product={product} />
+                      <>{product.name}</>
                     ))}
                   </div>
                 ) : (
