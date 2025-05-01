@@ -8,7 +8,7 @@ const AuthCallback = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { handleAuthCallback } = useAuth();
-  const { fetchUserById, selectedUser } = useUserManagement();
+  const { fetchUserById } = useUserManagement();
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(true);
 
@@ -28,20 +28,34 @@ const AuthCallback = () => {
         }
 
         localStorage.setItem("auth_token", token);
-
-        const success = await fetchUserById(userId, false);
-
-        if (!success) {
-          throw new Error("Failed to fetch user data");
-        }
-
         setTimeout(() => {
-          handleAuthCallback(token, selectedUser);
-
-          const redirectPath = "/";
-          // localStorage.removeItem("auth_redirect");
-          navigate(redirectPath, { replace: true });
+          // Use the API directly with the token already in localStorage
+          import("../utils/services/apiService").then(({ api }) => {
+            api.getUserProfile(true).then((response) => {
+              if (response) {
+                // handleAuthCallback(token, response.data);
+                // const redirectPath = "/";
+                // localStorage.removeItem("auth_redirect");
+                // navigate(redirectPath, { replace: true });
+                console.log("Complete user profile loaded", response);
+              }
+            });
+          });
         }, 100);
+
+        // const success = await fetchUserById(userId, false);
+
+        // if (!success) {
+        //   throw new Error("Failed to fetch user data");
+        // }
+
+        // setTimeout(() => {
+        //   handleAuthCallback(token, selectedUser);
+
+        //   const redirectPath = "/";
+        //   // localStorage.removeItem("auth_redirect");
+        //   navigate(redirectPath, { replace: true });
+        // }, 100);
       } catch (err) {
         console.error("Auth callback error:", err);
         setError(err instanceof Error ? err.message : "Authentication failed");
