@@ -16,6 +16,7 @@ const EditProfile = lazy(
 const Settings = lazy(() => import("../components/account/settings/Settings"));
 import { Product1 } from ".";
 import { TabOption, TabType } from "../utils/types";
+import { fetchUserProfile } from "../store/slices/userSlice.ts";
 
 const TAB_OPTIONS: TabOption[] = [
   { id: "1", label: "Order History" },
@@ -30,32 +31,24 @@ const Account = () => {
     formattedSelectedUser,
     isLoading,
     error,
-    fetchUserById,
+    fetchProfile,
     isError,
     resetSelectedUser,
   } = useUserManagement();
 
   const [tab, setTab] = useState<TabType>("1");
-  const [pageLoading, setPageLoading] = useState(true);
+  // const [pageLoading, setPageLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
 
   useEffect(() => {
-    // Fetch current user profile
-    const userId = localStorage.getItem("userId");
-    if (userId) {
-      fetchUserById(userId, false);
-    }
+    fetchProfile();
 
-    const timer = setTimeout(() => {
-      setPageLoading(false);
-    }, 600);
-
-    return () => {
-      clearTimeout(timer);
-      resetSelectedUser();
-    };
-  }, [fetchUserById, resetSelectedUser]);
+    // return () => {
+    //   clearTimeout(timer);
+    //   resetSelectedUser();
+    // };
+  }, [resetSelectedUser]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -63,7 +56,7 @@ const Account = () => {
 
   const handleShowEditProfile = useCallback(() => setShowEditProfile(true), []);
 
-  if (isLoading || pageLoading) {
+  if (isLoading) {
     return (
       <div className="bg-Dark min-h-screen text-white flex items-center justify-center">
         <LoadingSpinner />
@@ -81,7 +74,7 @@ const Account = () => {
             title="Retry"
             onClick={() => {
               const userId = localStorage.getItem("userId");
-              if (userId) fetchUserById(userId);
+              if (userId) fetchUserProfile();
             }}
             className="mx-auto bg-Red hover:bg-[#e02d37] text-white px-6 py-2 rounded-lg transition-colors"
           />

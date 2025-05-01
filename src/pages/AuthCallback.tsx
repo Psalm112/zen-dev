@@ -34,27 +34,12 @@ const AuthCallback = () => {
               if (response.ok && response.data) {
                 handleAuthCallback(token, response.data);
                 const redirectPath = "/";
-                // localStorage.removeItem("auth_redirect");
                 navigate(redirectPath, { replace: true });
                 console.log("Complete user profile loaded");
               }
             });
           });
         }, 100);
-
-        // const success = await fetchUserById(userId, false);
-
-        // if (!success) {
-        //   throw new Error("Failed to fetch user data");
-        // }
-
-        // setTimeout(() => {
-        //   handleAuthCallback(token, selectedUser);
-
-        //   const redirectPath = "/";
-        //   // localStorage.removeItem("auth_redirect");
-        //   navigate(redirectPath, { replace: true });
-        // }, 100);
       } catch (err) {
         console.error("Auth callback error:", err);
         setError(err instanceof Error ? err.message : "Authentication failed");
