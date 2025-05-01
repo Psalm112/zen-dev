@@ -27,6 +27,7 @@ export const useUserManagement = () => {
   const formattedSelectedUser = useAppSelector(selectFormattedSelectedUser);
   const loading = useAppSelector(selectUserLoading);
   const error = useAppSelector(selectUserError);
+  const ll = (state: RootState) => state.user;
   const fetchProfile = useCallback(
     async (showNotifications = true, forceRefresh = false) => {
       try {
@@ -38,7 +39,7 @@ export const useUserManagement = () => {
         if (showNotifications) {
           showSnackbar("Profile loaded successfully", "success");
         }
-        (state: RootState) => console.log(state.user.selectedUser);
+        console.log("kk", ll);
         return true;
       } catch (err) {
         if (showNotifications) {
