@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "./redux";
 import {
   getUserById,
@@ -7,6 +7,7 @@ import {
   deleteUserProfile,
   clearSelectedUser,
   fetchUserProfile,
+  syncProfileWithSelectedUser,
 } from "../../store/slices/userSlice";
 import {
   selectAllUsers,
@@ -14,6 +15,7 @@ import {
   selectUserLoading,
   selectUserError,
   selectFormattedSelectedUser,
+  selectUserProfile,
 } from "../../store/selectors/userSelectors";
 import { useSnackbar } from "../../context/SnackbarContext";
 import { RootState } from "../../store/store";
@@ -24,10 +26,16 @@ export const useUserManagement = () => {
 
   const users = useAppSelector(selectAllUsers);
   const selectedUser = useAppSelector(selectSelectedUser);
+  const profile = useAppSelector(selectUserProfile);
   const formattedSelectedUser = useAppSelector(selectFormattedSelectedUser);
   const loading = useAppSelector(selectUserLoading);
   const error = useAppSelector(selectUserError);
-  const ll = (state: RootState) => state.user;
+
+  useEffect(() => {
+    if (profile && !selectedUser) {
+      dispatch(syncProfileWithSelectedUser());
+    }
+  }, [profile, selectedUser, dispatch]);
   const fetchProfile = useCallback(
     async (showNotifications = true, forceRefresh = false) => {
       try {
@@ -39,7 +47,6 @@ export const useUserManagement = () => {
         if (showNotifications) {
           showSnackbar("Profile loaded successfully", "success");
         }
-        console.log("kk", ll);
         return true;
       } catch (err) {
         if (showNotifications) {

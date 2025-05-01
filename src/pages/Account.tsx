@@ -213,7 +213,6 @@ const Account = () => {
   const {
     selectedUser,
     formattedSelectedUser,
-
     isLoading,
     error,
     fetchProfile,
@@ -224,10 +223,14 @@ const Account = () => {
   const [viewState, setViewState] = useState<AccountViewState>("overview");
 
   useEffect(() => {
-    if (!selectedUser) {
-      fetchProfile(false);
-    }
-  }, [fetchProfile, selectedUser]);
+    fetchProfile(false, false);
+  }, [fetchProfile]);
+
+  // useEffect(() => {
+  //   if (!selectedUser) {
+  //     fetchProfile(false);
+  //   }
+  // }, [fetchProfile, selectedUser]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -238,7 +241,7 @@ const Account = () => {
     []
   );
   const handleShowSettings = useCallback(() => setViewState("settings"), []);
-  const handleShowOverview = useCallback(() => setViewState("overview"), []);
+  const handleBackToOverview = useCallback(() => setViewState("overview"), []);
 
   const handleRetryFetch = useCallback(() => {
     fetchProfile(true, true);
@@ -265,14 +268,22 @@ const Account = () => {
     );
   }
 
+  // if (!selectedUser) {
+  //   return (
+  //     <div className="bg-Dark min-h-screen text-white flex items-center justify-center">
+  //       <Button
+  //         title="Load Profile"
+  //         onClick={() => fetchProfile(true, true)}
+  //         className="mx-auto bg-Red hover:bg-[#e02d37] text-white px-6 py-2 rounded-lg transition-colors"
+  //       />
+  //     </div>
+  //   );
+  // }
+
   if (!selectedUser) {
     return (
       <div className="bg-Dark min-h-screen text-white flex items-center justify-center">
-        <Button
-          title="Load Profile"
-          onClick={() => fetchProfile(true, true)}
-          className="mx-auto bg-Red hover:bg-[#e02d37] text-white px-6 py-2 rounded-lg transition-colors"
-        />
+        <LoadingSpinner size="lg" />
       </div>
     );
   }

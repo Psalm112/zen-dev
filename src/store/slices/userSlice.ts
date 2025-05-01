@@ -172,6 +172,11 @@ const userSlice = createSlice({
     clearSelectedUser: (state) => {
       state.selectedUser = null;
     },
+    syncProfileWithSelectedUser: (state) => {
+      if (state.profile) {
+        state.selectedUser = state.profile;
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -183,6 +188,7 @@ const userSlice = createSlice({
         fetchUserProfile.fulfilled,
         (state, action: PayloadAction<UserProfile>) => {
           state.profile = action.payload;
+          state.selectedUser = action.payload;
           state.loading = "succeeded";
           state.lastFetched = Date.now();
         }
@@ -266,12 +272,10 @@ const userSlice = createSlice({
           state,
           action: PayloadAction<{ success: boolean; userId: string }>
         ) => {
-          // Remove user from users array if present
           state.users = state.users.filter(
             (user) => user._id !== action.payload.userId
           );
           state.loading = "succeeded";
-          // Clear selected user if it's the deleted user
           if (state.selectedUser?._id === action.payload.userId) {
             state.selectedUser = null;
           }
@@ -284,5 +288,9 @@ const userSlice = createSlice({
   },
 });
 
-export const { clearUserProfile, clearSelectedUser } = userSlice.actions;
+export const {
+  clearUserProfile,
+  clearSelectedUser,
+  syncProfileWithSelectedUser,
+} = userSlice.actions;
 export default userSlice.reducer;
