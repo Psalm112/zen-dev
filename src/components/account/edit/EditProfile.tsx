@@ -31,7 +31,7 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 
 interface EditProfileProps {
   avatar: string;
-  showEditProfile: React.Dispatch<React.SetStateAction<boolean>>;
+  setViewState: () => void;
   currentProfile: {
     name: string;
     dob: string;
@@ -43,7 +43,7 @@ interface EditProfileProps {
 
 const EditProfile: React.FC<EditProfileProps> = ({
   avatar,
-  showEditProfile,
+  setViewState,
   currentProfile,
 }) => {
   const dispatch = useAppDispatch();
@@ -142,7 +142,6 @@ const EditProfile: React.FC<EditProfileProps> = ({
 
       await dispatch(updateUserProfile(submitData)).unwrap();
       showSnackbar("Profile updated successfully", "success");
-      showEditProfile(false);
     } catch (error) {
       showSnackbar((error as string) || "Failed to update profile", "error");
     }
@@ -151,7 +150,7 @@ const EditProfile: React.FC<EditProfileProps> = ({
   return (
     <ErrorBoundary
       FallbackComponent={ErrorFallback}
-      onReset={() => showEditProfile(false)}
+      onReset={() => setViewState}
     >
       <motion.div
         className="mt-4 relative"
@@ -164,7 +163,7 @@ const EditProfile: React.FC<EditProfileProps> = ({
             aria-label="Back to Profile"
             className="hover:opacity-80 transition-opacity"
             transition={{ type: "spring", stiffness: 300 }}
-            onClick={() => showEditProfile(false)}
+            onClick={() => setViewState}
             whileHover={{ x: -3 }}
             whileTap={{ scale: 0.95 }}
           >

@@ -39,10 +39,10 @@ const SettingItem = ({ icon, label, onClick, delay }: SettingItemProps) => {
 };
 
 const Settings = ({
-  showSettings,
+  setViewState,
   profileData,
 }: {
-  showSettings: React.Dispatch<React.SetStateAction<boolean>>;
+  setViewState: (state: "overview" | "settings" | "edit-profile") => void;
   profileData: {
     name: string;
     dob: string;
@@ -124,7 +124,7 @@ const Settings = ({
       {showEditProfile ? (
         <EditProfile
           avatar={Avatar2}
-          showEditProfile={setShowEditProfile}
+          setViewState={() => setViewState("settings")}
           currentProfile={profileData}
         />
       ) : (
@@ -139,7 +139,7 @@ const Settings = ({
               aria-label="Settings"
               className="hover:opacity-80 transition-opacity"
               transition={{ type: "spring", stiffness: 300 }}
-              onClick={() => showSettings(false)}
+              onClick={() => setViewState("overview")}
             >
               <LiaAngleLeftSolid className="text-white text-2xl" />
             </motion.button>

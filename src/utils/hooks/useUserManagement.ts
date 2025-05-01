@@ -26,10 +26,13 @@ export const useUserManagement = () => {
   const formattedSelectedUser = useAppSelector(selectFormattedSelectedUser);
   const loading = useAppSelector(selectUserLoading);
   const error = useAppSelector(selectUserError);
-
   const fetchProfile = useCallback(
     async (showNotifications = true, forceRefresh = false) => {
       try {
+        if (!forceRefresh && selectedUser) {
+          return true;
+        }
+
         await dispatch(fetchUserProfile(forceRefresh)).unwrap();
         if (showNotifications) {
           showSnackbar("Profile loaded successfully", "success");
@@ -42,11 +45,11 @@ export const useUserManagement = () => {
         return false;
       }
     },
-    [dispatch, showSnackbar]
+    [dispatch, showSnackbar, selectedUser]
   );
 
   const fetchUserById = useCallback(
-    async (userId: string, showNotifications = true) => {
+    async (userId: string, showNotifications = false) => {
       try {
         await dispatch(getUserById(userId)).unwrap();
         if (showNotifications) {
@@ -64,7 +67,7 @@ export const useUserManagement = () => {
   );
 
   const fetchUserByEmail = useCallback(
-    async (email: string, showNotifications = true) => {
+    async (email: string, showNotifications = false) => {
       try {
         await dispatch(getUserByEmail(email)).unwrap();
         if (showNotifications) {
@@ -82,7 +85,7 @@ export const useUserManagement = () => {
   );
 
   const fetchAllUsers = useCallback(
-    async (showNotifications = true, forceRefresh = false) => {
+    async (showNotifications = false, forceRefresh = false) => {
       try {
         await dispatch(getAllUsers(forceRefresh)).unwrap();
         if (showNotifications) {
