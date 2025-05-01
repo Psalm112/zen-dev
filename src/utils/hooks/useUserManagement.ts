@@ -38,7 +38,7 @@ export const useUserManagement = () => {
         if (showNotifications) {
           showSnackbar("Profile loaded successfully", "success");
         }
-        console.log((state: RootState) => state.user.selectedUser);
+        (state: RootState) => console.log(state.user.selectedUser);
         return true;
       } catch (err) {
         if (showNotifications) {
