@@ -114,23 +114,14 @@ const CreateProduct = () => {
 
   return (
     <motion.div
-      className="w-full max-w-2xl mx-auto"
+      className="w-full max-w-md mx-auto"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <motion.h2
-        className="text-2xl md:text-3xl font-semibold text-white mb-6"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.2 }}
-      >
-        Create Product
-      </motion.h2>
-
       <motion.form
         onSubmit={handleSubmit}
-        className="bg-[#292B30] rounded-lg p-6 md:p-8"
+        className="bg-[#292B30] rounded-lg p-4 md:p-8 w-full"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}

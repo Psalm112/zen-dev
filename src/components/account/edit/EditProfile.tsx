@@ -148,10 +148,7 @@ const EditProfile: React.FC<EditProfileProps> = ({
   };
 
   return (
-    <ErrorBoundary
-      FallbackComponent={ErrorFallback}
-      onReset={() => setViewState}
-    >
+    <ErrorBoundary FallbackComponent={ErrorFallback} onReset={setViewState}>
       <motion.div
         className="mt-4 relative"
         initial={{ opacity: 0 }}
@@ -163,7 +160,7 @@ const EditProfile: React.FC<EditProfileProps> = ({
             aria-label="Back to Profile"
             className="hover:opacity-80 transition-opacity"
             transition={{ type: "spring", stiffness: 300 }}
-            onClick={() => setViewState}
+            onClick={setViewState}
             whileHover={{ x: -3 }}
             whileTap={{ scale: 0.95 }}
           >

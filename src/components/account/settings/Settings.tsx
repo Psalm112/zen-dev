@@ -80,7 +80,6 @@ const Settings = ({
           delay: 0.4,
         },
         {
-          // icon: <RiKey2Fill className="text-white" />,
           icon: (
             <img
               src={TwoFactor}
