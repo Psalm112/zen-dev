@@ -109,10 +109,17 @@ const Home = () => {
               {isAuthenticated ? (
                 <>
                   <span className="max-xs:hidden">{user?.name}</span>
-                  <span className="xs:hidden">{`${user?.name.split(" ")[0]} ${
-                    user?.name.split(" ")[-1]
-                  }`}</span>
-                  <span className="xs:hidden">{user?.name}</span>
+                  <span className="xs:hidden">
+                    {user?.name && typeof user.name === "string"
+                      ? `${user.name.split(" ")[0]} ${
+                          user.name.split(" ").length > 1
+                            ? user.name.split(" ")[
+                                user.name.split(" ").length - 1
+                              ]
+                            : ""
+                        }`
+                      : "User"}
+                  </span>
                 </>
               ) : (
                 "User"
