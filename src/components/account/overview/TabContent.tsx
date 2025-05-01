@@ -29,7 +29,6 @@ const TabContent: React.FC<TabContentProps> = ({ activeTab, productImage }) => {
   const { fetchBuyerOrders, formattedOrders, loading, error } = useOrderData();
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
-  // Fetch orders when component mounts or when the active tab is "1" (Orders)
   useEffect(() => {
     if (activeTab === "1") {
       const loadOrders = async () => {
@@ -41,9 +40,7 @@ const TabContent: React.FC<TabContentProps> = ({ activeTab, productImage }) => {
     }
 
     // Cleanup function
-    return () => {
-      // No need to cleanup since the API cancel is handled in useOrderData hook
-    };
+    return () => {};
   }, [activeTab, fetchBuyerOrders, isInitialLoad]);
 
   return (

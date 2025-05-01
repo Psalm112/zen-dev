@@ -330,7 +330,13 @@ const CreateProduct = () => {
               type="submit"
               disabled={isSubmitting || loading}
               iconPosition="start"
-              icon={isSubmitting ? <LoadingSpinner size="sm" /> : <FiPlus />}
+              icon={
+                isSubmitting ? (
+                  <LoadingSpinner size="sm" color="white" />
+                ) : (
+                  <FiPlus />
+                )
+              }
             />
           </motion.div>
         </div>
