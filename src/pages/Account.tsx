@@ -264,6 +264,17 @@ const Account = () => {
     );
   }
 
+  if (!selectedUser) {
+    return (
+      <div className="bg-Dark min-h-screen text-white flex items-center justify-center">
+        <Button
+          title="Load Profile"
+          onClick={() => fetchProfile(true, true)}
+          className="mx-auto bg-Red hover:bg-[#e02d37] text-white px-6 py-2 rounded-lg transition-colors"
+        />
+      </div>
+    );
+  }
   return (
     <div className="bg-Dark min-h-screen text-white">
       <Container className="py-6 md:py-10">
@@ -273,7 +284,6 @@ const Account = () => {
               setViewState={(state) => setViewState(state)}
               profileData={formattedSelectedUser}
             />
-            ~
           </Suspense>
         ) : viewState === "edit-profile" ? (
           <Suspense fallback={<LoadingFallback />}>
@@ -288,54 +298,53 @@ const Account = () => {
             />
           </Suspense>
         ) : (
-          selectedUser && (
-            <>
-              <ProfileHeader
-                avatar={
-                  typeof selectedUser?.profileImage === "string"
-                    ? selectedUser?.profileImage
-                    : ""
-                }
-                name={selectedUser.name}
-                email={selectedUser.email}
-                showSettings={handleShowSettings}
+          // selectedUser && (
+          <>
+            <ProfileHeader
+              avatar={
+                typeof selectedUser?.profileImage === "string"
+                  ? selectedUser?.profileImage
+                  : ""
+              }
+              name={selectedUser.name}
+              email={selectedUser.email}
+              showSettings={handleShowSettings}
+            />
+            <motion.div
+              className="w-full max-w-[650px] mx-auto"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <Button
+                title="Edit Profile"
+                icon={<LiaAngleDownSolid />}
+                path=""
+                onClick={handleShowEditProfile}
+                className="bg-white text-black text-lg font-bold h-11 rounded-none flex justify-center w-full border-none outline-none text-center my-2 hover:bg-gray-100 transition-colors"
               />
-              <motion.div
-                className="w-full max-w-[650px] mx-auto"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-              >
-                <Button
-                  title="Edit Profile"
-                  icon={<LiaAngleDownSolid />}
-                  path=""
-                  onClick={handleShowEditProfile}
-                  className="bg-white text-black text-lg font-bold h-11 rounded-none flex justify-center w-full border-none outline-none text-center my-2 hover:bg-gray-100 transition-colors"
+            </motion.div>
+            <TabNavigation
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              options={TAB_OPTIONS}
+            />
+            <AnimatePresence mode="wait">
+              <Suspense fallback={<LoadingFallback />}>
+                <TabContent
+                  activeTab={activeTab}
+                  productImage={Product1}
+                  milestones={selectedUser.milestones}
+                  referralCode={selectedUser.referralCode}
+                  referralCount={selectedUser.referralCount}
+                  points={{
+                    total: selectedUser.totalPoints,
+                    available: selectedUser.availablePoints,
+                  }}
                 />
-              </motion.div>
-              <TabNavigation
-                activeTab={activeTab}
-                onTabChange={setActiveTab}
-                options={TAB_OPTIONS}
-              />
-              <AnimatePresence mode="wait">
-                <Suspense fallback={<LoadingFallback />}>
-                  <TabContent
-                    activeTab={activeTab}
-                    productImage={Product1}
-                    milestones={selectedUser.milestones}
-                    referralCode={selectedUser.referralCode}
-                    referralCount={selectedUser.referralCount}
-                    points={{
-                      total: selectedUser.totalPoints,
-                      available: selectedUser.availablePoints,
-                    }}
-                  />
-                </Suspense>
-              </AnimatePresence>
-            </>
-          )
+              </Suspense>
+            </AnimatePresence>
+          </>
         )}
       </Container>
     </div>
