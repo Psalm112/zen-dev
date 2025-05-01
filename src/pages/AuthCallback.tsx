@@ -29,15 +29,14 @@ const AuthCallback = () => {
 
         localStorage.setItem("auth_token", token);
         setTimeout(() => {
-          // Use the API directly with the token already in localStorage
           import("../utils/services/apiService").then(({ api }) => {
             api.getUserProfile(true).then((response) => {
-              if (response) {
-                // handleAuthCallback(token, response.data);
-                // const redirectPath = "/";
+              if (response.ok && response.data) {
+                handleAuthCallback(token, response.data);
+                const redirectPath = "/";
                 // localStorage.removeItem("auth_redirect");
-                // navigate(redirectPath, { replace: true });
-                console.log("Complete user profile loaded", response);
+                navigate(redirectPath, { replace: true });
+                console.log("Complete user profile loaded");
               }
             });
           });
