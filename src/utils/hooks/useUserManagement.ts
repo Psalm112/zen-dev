@@ -16,6 +16,7 @@ import {
   selectFormattedSelectedUser,
 } from "../../store/selectors/userSelectors";
 import { useSnackbar } from "../../context/SnackbarContext";
+import { RootState } from "../../store/store";
 
 export const useUserManagement = () => {
   const dispatch = useAppDispatch();
@@ -37,6 +38,7 @@ export const useUserManagement = () => {
         if (showNotifications) {
           showSnackbar("Profile loaded successfully", "success");
         }
+        console.log((state: RootState) => state.user.selectedUser);
         return true;
       } catch (err) {
         if (showNotifications) {
