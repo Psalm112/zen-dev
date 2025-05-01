@@ -37,13 +37,24 @@ const ProductList = ({
   } = useProductData();
 
   const [displayProducts, setDisplayProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
-      if (isFeatured) {
-        await fetchSponsoredProducts();
-      } else {
-        await fetchAllProducts();
+      setIsLoading(true);
+      setLoadError(null);
+
+      try {
+        if (isFeatured) {
+          await fetchSponsoredProducts();
+        } else {
+          await fetchAllProducts();
+        }
+      } catch (err) {
+        setLoadError("Failed to load products. Please try again later.");
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -51,19 +62,23 @@ const ProductList = ({
   }, [isFeatured, fetchAllProducts, fetchSponsoredProducts]);
 
   useEffect(() => {
-    if (isFeatured && sponsoredProducts && sponsoredProducts.length > 0) {
-      setDisplayProducts(sponsoredProducts.slice(0, maxItems));
-    } else if (products && products.length > 0) {
-      if (category) {
-        const filteredProducts = getProductsByCategory(category);
-        setDisplayProducts(
-          filteredProducts.slice(
-            0,
-            isCategoryView ? filteredProducts.length : maxItems
-          )
-        );
+    if (!loading) {
+      if (isFeatured && sponsoredProducts && sponsoredProducts.length > 0) {
+        setDisplayProducts(sponsoredProducts.slice(0, maxItems));
+      } else if (products && products.length > 0) {
+        if (category) {
+          const filteredProducts = getProductsByCategory(category);
+          setDisplayProducts(
+            filteredProducts.slice(
+              0,
+              isCategoryView ? filteredProducts.length : maxItems
+            )
+          );
+        } else {
+          setDisplayProducts(products.slice(0, maxItems));
+        }
       } else {
-        setDisplayProducts(products.slice(0, maxItems));
+        setDisplayProducts([]);
       }
     }
   }, [
@@ -74,12 +89,20 @@ const ProductList = ({
     products,
     sponsoredProducts,
     isCategoryView,
+    loading,
   ]);
 
   const newClass = twMerge("", className);
-  if (!isCategoryView && !loading && displayProducts.length === 0) {
+
+  if (
+    !isCategoryView &&
+    !isLoading &&
+    !loadError &&
+    displayProducts.length === 0
+  ) {
     return <></>;
   }
+
   return (
     <section className={newClass}>
       {!isCategoryView && (
@@ -96,13 +119,15 @@ const ProductList = ({
         </div>
       )}
       <div className="mt-4 md:mt-8 overflow-x-auto scrollbar-hide">
-        {loading ? (
+        {isLoading ? (
           <div className="flex justify-center items-center py-12">
             <LoadingSpinner size="md" />
           </div>
-        ) : error ? (
+        ) : loadError || error ? (
           <div className="text-Red text-center py-8">
-            Failed to load products. Please try again later.
+            {loadError ||
+              error ||
+              "Failed to load products. Please try again later."}
           </div>
         ) : displayProducts.length === 0 ? (
           <div className="text-gray-400 text-center py-8">
