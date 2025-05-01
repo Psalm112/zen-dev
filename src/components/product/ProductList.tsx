@@ -77,8 +77,7 @@ const ProductList = ({
   ]);
 
   const newClass = twMerge("", className);
-
-  if (!isCategoryView && displayProducts.length === 0) {
+  if (!isCategoryView && !loading && displayProducts.length === 0) {
     return <></>;
   }
   return (

@@ -89,8 +89,7 @@ const Product = () => {
                 {!loading && searchResults.length > 0 ? (
                   <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 md:gap-5">
                     {searchResults.map((product) => (
-                      // <ProductCard key={product._id} product={product} />
-                      <>{product.name}</>
+                      <ProductCard key={product._id} product={product} />
                     ))}
                   </div>
                 ) : (
@@ -132,33 +131,13 @@ const Product = () => {
             </div>
 
             {/* Show all products */}
-            {/* {isLoading || loading ? (
-              <div className="flex justify-center items-center py-12">
-                <LoadingSpinner size="md" />
-              </div>
-            ) : ( */}
+
             <ProductList
               title="All Products"
               className="mt-8"
               isCategoryView={false}
               category="All"
-              maxItems={8}
             />
-            {/* )} */}
-
-            {/* Show category specific products */}
-            {/* {activeCategory !== "All" &&
-              categories.map((category) => (
-                <ProductList
-                  key={`${category}-productlist`}
-                  title={category}
-                  path={`/product/category/${category.toLowerCase()}`}
-                  className="mt-8"
-                  isCategoryView={false}
-                  category={category}
-                  maxItems={4}
-                />
-              ))} */}
           </>
         ) : (
           <>

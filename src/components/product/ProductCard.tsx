@@ -35,7 +35,7 @@ const ProductCard = React.memo(
       >
         <div className="mb-2 md:mb-10 w-full flex justify-between p-2 md:p-4">
           {isNew && (
-            <div className="text-white text-xs md:text-sm bg-[#2563eb] rounded-xl py-1 px-2">
+            <div className="text-white text-xs md:text-sm bg-Red/20 rounded-xl py-1 px-2">
               New
             </div>
           )}

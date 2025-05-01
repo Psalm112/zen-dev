@@ -211,11 +211,12 @@ const Home = () => {
           isFeatured={true}
         />
         <ProductList
-          title=""
+          title="All"
           path="/product"
           className="mt-6 md:mt-10"
           isCategoryView={false}
           maxItems={8}
+          // category="All"
         />
       </Container>
       {showWallet && (
