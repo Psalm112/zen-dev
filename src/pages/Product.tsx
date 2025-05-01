@@ -10,10 +10,12 @@ import ProductCard from "../components/product/ProductCard";
 // categories
 const categories = [
   "All",
-  "Clothing",
-  "Cosmetics",
   "Electronics",
-  "Home",
+  "Clothing",
+  "Home & Garden",
+  "Beauty & Personal Care",
+  "Sports & Outdoors",
+  "Art Work",
   "Accessories",
 ];
 
@@ -102,7 +104,7 @@ const Product = () => {
                         ? "/product"
                         : `/product/category/${category.toLowerCase()}`
                     }
-                    key={category}
+                    key={`${category}-productbutton`}
                     className={`px-4 py-2 rounded-full transition-colors whitespace-nowrap ${
                       activeCategory === category
                         ? "bg-Red text-white"
@@ -114,25 +116,15 @@ const Product = () => {
                 ))}
               </div>
             </div>
-
-            <ProductList
-              title="Clothing"
-              path="/product/category/clothing"
-              className="mt-8"
-              isCategoryView={false}
-            />
-            <ProductList
-              title="Cosmetics"
-              path="/product/category/cosmetics"
-              className="mt-16"
-              isCategoryView={false}
-            />
-            <ProductList
-              title="Electronics"
-              path="/product/category/electronics"
-              className="mt-16"
-              isCategoryView={false}
-            />
+            {categories.map((category) => (
+              <ProductList
+                key={`${category}-productlist`}
+                title={category}
+                path={`/product/category/${category.toLowerCase()}`}
+                className="mt-8"
+                isCategoryView={false}
+              />
+            ))}
           </>
         ) : (
           <>

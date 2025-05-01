@@ -12,6 +12,8 @@ import {
 } from "react-icons/ri";
 import { Avatar2, TwoFactor } from "../../../pages";
 import { lazy, useState } from "react";
+import { useAuth } from "../../../context/AuthContext";
+import { useNavigate } from "react-router";
 const EditProfile = lazy(() => import("../edit/EditProfile"));
 
 interface SettingItemProps {
@@ -50,6 +52,8 @@ const Settings = ({
     phone: string;
   };
 }) => {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
   const [showEditProfile, setShowEditProfile] = useState(false);
   const settingSections: { items: SettingItemProps[] }[] = [
     {
@@ -113,6 +117,10 @@ const Settings = ({
           icon: <RiLogoutBoxRLine className="text-white" />,
           label: "Log Out",
           delay: 1.2,
+          onClick: () => {
+            logout();
+            navigate("/");
+          },
         },
       ],
     },

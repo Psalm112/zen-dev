@@ -8,6 +8,8 @@ import {
   clearSelectedUser,
   fetchUserProfile,
   syncProfileWithSelectedUser,
+  updateUserProfile,
+  updateUserFromAuth,
 } from "../../store/slices/userSlice";
 import {
   selectAllUsers,
@@ -19,10 +21,13 @@ import {
 } from "../../store/selectors/userSelectors";
 import { useSnackbar } from "../../context/SnackbarContext";
 import { RootState } from "../../store/store";
+import { useAuth } from "../../context/AuthContext";
+import { UserProfile } from "../types";
 
 export const useUserManagement = () => {
   const dispatch = useAppDispatch();
   const { showSnackbar } = useSnackbar();
+  const { handleUserUpdate } = useAuth();
 
   const users = useAppSelector(selectAllUsers);
   const selectedUser = useAppSelector(selectSelectedUser);
@@ -74,6 +79,31 @@ export const useUserManagement = () => {
       }
     },
     [dispatch, showSnackbar]
+  );
+
+  const updateProfile = useCallback(
+    async (profileData: Partial<UserProfile>, showNotifications = false) => {
+      try {
+        const updatedProfile = await dispatch(
+          updateUserProfile(profileData)
+        ).unwrap();
+
+        handleUserUpdate(updatedProfile);
+
+        dispatch(updateUserFromAuth(updatedProfile));
+
+        if (showNotifications) {
+          showSnackbar("Profile updated successfully", "success");
+        }
+        return true;
+      } catch (err) {
+        if (showNotifications) {
+          showSnackbar((err as string) || "Failed to update profile", "error");
+        }
+        return false;
+      }
+    },
+    [dispatch, showSnackbar, handleUserUpdate]
   );
 
   const fetchUserByEmail = useCallback(
@@ -137,6 +167,7 @@ export const useUserManagement = () => {
     isLoading: loading === "pending",
     error,
     fetchProfile,
+    updateProfile,
     fetchUserById,
     fetchUserByEmail,
     fetchAllUsers,

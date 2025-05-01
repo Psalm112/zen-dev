@@ -14,6 +14,7 @@ import { useSnackbar } from "../../../context/SnackbarContext";
 import { updateUserProfile } from "../../../store/slices/userSlice";
 import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallback from "../../common/ErrorFallback";
+import { useUserManagement } from "../../../utils/hooks/useUserManagement";
 
 // Validation schema
 const profileSchema = z.object({
@@ -47,6 +48,7 @@ const EditProfile: React.FC<EditProfileProps> = ({
   currentProfile,
 }) => {
   const dispatch = useAppDispatch();
+  const { updateProfile } = useUserManagement();
   const { showSnackbar } = useSnackbar();
   const [countryCode, setCountryCode] = useState("US");
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -139,9 +141,11 @@ const EditProfile: React.FC<EditProfileProps> = ({
       if (profileImageFile) {
         submitData.profileImage = profileImageFile;
       }
-
-      await dispatch(updateUserProfile(submitData)).unwrap();
-      showSnackbar("Profile updated successfully", "success");
+      const success = await updateProfile(data);
+      // await dispatch(updateUserProfile(submitData)).unwrap();
+      if (success) {
+        showSnackbar("Profile updated successfully", "success");
+      }
     } catch (error) {
       showSnackbar((error as string) || "Failed to update profile", "error");
     }

@@ -34,6 +34,8 @@ const CreateProduct = () => {
     "Home & Garden",
     "Beauty & Personal Care",
     "Sports & Outdoors",
+    "Art Work",
+    "Accessories",
     "Other",
   ];
 
