@@ -43,6 +43,12 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
   });
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [pendingTransactionData, setPendingTransactionData] = useState<{
+    contractAddress: string;
+    amount: string;
+    isUSDT: boolean;
+    usdtAddress: string;
+  } | null>(null);
   const { initiateTradeContract, sendFundsToEscrow } = useContractData();
   const { isConnected } = useWallet();
 
@@ -78,6 +84,10 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
       return;
     }
 
+    await processRelease();
+  };
+
+  const processRelease = async () => {
     setIsProcessing(true);
     try {
       const tradeResponse = await initiateTradeContract({
@@ -89,19 +99,20 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
         orderId: orderId || "",
       });
 
-      if (tradeResponse.status !== "success" || !tradeResponse) {
+      if (tradeResponse.status !== "success" || !tradeResponse.data) {
         throw new Error(
           tradeResponse.message || "Failed to create trade contract"
         );
       }
 
-      // const { contractAddress, amount, isUSDT, usdtAddress } =
-      //   tradeResponse.data;
+      const { contractAddress, amount, isUSDT, usdtAddress } =
+        tradeResponse.data;
+
       const escrowResult = await sendFundsToEscrow(
-        "0xD2570DD7bdf47B381d11859efB739595f583CAaB",
-        getAmount(),
-        true,
-        "0x9b4eB82CB4A5617B7fdb92CD066c5CA5eD699C55"
+        contractAddress,
+        amount,
+        isUSDT,
+        usdtAddress
       );
 
       if (!escrowResult.success) {
@@ -126,7 +137,7 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
   const handleWalletConnected = (success: boolean) => {
     setIsWalletModalOpen(false);
     if (success) {
-      handleReleaseNow();
+      processRelease();
     }
   };
 
@@ -189,6 +200,15 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
         <ConnectWallet
           showAlternatives={true}
           onTransactionComplete={handleWalletConnected}
+          pendingTransaction={
+            pendingTransactionData
+              ? {
+                  type: "escrow",
+                  contractAddress: pendingTransactionData.contractAddress,
+                  amount: pendingTransactionData.amount,
+                }
+              : null
+          }
         />
       </Modal>
     </>

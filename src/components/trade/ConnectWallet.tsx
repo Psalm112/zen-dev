@@ -1,4 +1,4 @@
-'use client'
+"use client";
 import { motion } from "framer-motion";
 import { FC, useState, useCallback } from "react";
 import {
@@ -14,15 +14,11 @@ import {
 import TransactionConfirmation from "./TransactionConfirmation";
 import ConfirmDelivery from "./ConfirmDelivery";
 import { useWallet } from "../../utils/hooks/useWallet";
+import { pendingTransactionProps } from "../../utils/types";
 
-interface ConnectWalletProps {
+export interface ConnectWalletProps {
   showAlternatives?: boolean;
-  pendingTransaction?: {
-    type: "escrow" | "delivery";
-    contractAddress?: string;
-    amount?: string;
-    tradeId?: string;
-  } | null;
+  pendingTransaction?: pendingTransactionProps | null;
   onTransactionComplete?: (success: boolean) => void;
 }
 
@@ -164,7 +160,8 @@ const ConnectWallet: FC<ConnectWalletProps> = ({
             <FaWallet className="text-3xl" />
           </motion.div>
           <p className="text-gray-400 text-sm mb-2">
-            Connected as <span className="font-semibold text-white">{shortenedAddress}</span>
+            Connected as{" "}
+            <span className="font-semibold text-white">{shortenedAddress}</span>
           </p>
           <h2 className="text-xl font-semibold">Wallet Connected</h2>
         </div>
@@ -335,7 +332,9 @@ const ConnectWallet: FC<ConnectWalletProps> = ({
           </div>
         )}
         <div className="text-center mb-6">
-          <h2 className="account text-xl font-semibold mb-2">Connect with Phone</h2>
+          <h2 className="account text-xl font-semibold mb-2">
+            Connect with Phone
+          </h2>
           <p className="text-gray-400 text-sm">
             We'll send you a verification code via SMS
           </p>

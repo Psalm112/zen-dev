@@ -208,3 +208,10 @@ export interface StatusProps {
   onConfirmDelivery?: () => void;
   orderId?: string;
 }
+
+export interface pendingTransactionProps {
+  type: "escrow" | "delivery";
+  contractAddress?: string;
+  amount?: string;
+  tradeId?: string;
+}
