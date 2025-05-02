@@ -135,8 +135,7 @@ const ViewOrderDetail = () => {
     }
   };
 
-  const Loader = () => {
-    // if (loading) {
+  if (loading) {
     return (
       <div className="bg-Dark min-h-screen flex items-center justify-center">
         <motion.div
@@ -155,10 +154,9 @@ const ViewOrderDetail = () => {
         </motion.div>
       </div>
     );
-    // }
-  };
-  const ErrorMessage = () => {
-    // if (error || !orderDetails) {
+  }
+
+  if (error || !orderDetails) {
     return (
       <div className="bg-Dark min-h-screen flex items-center justify-center">
         <motion.div
@@ -180,8 +178,7 @@ const ViewOrderDetail = () => {
         </motion.div>
       </div>
     );
-    // }
-  };
+  }
 
   return (
     <div className="bg-Dark min-h-screen py-8 text-white">
@@ -191,24 +188,18 @@ const ViewOrderDetail = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          {loading ? (
-            <Loader />
-          ) : error || !orderDetails ? (
-            <ErrorMessage />
-          ) : (
-            <TradeStatus
-              status={orderStatus}
-              orderDetails={orderDetails}
-              transactionInfo={transactionInfo}
-              onContactSeller={handleContactSeller}
-              onContactBuyer={handleContactBuyer}
-              onOrderDispute={handleOrderDispute}
-              onReleaseNow={handleReleaseNow}
-              onConfirmDelivery={handleConfirmDelivery}
-              orderId={orderId}
-              navigatePath={`/trades/viewtrades/${orderId}?status=release`}
-            />
-          )}
+          <TradeStatus
+            status={orderStatus}
+            orderDetails={orderDetails}
+            transactionInfo={transactionInfo}
+            onContactSeller={handleContactSeller}
+            onContactBuyer={handleContactBuyer}
+            onOrderDispute={handleOrderDispute}
+            onReleaseNow={handleReleaseNow}
+            onConfirmDelivery={handleConfirmDelivery}
+            orderId={orderId}
+            navigatePath={`/trades/viewtrades/${orderId}?status=release`}
+          />
         </motion.div>
       </Container>
     </div>

@@ -274,19 +274,19 @@ const BaseStatus: FC<BaseStatusProps> = ({
             />
             <TradeDetailRow
               label="Good Rating %"
-              value={`${transactionInfo?.goodRating}%`}
+              value={`${transactionInfo?.goodRating || ""}%`}
             />
             <TradeDetailRow
               label="Completed Order(s) in 30 Days"
-              value={`${transactionInfo?.completedOrders} Order(s)`}
+              value={`${transactionInfo?.completedOrders || ""} Order(s)`}
             />
             <TradeDetailRow
               label="30-Day Order Completion Rate"
-              value={`${transactionInfo?.completionRate}%`}
+              value={`${transactionInfo?.completionRate || ""}%`}
             />
             <TradeDetailRow
               label="Avg. Payment Time"
-              value={`${transactionInfo?.avgPaymentTime} Minute(s)`}
+              value={`${transactionInfo?.avgPaymentTime || ""} Minute(s)`}
             />
           </div>
         </div>
