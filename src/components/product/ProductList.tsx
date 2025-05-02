@@ -47,9 +47,9 @@ const ProductList = ({
 
       try {
         if (isFeatured) {
-          await fetchSponsoredProducts(false, true);
+          await fetchSponsoredProducts(false, false, true);
         } else {
-          await fetchAllProducts(false, true);
+          await fetchAllProducts(false, false, true);
         }
       } catch (err: any) {
         if (err.name === "AbortError") {
