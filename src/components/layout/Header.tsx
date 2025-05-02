@@ -46,7 +46,7 @@ const Header = () => {
 
   const handleLogout = () => {
     logout();
-    // navigate("/");
+    navigate("/");
     setShowUserMenu(false);
   };
 
