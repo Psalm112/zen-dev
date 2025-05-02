@@ -58,6 +58,16 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     return () => clearInterval(timer);
   }, []);
 
+  const getAmount = () => {
+    if (tradeDetails && tradeDetails.amount) {
+      return tradeDetails.amount.toString();
+    }
+    if (orderDetails && orderDetails.formattedAmount) {
+      return orderDetails.formattedAmount;
+    }
+    return "20000000";
+  };
+
   const handleReleaseNow = async () => {
     if (!isConnected) {
       setIsWalletModalOpen(true);
@@ -68,9 +78,7 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     try {
       const tradeResponse = await initiateTradeContract({
         seller: "0x57aEAAEb6081A394675642B5A7E70e94618641d9",
-        productCost: tradeDetails
-          ? tradeDetails.amount.toString()
-          : orderDetails?.formattedAmount || "20000000",
+        productCost: getAmount(),
         logisticsProvider: "0x57aEAAEb6081A394675642B5A7E70e94618641d9",
         logisticsCost: "2000",
         useUSDT: true,
@@ -87,9 +95,7 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
       //   tradeResponse.data;
       const escrowResult = await sendFundsToEscrow(
         "0xD2570DD7bdf47B381d11859efB739595f583CAaB",
-        tradeDetails
-          ? tradeDetails.amount.toString()
-          : orderDetails?.formattedAmount || "20000000",
+        getAmount(),
         true,
         "0x9b4eB82CB4A5617B7fdb92CD066c5CA5eD699C55"
       );
@@ -98,7 +104,6 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
         throw new Error("Failed to send funds to escrow");
       }
 
-      // Step 3: Navigate to the next page if provided
       if (navigatePath) {
         navigate(navigatePath, { replace: true });
       } else if (onReleaseNow) {
@@ -133,6 +138,7 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
             type="warning"
           />
         }
+        orderDetails={orderDetails}
         tradeDetails={tradeDetails}
         transactionInfo={transactionInfo}
         contactLabel="Contact Buyer"

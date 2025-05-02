@@ -230,7 +230,7 @@ const CompletedStatus: FC<CompletedStatusProps> = ({
                   <span className="text-white">
                     {tradeDetails
                       ? tradeDetails.quantity.toString()
-                      : orderDetails?.quantity.toString()}
+                      : orderDetails?.quantity.toString() || "2"}
                   </span>
                 </div>
 

@@ -46,6 +46,39 @@ const BaseStatus: FC<BaseStatusProps> = ({
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const getProductName = () => {
+    return (
+      tradeDetails?.productName ||
+      orderDetails?.product?.name ||
+      "Unknown Product"
+    );
+  };
+
+  const getOrderId = () => {
+    return tradeDetails?.orderNo || orderDetails?._id || "";
+  };
+
+  const getAmount = () => {
+    return tradeDetails?.amount || orderDetails?.formattedAmount || "0";
+  };
+
+  const getQuantity = () => {
+    const quantity = tradeDetails?.quantity || orderDetails?.quantity;
+    return quantity !== undefined ? quantity.toString() : "0";
+  };
+
+  const getOrderTime = () => {
+    return tradeDetails?.orderTime || orderDetails?.formattedDate || "Unknown";
+  };
+
+  const getTradeType = () => {
+    return tradeDetails?.tradeType || "BUY";
+  };
+
+  const getPaymentMethod = () => {
+    return tradeDetails?.paymentMethod || "CRYPTO";
+  };
+
   return (
     <div className="w-full mx-auto">
       <motion.div
@@ -156,21 +189,17 @@ const BaseStatus: FC<BaseStatusProps> = ({
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.1 }}
                 >
-                  {tradeDetails
-                    ? tradeDetails.productName
-                    : orderDetails?.product.name}
+                  {getProductName()}
                 </motion.h3>
                 <motion.span
                   className={`${
-                    tradeDetails?.tradeType === "BUY" && orderDetails
-                      ? "bg-green-500"
-                      : "bg-red-500"
+                    getTradeType() === "BUY" ? "bg-green-500" : "bg-red-500"
                   } text-white text-xs px-3 py-1 rounded-full`}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.2 }}
                 >
-                  {tradeDetails ? tradeDetails.tradeType : "BUY"}
+                  {getTradeType()}
                 </motion.span>
               </div>
             </div>
@@ -186,46 +215,20 @@ const BaseStatus: FC<BaseStatusProps> = ({
               <div className="flex justify-between items-center">
                 <span className="text-gray-400 text-sm">Amount</span>
                 <span className="text-red-500 text-xl font-bold">
-                  {tradeDetails
-                    ? tradeDetails.amount
-                    : orderDetails?.formattedAmount}
+                  {getAmount()}
                 </span>
               </div>
 
               <div className="space-y-2">
-                <TradeDetailRow
-                  label="Total Quantity"
-                  value={
-                    tradeDetails
-                      ? tradeDetails.quantity.toString()
-                      : orderDetails?.quantity.toString()
-                  }
-                />
-                <TradeDetailRow
-                  label="Order Time"
-                  value={
-                    tradeDetails
-                      ? tradeDetails.orderTime
-                      : orderDetails?.formattedDate
-                  }
-                />
+                <TradeDetailRow label="Total Quantity" value={getQuantity()} />
+                <TradeDetailRow label="Order Time" value={getOrderTime()} />
                 <TradeDetailRow
                   label="Order No."
                   value={
                     <div className="flex items-center">
-                      <span className="mr-2">
-                        {tradeDetails
-                          ? tradeDetails.orderNo
-                          : orderDetails?._id}
-                      </span>
+                      <span className="mr-2">{getOrderId()}</span>
                       <motion.button
-                        onClick={() =>
-                          copyOrderId(
-                            tradeDetails
-                              ? tradeDetails.orderNo
-                              : orderDetails?._id || ""
-                          )
-                        }
+                        onClick={() => copyOrderId(getOrderId())}
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
                       >
@@ -246,12 +249,10 @@ const BaseStatus: FC<BaseStatusProps> = ({
                     )
                   }
                 />
-                {(tradeDetails?.paymentMethod || orderDetails) && (
-                  <TradeDetailRow
-                    label="Payment Method"
-                    value={tradeDetails ? tradeDetails.paymentMethod : "CRYPTO"}
-                  />
-                )}
+                <TradeDetailRow
+                  label="Payment Method"
+                  value={getPaymentMethod()}
+                />
               </div>
             </motion.div>
           </div>
@@ -270,23 +271,23 @@ const BaseStatus: FC<BaseStatusProps> = ({
           <div className="space-y-2">
             <TradeDetailRow
               label="Buyer's Name"
-              value={transactionInfo?.buyerName}
+              value={transactionInfo?.buyerName || "Unknown"}
             />
             <TradeDetailRow
               label="Good Rating %"
-              value={`${transactionInfo?.goodRating || ""}%`}
+              value={`${transactionInfo?.goodRating || 0}%`}
             />
             <TradeDetailRow
               label="Completed Order(s) in 30 Days"
-              value={`${transactionInfo?.completedOrders || ""} Order(s)`}
+              value={`${transactionInfo?.completedOrders || 0} Order(s)`}
             />
             <TradeDetailRow
               label="30-Day Order Completion Rate"
-              value={`${transactionInfo?.completionRate || ""}%`}
+              value={`${transactionInfo?.completionRate || 0}%`}
             />
             <TradeDetailRow
               label="Avg. Payment Time"
-              value={`${transactionInfo?.avgPaymentTime || ""} Minute(s)`}
+              value={`${transactionInfo?.avgPaymentTime || 0} Minute(s)`}
             />
           </div>
         </div>
