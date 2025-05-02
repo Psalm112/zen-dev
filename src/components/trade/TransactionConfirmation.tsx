@@ -1,53 +1,67 @@
+// src/components/trade/TransactionConfirmation.tsx
+
+import { FC, useState, useEffect } from "react";
+import { FaSpinner, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import { motion } from "framer-motion";
-import React, { FC, useEffect, useState } from "react";
-import {
-  FaSpinner,
-  FaCheckCircle,
-  FaExclamationTriangle,
-} from "react-icons/fa";
 import { useContractData } from "../../utils/hooks/useContractData";
 
 interface TransactionConfirmationProps {
   contractAddress: string;
   amount: string;
+  isUSDT?: boolean;
+  usdtAddress?: string;
   onComplete: (success: boolean) => void;
 }
 
 const TransactionConfirmation: FC<TransactionConfirmationProps> = ({
   contractAddress,
   amount,
+  isUSDT = false,
+  usdtAddress,
   onComplete,
 }) => {
-  const [status, setStatus] = useState<
-    "pending" | "sending" | "success" | "error"
-  >("pending");
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
   const { sendFundsToEscrow, isTransactionPending, transactionHash } =
     useContractData();
+  const [status, setStatus] = useState<"pending" | "success" | "error">(
+    "pending"
+  );
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
-    const initiateTransaction = async () => {
-      setStatus("sending");
+    const handleTransaction = async () => {
+      setIsProcessing(true);
       try {
-        const result = await sendFundsToEscrow(contractAddress, amount);
+        const result = await sendFundsToEscrow(
+          contractAddress,
+          amount,
+          isUSDT,
+          usdtAddress
+        );
         if (result.success) {
           setStatus("success");
           onComplete(true);
         } else {
           setStatus("error");
-          setErrorMessage("Transaction failed. Please try again.");
           onComplete(false);
         }
       } catch (error) {
+        console.error("Transaction error:", error);
         setStatus("error");
-        setErrorMessage((error as Error).message || "Transaction failed");
         onComplete(false);
+      } finally {
+        setIsProcessing(false);
       }
     };
 
-    initiateTransaction();
-  }, [contractAddress, amount, sendFundsToEscrow, onComplete]);
+    handleTransaction();
+  }, [
+    contractAddress,
+    amount,
+    isUSDT,
+    usdtAddress,
+    sendFundsToEscrow,
+    onComplete,
+  ]);
 
   return (
     <motion.div
@@ -57,57 +71,49 @@ const TransactionConfirmation: FC<TransactionConfirmationProps> = ({
       className="max-w-md mx-auto bg-[#212428] p-6 md:p-8 rounded-lg shadow-lg"
     >
       <div className="text-center mb-6">
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          transition={{ type: "spring", stiffness: 400, damping: 10 }}
-          className={`inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 ${
-            status === "success"
-              ? "bg-green-500/10 text-green-500"
-              : status === "error"
-              ? "bg-red-500/10 text-red-500"
-              : "bg-Red/10 text-Red"
-          }`}
-        >
-          {status === "pending" ||
-          status === "sending" ||
-          isTransactionPending ? (
-            <FaSpinner className="text-3xl animate-spin" />
-          ) : status === "success" ? (
-            <FaCheckCircle className="text-3xl" />
-          ) : (
-            <FaExclamationTriangle className="text-3xl" />
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4">
+          {status === "pending" && (
+            <FaSpinner className="text-4xl text-yellow-500 animate-spin" />
           )}
-        </motion.div>
+          {status === "success" && (
+            <FaCheckCircle className="text-4xl text-green-500" />
+          )}
+          {status === "error" && (
+            <FaTimesCircle className="text-4xl text-red-500" />
+          )}
+        </div>
         <h2 className="text-xl font-semibold mb-2">
-          {status === "pending"
-            ? "Preparing Transaction"
-            : status === "sending" || isTransactionPending
-            ? "Awaiting Confirmation"
-            : status === "success"
-            ? "Transaction Successful"
-            : "Transaction Failed"}
+          {status === "pending" && "Confirming Transaction"}
+          {status === "success" && "Transaction Complete"}
+          {status === "error" && "Transaction Failed"}
         </h2>
         <p className="text-gray-400 text-sm">
-          {status === "pending"
-            ? "Please wait while we prepare your transaction..."
-            : status === "sending" || isTransactionPending
-            ? "Please confirm the transaction in your wallet to deposit funds into escrow"
-            : status === "success"
-            ? "Your funds have been successfully deposited into escrow"
-            : errorMessage || "There was an error processing your transaction"}
+          {status === "pending" &&
+            `Sending ${amount} ${isUSDT ? "USDT" : "ETH"} to escrow...`}
+          {status === "success" &&
+            `Successfully sent ${amount} ${isUSDT ? "USDT" : "ETH"} to escrow.`}
+          {status === "error" &&
+            "There was an error processing your transaction."}
         </p>
       </div>
 
-      {status === "sending" || isTransactionPending ? (
-        <div className="bg-[#2A2D35] p-4 rounded-lg mb-4">
-          <p className="text-gray-400 text-sm mb-1">Amount</p>
-          <p className="text-white font-medium">{amount} ETH</p>
-        </div>
-      ) : null}
+      <div className="bg-[#2A2D35] p-4 rounded-lg mb-4">
+        <p className="text-gray-400 text-sm">Contract Address</p>
+        <p className="text-white font-mono text-sm break-all">
+          {contractAddress}
+        </p>
+      </div>
 
-      {transactionHash && (status === "success" || status === "error") && (
+      <div className="bg-[#2A2D35] p-4 rounded-lg mb-4">
+        <p className="text-gray-400 text-sm">Amount</p>
+        <p className="text-white">
+          {amount} {isUSDT ? "USDT" : "ETH"}
+        </p>
+      </div>
+
+      {transactionHash && (
         <div className="bg-[#2A2D35] p-4 rounded-lg mb-4">
-          <p className="text-gray-400 text-sm mb-1">Transaction Hash</p>
+          <p className="text-gray-400 text-sm">Transaction Hash</p>
           <p className="text-white font-mono text-sm break-all">
             {transactionHash}
           </p>
@@ -116,21 +122,14 @@ const TransactionConfirmation: FC<TransactionConfirmationProps> = ({
 
       {status === "error" && (
         <button
-          onClick={() => sendFundsToEscrow(contractAddress, amount)}
-          className="w-full py-3 bg-Red hover:bg-[#e02d37] text-white rounded transition-colors"
+          onClick={() => window.location.reload()}
+          className="w-full py-3 bg-Red hover:bg-[#e02d37] text-white rounded transition-colors mt-4"
         >
           Try Again
         </button>
-      )}
-
-      {status === "success" && (
-        <div className="bg-green-500/10 border border-green-500/30 text-green-400 p-3 rounded-md">
-          Your transaction was successful. The funds are now held in escrow
-          until delivery is confirmed.
-        </div>
       )}
     </motion.div>
   );
 };
 
-export default React.memo(TransactionConfirmation);
+export default TransactionConfirmation;

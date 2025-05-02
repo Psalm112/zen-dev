@@ -1,6 +1,11 @@
+import { FC, useState } from "react";
+import {
+  FaSpinner,
+  FaCheckCircle,
+  FaTimesCircle,
+  FaExclamationTriangle,
+} from "react-icons/fa";
 import { motion } from "framer-motion";
-import React, { FC, useState } from "react";
-import { FaBox, FaSpinner, FaCheckCircle } from "react-icons/fa";
 import { useContractData } from "../../utils/hooks/useContractData";
 
 interface ConfirmDeliveryProps {
@@ -9,20 +14,29 @@ interface ConfirmDeliveryProps {
 }
 
 const ConfirmDelivery: FC<ConfirmDeliveryProps> = ({ tradeId, onComplete }) => {
-  const [isConfirmed, setIsConfirmed] = useState(false);
-  const {
-    confirmTradeDelivery,
-    isDeliveryConfirmLoading,
-    deliveryConfirmError,
-  } = useContractData();
+  const { confirmTradeDelivery, isDeliveryConfirmLoading } = useContractData();
+  const [status, setStatus] = useState<
+    "pending" | "confirming" | "success" | "error"
+  >("pending");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleConfirmDelivery = async () => {
-    const result = await confirmTradeDelivery(tradeId);
-    if (result.success) {
-      setIsConfirmed(true);
-      setTimeout(() => {
-        onComplete();
-      }, 2000);
+  const handleConfirm = async () => {
+    setStatus("confirming");
+    try {
+      const result = await confirmTradeDelivery(tradeId);
+      if (result.success) {
+        setStatus("success");
+        setTimeout(() => {
+          onComplete();
+        }, 2000);
+      } else {
+        setStatus("error");
+        setErrorMessage(result.message || "Failed to confirm delivery");
+      }
+    } catch (error: any) {
+      console.error("Delivery confirmation error:", error);
+      setStatus("error");
+      setErrorMessage(error.message || "An unexpected error occurred");
     }
   };
 
@@ -33,71 +47,71 @@ const ConfirmDelivery: FC<ConfirmDeliveryProps> = ({ tradeId, onComplete }) => {
       transition={{ duration: 0.5 }}
       className="max-w-md mx-auto bg-[#212428] p-6 md:p-8 rounded-lg shadow-lg"
     >
-      {deliveryConfirmError && (
-        <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-3 rounded-md mb-4">
-          {deliveryConfirmError}
-        </div>
-      )}
-
       <div className="text-center mb-6">
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          transition={{ type: "spring", stiffness: 400, damping: 10 }}
-          className={`inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 ${
-            isConfirmed
-              ? "bg-green-500/10 text-green-500"
-              : "bg-Red/10 text-Red"
-          }`}
-        >
-          {isConfirmed ? (
-            <FaCheckCircle className="text-3xl" />
-          ) : (
-            <FaBox className="text-3xl" />
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4">
+          {(status === "pending" || status === "confirming") && (
+            <FaExclamationTriangle
+              className={`text-4xl text-yellow-500 ${
+                status === "confirming" ? "animate-pulse" : ""
+              }`}
+            />
           )}
-        </motion.div>
+          {status === "success" && (
+            <FaCheckCircle className="text-4xl text-green-500" />
+          )}
+          {status === "error" && (
+            <FaTimesCircle className="text-4xl text-red-500" />
+          )}
+        </div>
         <h2 className="text-xl font-semibold mb-2">
-          {isConfirmed ? "Delivery Confirmed" : "Confirm Delivery"}
+          {status === "pending" && "Confirm Delivery"}
+          {status === "confirming" && "Confirming Delivery"}
+          {status === "success" && "Delivery Confirmed"}
+          {status === "error" && "Confirmation Failed"}
         </h2>
         <p className="text-gray-400 text-sm">
-          {isConfirmed
-            ? "Thank you for confirming. Funds have been released to the seller."
-            : "Confirm that you've received your order to release funds from escrow."}
+          {status === "pending" &&
+            "Confirm that you've received your order to release funds to the seller."}
+          {status === "confirming" && "Processing your confirmation..."}
+          {status === "success" && "Funds have been released to the seller."}
+          {status === "error" && errorMessage}
         </p>
       </div>
 
-      {!isConfirmed && (
-        <div className="space-y-6">
-          <div className="bg-[#2A2D35] p-4 rounded-lg">
-            <p className="text-sm text-gray-300 leading-relaxed">
-              By confirming delivery, you acknowledge that:
-              <ul className="list-disc pl-5 mt-2 space-y-1">
-                <li>You have received the items as described</li>
-                <li>The condition of the items meets your expectations</li>
-                <li>Funds will be immediately released to the seller</li>
-              </ul>
-            </p>
-          </div>
+      <div className="bg-[#2A2D35] p-4 rounded-lg mb-4">
+        <p className="text-gray-400 text-sm">Trade ID</p>
+        <p className="text-white font-mono text-sm break-all">{tradeId}</p>
+      </div>
 
+      {status === "pending" && (
+        <div className="space-y-3">
           <button
-            onClick={handleConfirmDelivery}
+            onClick={handleConfirm}
             disabled={isDeliveryConfirmLoading}
             className="w-full py-3 bg-Red hover:bg-[#e02d37] text-white rounded transition-colors flex items-center justify-center"
           >
             {isDeliveryConfirmLoading ? (
               <FaSpinner className="animate-spin mr-2" />
             ) : null}
-            {isDeliveryConfirmLoading ? "Processing..." : "Confirm Delivery"}
+            Confirm Delivery
           </button>
+          <p className="text-xs text-gray-500 text-center">
+            This action cannot be undone. Only confirm if you've received your
+            order.
+          </p>
         </div>
       )}
 
-      {isConfirmed && (
-        <div className="bg-green-500/10 border border-green-500/30 text-green-400 p-3 rounded-md">
-          Delivery successfully confirmed. The transaction is now complete.
-        </div>
+      {status === "error" && (
+        <button
+          onClick={() => setStatus("pending")}
+          className="w-full py-3 bg-Red hover:bg-[#e02d37] text-white rounded transition-colors mt-4"
+        >
+          Try Again
+        </button>
       )}
     </motion.div>
   );
 };
 
-export default React.memo(ConfirmDelivery);
+export default ConfirmDelivery;
