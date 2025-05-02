@@ -16,9 +16,9 @@ import ConnectWallet from "../ConnectWallet";
 import { useWallet } from "../../../utils/hooks/useWallet";
 
 interface PendingPaymentStatusProps {
-  tradeDetails: TradeDetails;
+  tradeDetails?: TradeDetails;
   orderDetails?: OrderDetails;
-  transactionInfo: TradeTransactionInfo;
+  transactionInfo?: TradeTransactionInfo;
   onContactSeller?: () => void;
   onOrderDispute?: () => void;
   onReleaseNow?: () => void;

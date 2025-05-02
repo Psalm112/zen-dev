@@ -9,9 +9,9 @@ import StatusAlert from "./StatusAlert";
 import { BsShieldExclamation } from "react-icons/bs";
 
 interface CancelledStatusProps {
-  tradeDetails: TradeDetails;
+  tradeDetails?: TradeDetails;
   orderDetails?: OrderDetails;
-  transactionInfo: TradeTransactionInfo;
+  transactionInfo?: TradeTransactionInfo;
   onContactSeller?: () => void;
   onOrderDispute?: () => void;
 }

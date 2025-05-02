@@ -151,7 +151,7 @@ import { ErrorBoundary } from "react-error-boundary";
 
 interface TradeStatusProps extends StatusProps {
   orderDetails?: OrderDetails;
-  navigatePath: string;
+  navigatePath?: string;
 }
 
 const TradeStatus: FC<TradeStatusProps> = ({

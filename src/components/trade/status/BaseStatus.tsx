@@ -17,7 +17,7 @@ interface BaseStatusProps {
   statusAlert?: ReactNode;
   orderDetails?: OrderDetails;
   tradeDetails?: TradeDetails;
-  transactionInfo: TradeTransactionInfo;
+  transactionInfo?: TradeTransactionInfo;
   contactLabel?: string;
   onContact?: () => void;
   actionButtons?: ReactNode;
@@ -270,23 +270,23 @@ const BaseStatus: FC<BaseStatusProps> = ({
           <div className="space-y-2">
             <TradeDetailRow
               label="Buyer's Name"
-              value={transactionInfo.buyerName}
+              value={transactionInfo?.buyerName}
             />
             <TradeDetailRow
               label="Good Rating %"
-              value={`${transactionInfo.goodRating}%`}
+              value={`${transactionInfo?.goodRating}%`}
             />
             <TradeDetailRow
               label="Completed Order(s) in 30 Days"
-              value={`${transactionInfo.completedOrders} Order(s)`}
+              value={`${transactionInfo?.completedOrders} Order(s)`}
             />
             <TradeDetailRow
               label="30-Day Order Completion Rate"
-              value={`${transactionInfo.completionRate}%`}
+              value={`${transactionInfo?.completionRate}%`}
             />
             <TradeDetailRow
               label="Avg. Payment Time"
-              value={`${transactionInfo.avgPaymentTime} Minute(s)`}
+              value={`${transactionInfo?.avgPaymentTime} Minute(s)`}
             />
           </div>
         </div>

@@ -15,9 +15,9 @@ import ConnectWallet from "../ConnectWallet";
 import { useWallet } from "../../../utils/hooks/useWallet";
 
 interface FundsReleaseStatusProps {
-  tradeDetails: TradeDetails;
+  tradeDetails?: TradeDetails;
   orderDetails?: OrderDetails;
-  transactionInfo: TradeTransactionInfo;
+  transactionInfo?: TradeTransactionInfo;
   onContactSeller?: () => void;
   onOrderDispute?: () => void;
   onConfirmDelivery?: () => void;
