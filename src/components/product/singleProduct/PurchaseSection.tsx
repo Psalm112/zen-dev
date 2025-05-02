@@ -134,7 +134,7 @@ const PurchaseSection = ({ product }: PurchaseSectionProps) => {
         seller: product.seller,
         amount: product.price,
       });
-      navigate(`/orders/${currentOrder?._id}`);
+      navigate(`/orders/${currentOrder?._id}?status=pending`);
     } catch (err) {
       setError(`Transaction failed: ${(err as string) || "Please try again"}`);
     } finally {
