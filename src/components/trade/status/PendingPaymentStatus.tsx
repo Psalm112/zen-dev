@@ -60,12 +60,16 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
 
   const getAmount = () => {
     if (tradeDetails && tradeDetails.amount) {
-      return tradeDetails.amount.toString();
+      return tradeDetails.amount.toString().includes(".")
+        ? tradeDetails.amount.toString()
+        : `${tradeDetails.amount.toString()}.00`;
     }
     if (orderDetails && orderDetails.formattedAmount) {
-      return orderDetails.formattedAmount;
+      return orderDetails.formattedAmount.includes(".")
+        ? orderDetails.formattedAmount
+        : `${orderDetails.formattedAmount}.00`;
     }
-    return "20000000";
+    return "200.00";
   };
 
   const handleReleaseNow = async () => {
@@ -80,7 +84,7 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
         seller: "0x57aEAAEb6081A394675642B5A7E70e94618641d9",
         productCost: getAmount(),
         logisticsProvider: "0x57aEAAEb6081A394675642B5A7E70e94618641d9",
-        logisticsCost: "2000",
+        logisticsCost: "2000.00",
         useUSDT: true,
         orderId: orderId || "",
       });

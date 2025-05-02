@@ -1,161 +1,3 @@
-// import { useCallback, useState } from "react";
-// import { useAppDispatch, useAppSelector } from "./redux";
-// import {
-//   createTrade,
-//   clearTradeResponse,
-//   setTransactionPending,
-//   confirmDelivery,
-//   clearDeliveryConfirmError,
-// } from "../../store/slices/contractSlice";
-// import {
-//   selectTradeResponse,
-//   selectIsContractPending,
-//   selectIsContractError,
-//   selectIsContractSuccess,
-//   selectContractError,
-//   selectTransactionPending,
-//   selectDeliveryConfirmLoading,
-//   selectDeliveryConfirmError,
-// } from "../../store/selectors/contractSelectors";
-// import { useSnackbar } from "../../context/SnackbarContext";
-// import { CreateTradeParams } from "../types";
-// import { useWallet } from "../../utils/hooks/useWallet";
-// import { ethers } from "ethers";
-
-// export const useContractData = () => {
-//   const dispatch = useAppDispatch();
-//   const { showSnackbar } = useSnackbar();
-//   const { signer } = useWallet();
-//   const [transactionHash, setTransactionHash] = useState<string | null>(null);
-
-//   const tradeResponse = useAppSelector(selectTradeResponse);
-//   const isLoading = useAppSelector(selectIsContractPending);
-//   const isError = useAppSelector(selectIsContractError);
-//   const isSuccess = useAppSelector(selectIsContractSuccess);
-//   const error = useAppSelector(selectContractError);
-//   const isTransactionPending = useAppSelector(selectTransactionPending);
-//   const isDeliveryConfirmLoading = useAppSelector(selectDeliveryConfirmLoading);
-//   const deliveryConfirmError = useAppSelector(selectDeliveryConfirmError);
-
-//   const sendFundsToEscrow = useCallback(
-//     async (contractAddress: string, amount: string) => {
-//       if (!signer) {
-//         showSnackbar("Wallet not connected", "error");
-//         return { success: false, hash: null };
-//       }
-
-//       try {
-//         dispatch(setTransactionPending(true));
-
-//         // Convert the amount to wei
-//         const amountInWei = ethers.parseEther(amount);
-
-//         // Send transaction to escrow contract
-//         const tx = await signer.sendTransaction({
-//           to: contractAddress,
-//           value: amountInWei,
-//         });
-
-//         setTransactionHash(tx.hash);
-
-//         // Wait for transaction to be mined
-//         await tx.wait();
-
-//         showSnackbar("Funds successfully sent to escrow", "success");
-//         return { success: true, hash: tx.hash };
-//       } catch (err: any) {
-//         console.error("Transaction error:", err);
-//         showSnackbar(err.message || "Transaction failed", "error");
-//         return { success: false, hash: null };
-//       } finally {
-//         dispatch(setTransactionPending(false));
-//       }
-//     },
-//     [signer, dispatch, showSnackbar]
-//   );
-
-//   const initiateTradeContract = useCallback(
-//     async (tradeData: CreateTradeParams, showNotifications = true) => {
-//       try {
-//         const result = await dispatch(createTrade(tradeData)).unwrap();
-
-//         if (showNotifications) {
-//           if (result.status === "success") {
-//             showSnackbar("Trade contract created successfully", "success");
-
-//             // If contract creation was successful, we need to prompt for funds transfer
-//             if (result.data.contractAddress && result.data.amount) {
-//               // Show notification about required action
-//               showSnackbar(
-//                 "Please confirm the transaction in your wallet to deposit funds",
-//                 "info"
-//               );
-//             }
-//           } else {
-//             showSnackbar(result.message || "Trade creation failed", "error");
-//           }
-//         }
-
-//         return result;
-//       } catch (err) {
-//         if (showNotifications) {
-//           showSnackbar(
-//             (err as string) || "Failed to create trade contract",
-//             "error"
-//           );
-//         }
-//         return {
-//           status: "error",
-//           message: (err as string) || "Failed to create trade contract",
-//         };
-//       }
-//     },
-//     [dispatch, showSnackbar]
-//   );
-
-//   const confirmTradeDelivery = useCallback(
-//     async (tradeId: string) => {
-//       try {
-//         const result = await dispatch(confirmDelivery(tradeId)).unwrap();
-//         showSnackbar(
-//           "Delivery confirmed successfully. Funds released to seller.",
-//           "success"
-//         );
-//         return { success: true, message: result.message };
-//       } catch (err) {
-//         showSnackbar((err as string) || "Failed to confirm delivery", "error");
-//         return { success: false, message: err as string };
-//       }
-//     },
-//     [dispatch, showSnackbar]
-//   );
-
-//   const resetTradeResponse = useCallback(() => {
-//     dispatch(clearTradeResponse());
-//   }, [dispatch]);
-
-//   const clearDeliveryError = useCallback(() => {
-//     dispatch(clearDeliveryConfirmError());
-//   }, [dispatch]);
-
-//   return {
-//     tradeResponse,
-//     isLoading,
-//     isError,
-//     isSuccess,
-//     error,
-//     isTransactionPending,
-//     transactionHash,
-//     isDeliveryConfirmLoading,
-//     deliveryConfirmError,
-//     initiateTradeContract,
-//     sendFundsToEscrow,
-//     confirmTradeDelivery,
-//     resetTradeResponse,
-//     clearDeliveryError,
-//   };
-// };
-
 import { useCallback, useState } from "react";
 import { useAppDispatch, useAppSelector } from "./redux";
 import {
@@ -196,6 +38,25 @@ export const useContractData = () => {
   const isDeliveryConfirmLoading = useAppSelector(selectDeliveryConfirmLoading);
   const deliveryConfirmError = useAppSelector(selectDeliveryConfirmError);
 
+  // Helper to sanitize amount strings
+  const sanitizeAmount = (amount: string): string => {
+    if (!amount) return "0";
+
+    // Remove any non-numeric characters except for a single decimal point
+    let sanitized = amount.replace(/[^\d.]/g, "");
+
+    // Ensure only one decimal point
+    const parts = sanitized.split(".");
+    if (parts.length > 1) {
+      sanitized = parts[0] + "." + parts.slice(1).join("");
+    }
+
+    // If the result is empty or just a decimal point, return "0"
+    if (sanitized === "" || sanitized === ".") return "0";
+
+    return sanitized;
+  };
+
   const approveUSDT = useCallback(
     async (
       usdtAddress: string,
@@ -208,8 +69,18 @@ export const useContractData = () => {
       }
 
       try {
-        // USDT has 6 decimals
-        const amountInMicroUSDT = ethers.parseUnits(amount, 6);
+        // Sanitize amount
+        const sanitizedAmount = sanitizeAmount(amount);
+
+        let amountInMicroUSDT;
+        try {
+          // USDT typically has 6 decimal places
+          amountInMicroUSDT = ethers.parseUnits(sanitizedAmount, 6);
+        } catch (error) {
+          console.error("Error parsing USDT amount:", error);
+          showSnackbar("Invalid amount format", "error");
+          return false;
+        }
 
         // Create USDT contract instance
         const usdtContract = new ethers.Contract(
@@ -235,10 +106,9 @@ export const useContractData = () => {
           );
           await tx.wait();
           showSnackbar("USDT approval successful", "success");
-          return true;
         }
 
-        return true; // Already approved enough
+        return true;
       } catch (err: any) {
         console.error("USDT approval error:", err);
         showSnackbar(err.message || "Failed to approve USDT", "error");
@@ -263,26 +133,33 @@ export const useContractData = () => {
       try {
         dispatch(setTransactionPending(true));
 
+        // Sanitize the amount first
+        const sanitizedAmount = sanitizeAmount(amount);
+
         if (isUSDT && usdtAddress) {
           // Handle USDT payment
           const approvalSuccess = await approveUSDT(
             usdtAddress,
             contractAddress,
-            amount
+            sanitizedAmount
           );
           if (!approvalSuccess) {
             return { success: false, hash: null };
           }
 
-          // Create contract instance for the trade contract to call createTrade
-          // Note: This is simplified - you'll need to include the actual function call to createTrade
           showSnackbar("Creating trade with USDT...", "info");
-          // Execute the createTrade function with USDT
 
-          return { success: true, hash: "usdt-transaction" }; // Replace with actual transaction hash
+          return { success: true, hash: "usdt-transaction" };
         } else {
-          // Handle ETH payment
-          const amountInWei = ethers.parseEther(amount);
+          // Handle ETH payment - convert to wei
+          let amountInWei;
+          try {
+            amountInWei = ethers.parseEther(sanitizedAmount);
+          } catch (error) {
+            console.error("Error parsing ETH amount:", error);
+            showSnackbar("Invalid amount format", "error");
+            return { success: false, hash: null };
+          }
 
           showSnackbar("Sending ETH to escrow...", "info");
           const tx = await signer.sendTransaction({
@@ -310,7 +187,13 @@ export const useContractData = () => {
   const initiateTradeContract = useCallback(
     async (tradeData: CreateTradeParams, showNotifications = true) => {
       try {
-        const result = await dispatch(createTrade(tradeData)).unwrap();
+        const sanitizedTradeData = {
+          ...tradeData,
+          productCost: sanitizeAmount(tradeData.productCost),
+          logisticsCost: sanitizeAmount(tradeData.logisticsCost),
+        };
+
+        const result = await dispatch(createTrade(sanitizedTradeData)).unwrap();
 
         if (showNotifications) {
           if (result.status === "success") {
