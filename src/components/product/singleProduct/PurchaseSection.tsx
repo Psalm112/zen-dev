@@ -121,7 +121,6 @@ const PurchaseSection = ({ product }: PurchaseSectionProps) => {
       setIsProcessing(false);
     }
   };
-
   const handlePurchase = async () => {
     if (!product) return;
 
@@ -129,12 +128,17 @@ const PurchaseSection = ({ product }: PurchaseSectionProps) => {
     setError(null);
 
     try {
-      await placeOrder({
+      const order = await placeOrder({
         product: product._id,
         seller: product.seller,
         amount: product.price,
       });
-      navigate(`/orders/${currentOrder?._id}?status=pending`);
+
+      if (order && order._id) {
+        navigate(`/orders/${order._id}?status=pending`);
+      } else {
+        setError("Failed to create order. Please try again.");
+      }
     } catch (err) {
       setError(`Transaction failed: ${(err as string) || "Please try again"}`);
     } finally {
