@@ -107,7 +107,7 @@ const CreateProduct = () => {
     try {
       const result = await createProduct(formData);
       if (result) {
-        navigate(`/products/${result._id}`);
+        navigate(`/product/${result._id}`);
       }
     } finally {
       setIsSubmitting(false);

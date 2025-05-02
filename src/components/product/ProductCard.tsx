@@ -1,7 +1,7 @@
 import React from "react";
 import { FaRegHeart } from "react-icons/fa";
 import { RiVerifiedBadgeFill } from "react-icons/ri";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { BsCart3 } from "react-icons/bs";
 import { Product } from "../../utils/types";
 
@@ -14,6 +14,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 const ProductCard = React.memo(
   ({ product, isNew = false }: ProductCardProps) => {
+    const navigate = useNavigate();
     const { _id, name, description, price, images, seller } = product;
 
     const ethPrice = (price / 1000000).toFixed(6);
@@ -74,10 +75,7 @@ const ProductCard = React.memo(
           </h4>
           <button
             className="mt-[5px] gap-3 lg:gap-7 font-bold text-white bg-Red py-2 hidden group-hover:flex justify-center items-center w-full transition-all duration-300"
-            onClick={(e) => {
-              e.preventDefault();
-              // Add to cart logic
-            }}
+            onClick={() => navigate(`/product/${_id}`)}
           >
             <div>Buy Now</div>
             <BsCart3 className="font-bold text-xl" />
