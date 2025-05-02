@@ -34,7 +34,11 @@ const ProductCard: FC<ProductCardProps> = ({
       layout
     >
       <motion.img
-        src={product.images[0]}
+        src={
+          product.images && product.images.length > 0
+            ? product.images[0]
+            : "https://placehold.co/300x300?text=No+Image"
+        }
         alt={product.description}
         className="w-[60%] md:w-full h-auto mx-auto md:mx-0 rounded-md lg:row-span-2"
         loading="lazy"
@@ -86,7 +90,8 @@ const ProductCard: FC<ProductCardProps> = ({
             actionType === "buy" ? (isSellTab ? "SELL" : "BUY") : "VIEW DETAILS"
           }
           className="flex justify-between items-center w-full bg-Red border-0 rounded text-white px-6 py-2 w-full transition-colors hover:bg-[#e02d37]"
-          path={`/trades/buy/${product._id}`}
+          path={`
+            /trades/buy/${product._id}`}
           icon={<FaArrowRightLong />}
           // onClick={handleButtonClick}
         />
