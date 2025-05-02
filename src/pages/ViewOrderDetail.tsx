@@ -88,37 +88,31 @@ const ViewOrderDetail = () => {
     toast.info("Opening chat with buyer...");
     // navigate(`/chat/${orderDetails?.buyer?._id}`);
   };
-
   const handleOrderDispute = async (reason = "Item not as described") => {
     if (!orderId) return;
 
-    // setIsProcessing(true);
     try {
       await raiseDispute(orderId, reason);
       toast.success("Dispute has been filed successfully");
+      navigate(`/trades/viewtrades/${orderId}?status=cancelled`, {
+        replace: true,
+      });
     } catch (error) {
       toast.error("Failed to file dispute. Please try again.");
       console.log(error);
-    } finally {
-      console.log("done");
-      //   setIsProcessing(false);
     }
   };
 
   const handleReleaseNow = async () => {
     if (!orderId) return;
 
-    // setIsProcessing(true);
     try {
       navigate(`/trades/viewtrades/${orderId}?status=release`, {
         replace: true,
       });
-      toast.success("Release successful!");
     } catch (error) {
       toast.error("Failed Release. Please try again.");
       console.log(error);
-    } finally {
-      //   setIsProcessing(false);
     }
   };
 
@@ -202,7 +196,9 @@ const ViewOrderDetail = () => {
             onContactBuyer={handleContactBuyer}
             onOrderDispute={handleOrderDispute}
             onReleaseNow={handleReleaseNow}
+            onConfirmDelivery={handleConfirmDelivery}
             orderId={orderId}
+            navigatePath={`/trades/viewtrades/${orderId}?status=release`}
           />
         </motion.div>
       </Container>

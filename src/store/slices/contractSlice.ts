@@ -62,27 +62,6 @@ export const confirmDelivery = createAsyncThunk<
   }
 });
 
-
-export const raiseDispute = createAsyncThunk
-  { status: string; message: string },
-  string,
-  { rejectValue: string }
->("contract/raiseDispute", async (tradeId, { rejectWithValue }) => {
-  try {
-    const response = await api.raiseDispute(tradeId);
-
-    if (!response.ok) {
-      return rejectWithValue(response.error || "Failed to raise dispute");
-    }
-
-    return response.data as { status: string; message: string };
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "An unknown error occurred";
-    return rejectWithValue(message);
-  }
-});
-
 const contractSlice = createSlice({
   name: "contract",
   initialState,

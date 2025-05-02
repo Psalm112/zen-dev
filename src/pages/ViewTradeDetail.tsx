@@ -234,6 +234,7 @@ const ViewTradeDetail = () => {
             onOrderDispute={handleOrderDispute}
             onReleaseNow={handleReleaseNow}
             orderId={tradeId}
+            navigatePath=""
           />
         </motion.div>
       </div>

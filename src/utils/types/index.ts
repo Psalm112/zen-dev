@@ -106,7 +106,7 @@ export interface CreateTradeParams {
 export interface TradeResponse {
   status: "success" | "error";
   message: string;
-  data?: any;
+  data: any;
 }
 
 export interface ReferralInfo {

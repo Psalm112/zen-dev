@@ -151,6 +151,7 @@ import { ErrorBoundary } from "react-error-boundary";
 
 interface TradeStatusProps extends StatusProps {
   orderDetails?: OrderDetails;
+  navigatePath: string;
 }
 
 const TradeStatus: FC<TradeStatusProps> = ({
@@ -164,6 +165,7 @@ const TradeStatus: FC<TradeStatusProps> = ({
   onConfirmDelivery,
   onReleaseNow,
   orderId,
+  navigatePath,
 }) => {
   const details = tradeDetails || (orderDetails as unknown as TradeDetails);
   const transactionData = transactionInfo || {
@@ -200,7 +202,8 @@ const TradeStatus: FC<TradeStatusProps> = ({
         onOrderDispute,
         onConfirmDelivery,
         onReleaseNow,
-        orderId
+        orderId,
+        navigatePath
       )}
     </ErrorBoundary>
   );
@@ -216,7 +219,8 @@ const renderStatusComponent = (
   onOrderDispute?: (reason?: string) => void,
   onReleaseNow?: () => void,
   onConfirmDelivery?: () => void,
-  orderId?: string
+  orderId?: string,
+  navigatePath?: string
 ) => {
   switch (status) {
     case "cancelled":
@@ -238,6 +242,7 @@ const renderStatusComponent = (
           onContactSeller={onContactSeller}
           onOrderDispute={onOrderDispute}
           onReleaseNow={onReleaseNow}
+          navigatePath={navigatePath}
         />
       );
     case "release":
