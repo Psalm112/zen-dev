@@ -80,8 +80,8 @@ const CreateProduct = () => {
     } else if (isNaN(parseFloat(price)) || parseFloat(price) <= 0) {
       newErrors.price = "Price must be a positive number";
     }
-    if (images.length === 0)
-      newErrors.images = "At least one image is required";
+    // if (images.length === 0)
+    //   newErrors.images = "At least one image is required";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -103,7 +103,7 @@ const CreateProduct = () => {
     images.forEach((image) => {
       formData.append("images", image);
     });
-
+    console.log(formData);
     try {
       const result = await createProduct(formData);
       if (result) {
