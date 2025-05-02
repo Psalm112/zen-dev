@@ -68,7 +68,9 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     try {
       const tradeResponse = await initiateTradeContract({
         seller: "0x57aEAAEb6081A394675642B5A7E70e94618641d9",
-        productCost: "1500000000000000000",
+        productCost: tradeDetails
+          ? tradeDetails.amount.toString()
+          : orderDetails?.formattedAmount || "20000000",
         logisticsProvider: "0x57aEAAEb6081A394675642B5A7E70e94618641d9",
         logisticsCost: "2000",
         useUSDT: true,
@@ -81,13 +83,15 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
         );
       }
 
-      const { contractAddress, amount, isUSDT, usdtAddress } =
-        tradeResponse.data;
+      // const { contractAddress, amount, isUSDT, usdtAddress } =
+      //   tradeResponse.data;
       const escrowResult = await sendFundsToEscrow(
-        contractAddress,
-        amount.toString(),
-        isUSDT,
-        usdtAddress
+        "0xD2570DD7bdf47B381d11859efB739595f583CAaB",
+        tradeDetails
+          ? tradeDetails.amount.toString()
+          : orderDetails?.formattedAmount || "20000000",
+        true,
+        "0x9b4eB82CB4A5617B7fdb92CD066c5CA5eD699C55"
       );
 
       if (!escrowResult.success) {
