@@ -13,7 +13,7 @@ const ViewOrderDetail = () => {
 
   const location = useLocation();
   const navigate = useNavigate();
-  const [tradeStatus, setTradeStatus] = useState<TradeStatusType>("pending");
+  const [orderStatus, setOrderStatus] = useState<TradeStatusType>("pending");
   //   const [isProcessing, setIsProcessing] = useState(false);
 
   const {
@@ -32,7 +32,7 @@ const ViewOrderDetail = () => {
         statusParam &&
         ["cancelled", "pending", "release", "completed"].includes(statusParam)
       ) {
-        setTradeStatus(statusParam as TradeStatusType);
+        setOrderStatus(statusParam as TradeStatusType);
       }
     }
 
@@ -49,15 +49,15 @@ const ViewOrderDetail = () => {
     if (orderDetails?.status) {
       const statusMapping: Record<string, TradeStatusType> = {
         pending: "pending",
-        "in escrow": "pending",
-        processing: "release",
-        shipped: "release",
+        accepted: "pending",
+        rejected: "cancelled",
         completed: "completed",
-        cancelled: "cancelled",
-        disputed: "pending",
+        disputed: "cancelled",
+        refunded: "pending",
+        delivery_confirmed: "completed",
       };
 
-      setTradeStatus(
+      setOrderStatus(
         statusMapping[orderDetails.status.toLowerCase()] || "pending"
       );
     }
@@ -110,8 +110,25 @@ const ViewOrderDetail = () => {
 
     // setIsProcessing(true);
     try {
+      navigate(`/trades/viewtrades/${orderId}?status=release`, {
+        replace: true,
+      });
+      toast.success("Release successful!");
+    } catch (error) {
+      toast.error("Failed Release. Please try again.");
+      console.log(error);
+    } finally {
+      //   setIsProcessing(false);
+    }
+  };
+
+  const handleConfirmDelivery = async () => {
+    if (!orderId) return;
+
+    // setIsProcessing(true);
+    try {
       await changeOrderStatus(orderId, "completed");
-      setTradeStatus("completed");
+      setOrderStatus("completed");
       navigate(`/trades/viewtrades/${orderId}?status=completed`, {
         replace: true,
       });
@@ -159,10 +176,10 @@ const ViewOrderDetail = () => {
             Sorry, we couldn't find the order you're looking for.
           </p>
           <button
-            onClick={() => navigate("/trades/viewtrades")}
+            onClick={() => navigate(`/product`)}
             className="bg-Red hover:bg-[#e02d37] text-white px-6 py-2 rounded-lg transition-colors"
           >
-            Back to Orders
+            Back to Products
           </button>
         </motion.div>
       </div>
@@ -178,7 +195,7 @@ const ViewOrderDetail = () => {
           transition={{ duration: 0.5, delay: 0.2 }}
         >
           <TradeStatus
-            status={tradeStatus}
+            status={orderStatus}
             orderDetails={orderDetails}
             transactionInfo={transactionInfo}
             onContactSeller={handleContactSeller}

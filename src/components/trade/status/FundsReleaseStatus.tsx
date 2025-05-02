@@ -17,7 +17,7 @@ interface FundsReleaseStatusProps {
   transactionInfo: TradeTransactionInfo;
   onContactSeller?: () => void;
   onOrderDispute?: () => void;
-  onReleaseNow?: () => void;
+  onConfirmDelivery?: () => void;
   orderId?: string;
 }
 
@@ -27,7 +27,7 @@ const FundsReleaseStatus: FC<FundsReleaseStatusProps> = ({
   transactionInfo,
   onContactSeller,
   onOrderDispute,
-  onReleaseNow,
+  onConfirmDelivery,
   orderId,
 }) => {
   const [timeRemaining, setTimeRemaining] = useState({
@@ -66,8 +66,8 @@ const FundsReleaseStatus: FC<FundsReleaseStatusProps> = ({
         );
       }
 
+      if (onConfirmDelivery) onConfirmDelivery();
       toast.success("Trade completed successfully!");
-      if (onReleaseNow) onReleaseNow();
     } catch (error) {
       console.error("Error during release process:", error);
       toast.error("Failed to complete trade. Please try again.");

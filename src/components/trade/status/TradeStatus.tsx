@@ -161,6 +161,7 @@ const TradeStatus: FC<TradeStatusProps> = ({
   onContactSeller,
   onContactBuyer,
   onOrderDispute,
+  onConfirmDelivery,
   onReleaseNow,
   orderId,
 }) => {
@@ -197,6 +198,7 @@ const TradeStatus: FC<TradeStatusProps> = ({
         onContactSeller,
         onContactBuyer,
         onOrderDispute,
+        onConfirmDelivery,
         onReleaseNow,
         orderId
       )}
@@ -213,6 +215,7 @@ const renderStatusComponent = (
   onContactBuyer?: () => void,
   onOrderDispute?: (reason?: string) => void,
   onReleaseNow?: () => void,
+  onConfirmDelivery?: () => void,
   orderId?: string
 ) => {
   switch (status) {
@@ -245,7 +248,7 @@ const renderStatusComponent = (
           transactionInfo={transactionInfo!}
           onContactSeller={onContactSeller}
           onOrderDispute={onOrderDispute}
-          onReleaseNow={onReleaseNow}
+          onConfirmDelivery={onConfirmDelivery}
           orderId={orderId}
         />
       );

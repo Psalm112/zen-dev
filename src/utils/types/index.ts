@@ -165,12 +165,12 @@ export type TradeStatusType = "cancelled" | "pending" | "release" | "completed";
 
 export type OrderStatus =
   | "pending"
-  | "in escrow"
-  | "processing"
-  | "shipped"
+  | "accepted"
+  | "rejected"
   | "completed"
-  | "cancelled"
-  | "disputed";
+  | "disputed"
+  | "refunded"
+  | "delivery_confirmed";
 
 export interface TradeDetails {
   productName: string;
@@ -205,5 +205,6 @@ export interface StatusProps {
   onContactBuyer?: () => void;
   onOrderDispute?: () => void;
   onReleaseNow?: () => void;
+  onConfirmDelivery?: () => void;
   orderId?: string;
 }

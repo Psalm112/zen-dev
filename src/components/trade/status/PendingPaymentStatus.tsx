@@ -20,7 +20,7 @@ interface PendingPaymentStatusProps {
 
 const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
   tradeDetails,
-  //   orderDetails,
+  orderDetails,
   transactionInfo,
   onContactSeller,
   onOrderDispute,
