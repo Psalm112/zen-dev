@@ -64,29 +64,34 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     return () => clearInterval(timer);
   }, []);
 
-  const getAmount = () => {
-    if (tradeDetails && tradeDetails.amount) {
-      return tradeDetails.amount.toString();
-    }
-    if (orderDetails && orderDetails.product.price) {
-      return orderDetails.product.price;
-    }
-    return "200";
-  };
+  // const getAmount = () => {
+  //   if (tradeDetails && tradeDetails.amount) {
+  //     return tradeDetails.amount.toString();
+  //   }
+  //   if (orderDetails && orderDetails.product.price) {
+  //     return orderDetails.product.price;
+  //   }
+  //   return "200";
+  // };
 
   const processRelease = async () => {
     setIsProcessing(true);
     try {
       const tradeResponse = await initiateTradeContract({
-        seller: "0x57aEAAEb6081A394675642B5A7E70e94618641d9",
-        productCost: getAmount(),
+        seller: tradeDetails
+          ? tradeDetails.sellerId
+          : orderDetails?.seller._id || "",
+        productCost:
+          tradeDetails && tradeDetails.amount
+            ? tradeDetails.amount
+            : orderDetails?.product.price || 200,
         logisticsProvider: "0x57aEAAEb6081A394675642B5A7E70e94618641d9",
         logisticsCost: "2000",
         useUSDT: true,
         orderId: orderId || "",
       });
 
-      console.log(tradeResponse, getAmount());
+      console.log(tradeResponse, orderDetails?.product.price);
       if (tradeResponse.status !== "success" || !tradeResponse.data) {
         throw new Error(
           tradeResponse.message || "Failed to create trade contract"
