@@ -18,7 +18,7 @@ import {
   selectDeliveryConfirmError,
 } from "../../store/selectors/contractSelectors";
 import { useSnackbar } from "../../context/SnackbarContext";
-import { CreateTradeParams } from "../types";
+import { CreateTradeParams, TradeResponse } from "../types";
 import { useWallet } from "./useWallet";
 import { ethers } from "ethers";
 import { raiseOrderDispute } from "../../store/slices/orderSlice";
@@ -185,7 +185,10 @@ export const useContractData = () => {
   );
 
   const initiateTradeContract = useCallback(
-    async (tradeData: CreateTradeParams, showNotifications = true) => {
+    async (
+      tradeData: CreateTradeParams,
+      showNotifications = true
+    ): Promise<TradeResponse> => {
       try {
         const sanitizedTradeData = {
           ...tradeData,
@@ -223,6 +226,7 @@ export const useContractData = () => {
         return {
           status: "error",
           message: (err as string) || "Failed to create trade contract",
+          data: null,
         };
       }
     },

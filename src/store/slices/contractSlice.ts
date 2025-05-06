@@ -43,7 +43,7 @@ export const createTrade = createAsyncThunk<
 });
 
 export const confirmDelivery = createAsyncThunk<
-  { status: string; message: string },
+  TradeResponse,
   string,
   { rejectValue: string }
 >("contract/confirmDelivery", async (tradeId, { rejectWithValue }) => {

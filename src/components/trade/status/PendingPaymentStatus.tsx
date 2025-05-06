@@ -78,15 +78,6 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     return "200.00";
   };
 
-  const handleReleaseNow = async () => {
-    if (!isConnected) {
-      setIsWalletModalOpen(true);
-      return;
-    }
-
-    await processRelease();
-  };
-
   const processRelease = async () => {
     setIsProcessing(true);
     try {
@@ -99,6 +90,7 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
         orderId: orderId || "",
       });
 
+      console.log(tradeResponse);
       if (tradeResponse.status !== "success" || !tradeResponse.data) {
         throw new Error(
           tradeResponse.message || "Failed to create trade contract"
@@ -108,16 +100,16 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
       const { contractAddress, amount, isUSDT, usdtAddress } =
         tradeResponse.data;
 
-      const escrowResult = await sendFundsToEscrow(
-        contractAddress,
-        amount,
-        isUSDT,
-        usdtAddress
-      );
+      // const escrowResult = await sendFundsToEscrow(
+      //   contractAddress,
+      //   amount,
+      //   isUSDT,
+      //   usdtAddress
+      // );
 
-      if (!escrowResult.success) {
-        throw new Error("Failed to send funds to escrow");
-      }
+      // if (!escrowResult.success) {
+      //   throw new Error("Failed to send funds to escrow");
+      // }
 
       if (navigatePath) {
         navigate(navigatePath, { replace: true });
@@ -133,7 +125,14 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
       setIsProcessing(false);
     }
   };
+  const handleReleaseNow = async () => {
+    if (!isConnected) {
+      setIsWalletModalOpen(true);
+      return;
+    }
 
+    await processRelease();
+  };
   const handleWalletConnected = (success: boolean) => {
     setIsWalletModalOpen(false);
     if (success) {
