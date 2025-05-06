@@ -3,16 +3,19 @@
 // import { Product } from "../../../utils/types";
 // import { useWallet } from "../../../context/WalletContext";
 // import { useOrderData } from "../../../utils/hooks/useOrderData";
+// import { useNavigate } from "react-router-dom";
 
 // interface PurchaseSectionProps {
 //   product?: Product;
 // }
 
 // const PurchaseSection = ({ product }: PurchaseSectionProps) => {
-//   const { placeOrder, loading } = useOrderData();
+//   const navigate = useNavigate();
+//   const { placeOrder } = useOrderData();
 //   const [isProcessing, setIsProcessing] = useState(false);
 //   const [error, setError] = useState<string | null>(null);
 //   const { isConnected, connectMetaMask, balance, account } = useWallet();
+
 //   const handleConnectWallet = async () => {
 //     setIsProcessing(true);
 //     setError(null);
@@ -26,7 +29,6 @@
 //       setIsProcessing(false);
 //     }
 //   };
-
 //   const handlePurchase = async () => {
 //     if (!product) return;
 
@@ -34,11 +36,17 @@
 //     setError(null);
 
 //     try {
-//       // Simulating purchase process
-//       await new Promise((resolve) => setTimeout(resolve, 1500));
+//       const order = await placeOrder({
+//         product: product._id,
+//         seller: product.seller,
+//         amount: product.price,
+//       });
 
-//       // In a real implementation this would send a transaction
-//       // Show success notification or redirect
+//       if (order && order._id) {
+//         navigate(`/orders/${order._id}?status=pending`);
+//       } else {
+//         setError("Failed to create order. Please try again.");
+//       }
 //     } catch (err) {
 //       setError(`Transaction failed: ${(err as string) || "Please try again"}`);
 //     } finally {
@@ -96,6 +104,7 @@ import { Product } from "../../../utils/types";
 import { useWallet } from "../../../context/WalletContext";
 import { useOrderData } from "../../../utils/hooks/useOrderData";
 import { useNavigate } from "react-router-dom";
+import QuantitySelector from "./QuantitySelector";
 
 interface PurchaseSectionProps {
   product?: Product;
@@ -107,6 +116,7 @@ const PurchaseSection = ({ product }: PurchaseSectionProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { isConnected, connectMetaMask, balance, account } = useWallet();
+  const [quantity, setQuantity] = useState(1);
 
   const handleConnectWallet = async () => {
     setIsProcessing(true);
@@ -121,6 +131,7 @@ const PurchaseSection = ({ product }: PurchaseSectionProps) => {
       setIsProcessing(false);
     }
   };
+
   const handlePurchase = async () => {
     if (!product) return;
 
@@ -131,7 +142,8 @@ const PurchaseSection = ({ product }: PurchaseSectionProps) => {
       const order = await placeOrder({
         product: product._id,
         seller: product.seller,
-        amount: product.price,
+        amount: product.price * quantity,
+        // quantity: quantity,
       });
 
       if (order && order._id) {
@@ -146,6 +158,10 @@ const PurchaseSection = ({ product }: PurchaseSectionProps) => {
     }
   };
 
+  const handleQuantityChange = (newQuantity: number) => {
+    setQuantity(newQuantity);
+  };
+
   return (
     <div className="bg-[#212428] p-4 md:p-6 space-y-4">
       {error && (
@@ -153,6 +169,17 @@ const PurchaseSection = ({ product }: PurchaseSectionProps) => {
           {error}
         </div>
       )}
+
+      {/* Quantity Selector */}
+      <div className="flex justify-between items-center">
+        <QuantitySelector min={1} max={99} onChange={handleQuantityChange} />
+
+        {/* {product?.stock && product.stock < 10 && (
+          <span className="text-xs text-yellow-500">
+            Only {product.stock} left in stock
+          </span>
+        )} */}
+      </div>
 
       <div className="flex gap-3 w-full">
         <button

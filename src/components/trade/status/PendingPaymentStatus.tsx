@@ -76,6 +76,18 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
 
   const processRelease = async () => {
     setIsProcessing(true);
+    console.log({
+      seller: "0xe42d9833970534ce655d361CA1C4C4A23A6Db997",
+
+      productCost:
+        tradeDetails && tradeDetails.amount
+          ? tradeDetails.amount
+          : orderDetails?.product.price || 200,
+      logisticsProvider: "0x57aEAAEb6081A394675642B5A7E70e94618641d9",
+      logisticsCost: "2000",
+      useUSDT: true,
+      orderId: orderId || "",
+    });
     try {
       const tradeResponse = await initiateTradeContract({
         seller: "0xe42d9833970534ce655d361CA1C4C4A23A6Db997",
@@ -91,7 +103,6 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
         useUSDT: true,
         orderId: orderId || "",
       });
-
       console.log(tradeResponse, orderDetails?.product.price);
       if (tradeResponse.status !== "success" || !tradeResponse.data) {
         throw new Error(

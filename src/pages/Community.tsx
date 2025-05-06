@@ -39,8 +39,7 @@ const Community = () => {
   };
 
   const handleTelegramJoin = () => {
-    // Replace with your actual Telegram group URL
-    window.open("https://t.me/DezenMartCommunity", "_blank");
+    window.open("https://t.me/dezenmart_commuinity", "_blank");
   };
 
   const features = [
