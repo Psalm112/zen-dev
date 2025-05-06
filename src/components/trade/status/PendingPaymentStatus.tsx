@@ -68,14 +68,14 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     if (tradeDetails && tradeDetails.amount) {
       return tradeDetails.amount.toString().includes(".")
         ? tradeDetails.amount.toString()
-        : `${tradeDetails.amount.toString()}.00`;
+        : `${tradeDetails.amount.toString()}`;
     }
     if (orderDetails && orderDetails.formattedAmount) {
       return orderDetails.formattedAmount.includes(".")
         ? orderDetails.formattedAmount
-        : `${orderDetails.formattedAmount}.00`;
+        : `${orderDetails.formattedAmount}`;
     }
-    return "200.00";
+    return "200";
   };
 
   const processRelease = async () => {
