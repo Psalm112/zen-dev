@@ -210,7 +210,7 @@ const USER_KEY = "auth_user";
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { account } = useWallet();
+  // const { account } = useWallet();
 
   useEffect(() => {
     const checkAuthStatus = async () => {

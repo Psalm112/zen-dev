@@ -15,7 +15,7 @@ import {
   selectProductLoading,
   selectProductError,
   selectSearchResults,
-  selectProductsByCategory,
+  // selectProductsByCategory,
   selectRelatedProducts,
   selectFormattedProduct,
 } from "../../store/selectors/productSelectors";

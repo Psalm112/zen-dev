@@ -26,7 +26,7 @@ import { raiseOrderDispute } from "../../store/slices/orderSlice";
 export const useContractData = () => {
   const dispatch = useAppDispatch();
   const { showSnackbar } = useSnackbar();
-  const { signer, provider, account } = useWallet();
+  const { signer, account } = useWallet();
   const [transactionHash, setTransactionHash] = useState<string | null>(null);
 
   const tradeResponse = useAppSelector(selectTradeResponse);
@@ -253,9 +253,8 @@ export const useContractData = () => {
   const raiseTradeDispute = useCallback(
     async (orderId: string, reason: string) => {
       try {
-        const result = await dispatch(
-          raiseOrderDispute({ orderId, reason })
-        ).unwrap();
+        // const result =
+        await dispatch(raiseOrderDispute({ orderId, reason })).unwrap();
         showSnackbar(
           "Dispute raised successfully. Admin will review the case.",
           "success"

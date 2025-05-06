@@ -3,11 +3,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { googleIcon, facebookIcon, xIcon, Logo } from ".";
 import Button from "../components/common/Button";
 import { useAuth } from "../context/AuthContext";
-import ConnectWallet from "../components/trade/ConnectWallet";
-import { useWallet } from "../utils/hooks/useWallet";
+// import ConnectWallet from "../components/trade/ConnectWallet";
+// import { useWallet } from "../utils/hooks/useWallet";
 
-import { IoChevronBack } from "react-icons/io5";
-import { FaWallet, FaCheck } from "react-icons/fa";
+// import { IoChevronBack } from "react-icons/io5";
+// import { FaWallet, FaCheck } from "react-icons/fa";
 
 const Login = () => {
   const navigate = useNavigate();

@@ -6,7 +6,7 @@ import ProductList from "../components/product/ProductList";
 import { useProductData } from "../utils/hooks/useProductData";
 import { debounce } from "../utils/helpers";
 import ProductCard from "../components/product/ProductCard";
-import LoadingSpinner from "../components/common/LoadingSpinner";
+// import LoadingSpinner from "../components/common/LoadingSpinner";
 
 // categories
 const categories = [

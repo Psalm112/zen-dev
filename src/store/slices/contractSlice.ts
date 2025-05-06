@@ -54,7 +54,7 @@ export const confirmDelivery = createAsyncThunk<
       return rejectWithValue(response.error || "Failed to confirm delivery");
     }
 
-    return response.data as { status: string; message: string };
+    return response.data as TradeResponse;
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "An unknown error occurred";
