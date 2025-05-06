@@ -81,7 +81,7 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
         seller: "0x57aEAAEb6081A394675642B5A7E70e94618641d9",
         productCost: getAmount(),
         logisticsProvider: "0x57aEAAEb6081A394675642B5A7E70e94618641d9",
-        logisticsCost: "2000.00",
+        logisticsCost: "2000",
         useUSDT: true,
         orderId: orderId || "",
       });

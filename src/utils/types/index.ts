@@ -96,7 +96,7 @@ export interface Order {
 }
 export interface CreateTradeParams {
   seller: string;
-  productCost: string;
+  productCost: string | number;
   logisticsProvider: string;
   logisticsCost: string;
   useUSDT: boolean;

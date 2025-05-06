@@ -39,23 +39,23 @@ export const useContractData = () => {
   const deliveryConfirmError = useAppSelector(selectDeliveryConfirmError);
 
   // Helper to sanitize amount strings
-  const sanitizeAmount = (amount: string): string => {
-    if (!amount) return "0";
+  // const sanitizeAmount = (amount: string): string => {
+  //   if (!amount) return "0";
 
-    // Remove any non-numeric characters except for a single decimal point
-    let sanitized = amount.replace(/[^\d.]/g, "");
+  //   // Remove any non-numeric characters except for a single decimal point
+  //   let sanitized = amount.replace(/[^\d.]/g, "");
 
-    // Ensure only one decimal point
-    const parts = sanitized.split(".");
-    if (parts.length > 1) {
-      sanitized = parts[0] + "." + parts.slice(1).join("");
-    }
+  //   // Ensure only one decimal point
+  //   const parts = sanitized.split(".");
+  //   if (parts.length > 1) {
+  //     sanitized = parts[0] + "." + parts.slice(1).join("");
+  //   }
 
-    // If the result is empty or just a decimal point, return "0"
-    if (sanitized === "" || sanitized === ".") return "0";
+  //   // If the result is empty or just a decimal point, return "0"
+  //   if (sanitized === "" || sanitized === ".") return "0";
 
-    return sanitized;
-  };
+  //   return sanitized;
+  // };
 
   const approveUSDT = useCallback(
     async (
@@ -70,12 +70,12 @@ export const useContractData = () => {
 
       try {
         // Sanitize amount
-        const sanitizedAmount = sanitizeAmount(amount);
+        // const sanitizedAmount = sanitizeAmount(amount);
 
         let amountInMicroUSDT;
         try {
           // USDT typically has 6 decimal places
-          amountInMicroUSDT = ethers.parseUnits(sanitizedAmount, 6);
+          amountInMicroUSDT = ethers.parseUnits(amount, 6);
         } catch (error) {
           console.error("Error parsing USDT amount:", error);
           showSnackbar("Invalid amount format", "error");
@@ -134,14 +134,15 @@ export const useContractData = () => {
         dispatch(setTransactionPending(true));
 
         // Sanitize the amount first
-        const sanitizedAmount = sanitizeAmount(amount);
+        // const sanitizedAmount = sanitizeAmount(amount);
 
         if (isUSDT && usdtAddress) {
           // Handle USDT payment
           const approvalSuccess = await approveUSDT(
             usdtAddress,
             contractAddress,
-            sanitizedAmount
+            // sanitizedAmount
+            amount
           );
           if (!approvalSuccess) {
             return { success: false, hash: null };
@@ -154,7 +155,7 @@ export const useContractData = () => {
           // Handle ETH payment - convert to wei
           let amountInWei;
           try {
-            amountInWei = ethers.parseEther(sanitizedAmount);
+            amountInWei = ethers.parseEther(amount);
           } catch (error) {
             console.error("Error parsing ETH amount:", error);
             showSnackbar("Invalid amount format", "error");
@@ -192,8 +193,8 @@ export const useContractData = () => {
       try {
         const sanitizedTradeData = {
           ...tradeData,
-          productCost: sanitizeAmount(tradeData.productCost),
-          logisticsCost: sanitizeAmount(tradeData.logisticsCost),
+          productCost: tradeData.productCost,
+          logisticsCost: tradeData.logisticsCost,
         };
 
         const result = await dispatch(createTrade(sanitizedTradeData)).unwrap();
