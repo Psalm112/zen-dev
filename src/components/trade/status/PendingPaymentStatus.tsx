@@ -78,9 +78,10 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     setIsProcessing(true);
     try {
       const tradeResponse = await initiateTradeContract({
-        seller: tradeDetails
-          ? tradeDetails.sellerId
-          : orderDetails?.seller._id || "",
+        seller: "0xe42d9833970534ce655d361CA1C4C4A23A6Db997",
+        // tradeDetails
+        // ? tradeDetails.sellerId
+        // : orderDetails?.seller._id || "",
         productCost:
           tradeDetails && tradeDetails.amount
             ? tradeDetails.amount

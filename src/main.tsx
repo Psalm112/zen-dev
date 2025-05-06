@@ -29,6 +29,7 @@ const ViewTrade = lazy(() => import("./pages/ViewTrade.tsx"));
 const ViewTradeDetail = lazy(() => import("./pages/ViewTradeDetail.tsx"));
 const ViewOrderDetail = lazy(() => import("./pages/ViewOrderDetail.tsx"));
 const Notifications = lazy(() => import("./pages/Notifications.tsx"));
+const Community = lazy(() => import("./pages/Community.tsx"));
 // import About from "./pages/About.tsx";
 // import Market from "./pages/Market.tsx";
 // import Photos from "./pages/Photos.tsx";
@@ -117,6 +118,10 @@ const router = createBrowserRouter([
       {
         path: "/trades",
         element: <Trade />,
+      },
+      {
+        path: "/community",
+        element: <Community />,
       },
       {
         path: "/trades/viewtrades",
