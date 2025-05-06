@@ -90,7 +90,7 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
         orderId: orderId || "",
       });
 
-      console.log(tradeResponse);
+      console.log(tradeResponse, getAmount());
       if (tradeResponse.status !== "success" || !tradeResponse.data) {
         throw new Error(
           tradeResponse.message || "Failed to create trade contract"
