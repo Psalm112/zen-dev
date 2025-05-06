@@ -71,7 +71,7 @@ const ProductCard = React.memo(
             {description}
           </h4>
           <h4 className="text-[#AEAEB2] text-xs md:text-sm py-1 md:py-3 group-hover:hidden">
-            {images.length} items {ethPrice} ETH
+            {price} ETH
           </h4>
           <button
             className="mt-[5px] gap-3 lg:gap-7 font-bold text-white bg-Red py-2 hidden group-hover:flex justify-center items-center w-full transition-all duration-300"

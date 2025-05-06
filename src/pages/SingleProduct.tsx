@@ -170,7 +170,7 @@ const SingleProduct = () => {
                   </h1>
                   <div className="flex items-center">
                     <span className="text-xl sm:text-2xl font-bold">
-                      {ethPrice} ETH
+                      {product.price} ETH
                     </span>
                   </div>
                 </div>

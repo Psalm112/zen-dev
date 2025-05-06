@@ -59,7 +59,7 @@ const BaseStatus: FC<BaseStatusProps> = ({
   };
 
   const getAmount = () => {
-    return tradeDetails?.amount || orderDetails?.formattedAmount || "0";
+    return tradeDetails?.amount || orderDetails?.product.price || "0";
   };
 
   const getQuantity = () => {

@@ -64,7 +64,7 @@ const CompletedStatus: FC<CompletedStatusProps> = ({
     console.log(
       tradeDetails
         ? tradeDetails.amount.toString()
-        : orderDetails?.formattedAmount.toString()
+        : orderDetails?.product.price.toString()
     );
     setTimeout(() => {
       setCopied(false);
@@ -220,7 +220,7 @@ const CompletedStatus: FC<CompletedStatusProps> = ({
                 <span className="text-red-500 text-xl font-bold">
                   {tradeDetails
                     ? tradeDetails.amount.toString()
-                    : orderDetails?.formattedAmount}
+                    : orderDetails?.product.price}
                 </span>
               </div>
 
