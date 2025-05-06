@@ -92,17 +92,18 @@ const ViewOrderDetail = () => {
     if (!orderId) return;
 
     try {
-      const disputeRes = await raiseDispute(orderId, reason);
+      const disputeRes = await raiseDispute(orderId, reason, false);
       const changeOrderRes = await changeOrderStatus(
         orderId,
         "disputed",
         false
       );
-      toast.success("Dispute has been filed successfully");
+
       if (disputeRes && changeOrderRes?.status === "disputed") {
-        navigate(`/trades/viewtrades/${orderId}?status=cancelled`, {
-          replace: true,
-        });
+        toast.success("Dispute has been filled successfully");
+        // navigate(`/trades/viewtrades/${orderId}?status=cancelled`, {
+        //   replace: true,
+        // });
       }
     } catch (error) {
       toast.error("Failed to file dispute. Please try again.");

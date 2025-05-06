@@ -45,7 +45,7 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     seconds: 59,
   });
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
-  const [isDisputModalOpen, setIsDisputeModalOpen] = useState(false);
+  const [isDisputeModalOpen, setIsDisputeModalOpen] = useState(false);
   const [dispute, setDispute] = useState("");
   const [loading, setLoading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -221,17 +221,16 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
         }
       />
       <Modal
-        isOpen={isDisputModalOpen}
+        isOpen={isDisputeModalOpen}
         onClose={() => setIsDisputeModalOpen(false)}
-        title="Connect Wallet"
+        title="Reason for Dispute"
         maxWidth="md:max-w-lg"
       >
         <form onSubmit={handleDisputeSubmit} className="space-y-4 mt-4">
-          {" "}
           <div>
-            <label htmlFor="comment" className="block text-gray-300 mb-2">
+            {/* <label htmlFor="comment" className="block text-gray-300 mb-2">
               Reason for Dispute
-            </label>
+            </label> */}
             <textarea
               id="dispue-reason"
               value={dispute}
