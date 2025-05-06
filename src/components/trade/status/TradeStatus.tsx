@@ -10,10 +10,12 @@ import {
   TradeTransactionInfo,
 } from "../../../utils/types";
 import { ErrorBoundary } from "react-error-boundary";
+import { time } from "framer-motion";
 
 interface TradeStatusProps extends StatusProps {
   orderDetails?: OrderDetails;
   navigatePath?: string;
+  showTimer?: boolean;
 }
 
 const TradeStatus: FC<TradeStatusProps> = ({
@@ -28,6 +30,7 @@ const TradeStatus: FC<TradeStatusProps> = ({
   onReleaseNow,
   orderId,
   navigatePath,
+  showTimer = false,
 }) => {
   const safeTransactionInfo: TradeTransactionInfo = transactionInfo || {
     buyerName: "Unknown",
@@ -67,7 +70,8 @@ const TradeStatus: FC<TradeStatusProps> = ({
         onConfirmDelivery,
         onReleaseNow,
         orderId,
-        navigatePath
+        navigatePath,
+        showTimer
       )}
     </ErrorBoundary>
   );
@@ -80,11 +84,12 @@ const renderStatusComponent = (
   transactionInfo?: TradeTransactionInfo,
   onContactSeller?: () => void,
   onContactBuyer?: () => void,
-  onOrderDispute?: (reason?: string) => void,
+  onOrderDispute?: (reason: string) => Promise<void>,
   onConfirmDelivery?: () => void,
   onReleaseNow?: () => void,
   orderId?: string,
-  navigatePath?: string
+  navigatePath?: string,
+  showTimer?: boolean
 ) => {
   switch (status) {
     case "cancelled":
@@ -94,7 +99,7 @@ const renderStatusComponent = (
           orderDetails={orderDetails}
           transactionInfo={transactionInfo}
           onContactSeller={onContactSeller}
-          onOrderDispute={onOrderDispute}
+          // onOrderDispute={onOrderDispute}
         />
       );
     case "pending":
@@ -108,6 +113,7 @@ const renderStatusComponent = (
           onReleaseNow={onReleaseNow}
           navigatePath={navigatePath}
           orderId={orderId}
+          showTimer={showTimer}
         />
       );
     case "release":
@@ -120,6 +126,7 @@ const renderStatusComponent = (
           onOrderDispute={onOrderDispute}
           onConfirmDelivery={onConfirmDelivery}
           orderId={orderId}
+          showTimer={showTimer}
         />
       );
     case "completed":

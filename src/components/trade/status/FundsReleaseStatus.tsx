@@ -13,15 +13,17 @@ import { useContractData } from "../../../utils/hooks/useContractData";
 import Modal from "../../common/Modal";
 import ConnectWallet from "../ConnectWallet";
 import { useWallet } from "../../../utils/hooks/useWallet";
+import { motion } from "framer-motion";
 
 interface FundsReleaseStatusProps {
   tradeDetails?: TradeDetails;
   orderDetails?: OrderDetails;
   transactionInfo?: TradeTransactionInfo;
   onContactSeller?: () => void;
-  onOrderDispute?: () => void;
+  onOrderDispute?: (reason: string) => Promise<void>;
   onConfirmDelivery?: () => void;
   orderId?: string;
+  showTimer?: boolean;
 }
 
 const FundsReleaseStatus: FC<FundsReleaseStatusProps> = ({
@@ -31,6 +33,7 @@ const FundsReleaseStatus: FC<FundsReleaseStatusProps> = ({
   onOrderDispute,
   onConfirmDelivery,
   orderId,
+  showTimer,
 }) => {
   const [timeRemaining, setTimeRemaining] = useState({
     minutes: 9,
@@ -38,6 +41,9 @@ const FundsReleaseStatus: FC<FundsReleaseStatusProps> = ({
   });
   const [isProcessing, setIsProcessing] = useState(false);
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
+  const [isDisputModalOpen, setIsDisputeModalOpen] = useState(false);
+  const [dispute, setDispute] = useState("");
+  const [loading, setLoading] = useState(false);
   const { confirmTradeDelivery, raiseTradeDispute } = useContractData();
   const { isConnected } = useWallet();
 
@@ -89,44 +95,57 @@ const FundsReleaseStatus: FC<FundsReleaseStatusProps> = ({
     }
   };
 
-  const handleDispute = async () => {
-    if (!isConnected) {
-      setIsWalletModalOpen(true);
-      return;
-    }
-
-    if (!orderId) {
-      toast.error("Order ID is missing. Cannot raise dispute.");
-      return;
-    }
-
-    setIsProcessing(true);
+  const handleDisputeSubmit = async () => {
+    setLoading(true);
     try {
-      const result = await raiseTradeDispute(
-        orderId,
-        "Issue with received item"
-      );
-
-      if (!result.success) {
-        throw new Error(result.message || "Failed to raise dispute");
-      }
-
       if (onOrderDispute) {
-        onOrderDispute();
+        await onOrderDispute(dispute);
       }
-
-      toast.success(
-        "Dispute raised successfully! Admin will review your case."
-      );
-    } catch (error: any) {
-      console.error("Error raising dispute:", error);
-      toast.error(
-        error.message || "Failed to raise dispute. Please try again."
-      );
+    } catch (error) {
+      console.log(error);
     } finally {
-      setIsProcessing(false);
+      setLoading(false);
     }
   };
+
+  // const handleDispute = async () => {
+  //   if (!isConnected) {
+  //     setIsWalletModalOpen(true);
+  //     return;
+  //   }
+
+  //   if (!orderId) {
+  //     toast.error("Order ID is missing. Cannot raise dispute.");
+  //     return;
+  //   }
+
+  //   setIsProcessing(true);
+  //   try {
+  //     const result = await raiseTradeDispute(
+  //       orderId,
+  //       "Issue with received item"
+  //     );
+
+  //     if (!result.success) {
+  //       throw new Error(result.message || "Failed to raise dispute");
+  //     }
+
+  //     if (onOrderDispute) {
+  //       onOrderDispute();
+  //     }
+
+  //     toast.success(
+  //       "Dispute raised successfully! Admin will review your case."
+  //     );
+  //   } catch (error: any) {
+  //     console.error("Error raising dispute:", error);
+  //     toast.error(
+  //       error.message || "Failed to raise dispute. Please try again."
+  //     );
+  //   } finally {
+  //     setIsProcessing(false);
+  //   }
+  // };
 
   const handleWalletConnected = (success: boolean) => {
     setIsWalletModalOpen(false);
@@ -148,7 +167,7 @@ const FundsReleaseStatus: FC<FundsReleaseStatusProps> = ({
         transactionInfo={transactionInfo}
         contactLabel="Contact Buyer"
         onContact={onContactSeller}
-        showTimer={true}
+        showTimer={showTimer}
         timeRemaining={timeRemaining}
         actionButtons={
           <div className="w-full flex justify-evenly flex-row flex-wrap gap-4">
@@ -156,7 +175,7 @@ const FundsReleaseStatus: FC<FundsReleaseStatusProps> = ({
               <Button
                 title="Order Dispute?"
                 className="w-fit bg-transparent hover:bg-gray-700 text-white text-sm px-6 py-3 border border-gray-600 rounded transition-colors"
-                onClick={handleDispute}
+                onClick={() => setIsDisputeModalOpen(true)}
                 disabled={isProcessing}
               />
             )}
@@ -183,7 +202,38 @@ const FundsReleaseStatus: FC<FundsReleaseStatusProps> = ({
           </div>
         }
       />
-
+      <Modal
+        isOpen={isDisputModalOpen}
+        onClose={() => setIsDisputeModalOpen(false)}
+        title="Connect Wallet"
+        maxWidth="md:max-w-lg"
+      >
+        <form onSubmit={handleDisputeSubmit} className="space-y-4 mt-4">
+          {" "}
+          <div>
+            <label htmlFor="comment" className="block text-gray-300 mb-2">
+              Reason for Dispute
+            </label>
+            <textarea
+              id="dispue-reason"
+              value={dispute}
+              onChange={(e) => setDispute(e.target.value)}
+              className="w-full px-3 py-2 bg-neutral-800 text-white border border-neutral-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+              rows={4}
+              placeholder="Share the reason for the dispute or issue"
+            />
+          </div>
+          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <Button
+              title="Submit Review"
+              type="submit"
+              className={`max-w-md mx-auto flex items-center justify-center p-3 ${
+                loading ? "bg-Red/20" : "bg-Red"
+              } hover:bg-red-600 text-white w-full`}
+            />
+          </motion.div>
+        </form>
+      </Modal>
       <Modal
         isOpen={isWalletModalOpen}
         onClose={() => setIsWalletModalOpen(false)}

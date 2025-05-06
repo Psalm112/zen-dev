@@ -47,9 +47,9 @@ const SellCheckout = () => {
 
   const handleSell = () => {
     // sell logic
-    console.log("Sell initiated for:", product);
-    console.log("Payment amount:", paymentAmount);
-    console.log("Payment method:", paymentMethod);
+    // console.log("Sell initiated for:", product);
+    // console.log("Payment amount:", paymentAmount);
+    // console.log("Payment method:", paymentMethod);
 
     // success message and redirect
     setTimeout(() => {

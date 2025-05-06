@@ -14,16 +14,18 @@ import { toast } from "react-toastify";
 import Modal from "../../common/Modal";
 import ConnectWallet from "../ConnectWallet";
 import { useWallet } from "../../../utils/hooks/useWallet";
+import { motion } from "framer-motion";
 
 interface PendingPaymentStatusProps {
   tradeDetails?: TradeDetails;
   orderDetails?: OrderDetails;
   transactionInfo?: TradeTransactionInfo;
   onContactSeller?: () => void;
-  onOrderDispute?: () => void;
+  onOrderDispute?: (reason: string) => Promise<void>;
   onReleaseNow?: () => void;
   navigatePath?: string;
   orderId?: string;
+  showTimer?: boolean;
 }
 
 const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
@@ -35,6 +37,7 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
   onReleaseNow,
   navigatePath,
   orderId,
+  showTimer,
 }) => {
   const navigate = useNavigate();
   const [timeRemaining, setTimeRemaining] = useState({
@@ -42,6 +45,9 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     seconds: 59,
   });
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
+  const [isDisputModalOpen, setIsDisputeModalOpen] = useState(false);
+  const [dispute, setDispute] = useState("");
+  const [loading, setLoading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [pendingTransactionData, setPendingTransactionData] = useState<{
     contractAddress: string;
@@ -153,6 +159,18 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     }
   };
 
+  const handleDisputeSubmit = async () => {
+    setLoading(true);
+    try {
+      if (onOrderDispute) {
+        await onOrderDispute(dispute);
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <>
       <BaseStatus
@@ -170,7 +188,7 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
         transactionInfo={transactionInfo}
         contactLabel="Contact Buyer"
         onContact={onContactSeller}
-        showTimer={true}
+        showTimer={showTimer}
         timeRemaining={timeRemaining}
         actionButtons={
           <div className="w-full flex justify-evenly flex-row flex-wrap gap-4">
@@ -178,7 +196,7 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
               <Button
                 title="Order Dispute?"
                 className="bg-transparent hover:bg-gray-700 text-white text-sm px-6 py-3 border border-gray-600 rounded transition-colors"
-                onClick={onOrderDispute}
+                onClick={() => setIsDisputeModalOpen(true)}
                 disabled={isProcessing}
               />
             )}
@@ -202,6 +220,38 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
           </div>
         }
       />
+      <Modal
+        isOpen={isDisputModalOpen}
+        onClose={() => setIsDisputeModalOpen(false)}
+        title="Connect Wallet"
+        maxWidth="md:max-w-lg"
+      >
+        <form onSubmit={handleDisputeSubmit} className="space-y-4 mt-4">
+          {" "}
+          <div>
+            <label htmlFor="comment" className="block text-gray-300 mb-2">
+              Reason for Dispute
+            </label>
+            <textarea
+              id="dispue-reason"
+              value={dispute}
+              onChange={(e) => setDispute(e.target.value)}
+              className="w-full px-3 py-2 bg-neutral-800 text-white border border-neutral-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+              rows={4}
+              placeholder="Share the reason for the dispute or issue"
+            />
+          </div>
+          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <Button
+              title="Submit Review"
+              type="submit"
+              className={`max-w-md mx-auto flex items-center justify-center p-3 ${
+                loading ? "bg-Red/20" : "bg-Red"
+              } hover:bg-red-600 text-white w-full`}
+            />
+          </motion.div>
+        </form>
+      </Modal>
 
       <Modal
         isOpen={isWalletModalOpen}

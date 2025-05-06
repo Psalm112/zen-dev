@@ -97,7 +97,7 @@ const BuyCheckout = () => {
       // if (result) {
       //   navigate(`/orders/${result._id}?status=pending`);
       // }
-      navigate(`/orders/${product._id}?status=pending`);
+      navigate(`/trades/viewtrades/${product._id}?status=pending`);
     } catch (error) {
       console.error("Order creation error:", error);
       setError(error);

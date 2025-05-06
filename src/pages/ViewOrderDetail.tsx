@@ -88,18 +88,25 @@ const ViewOrderDetail = () => {
     toast.info("Opening chat with buyer...");
     // navigate(`/chat/${orderDetails?.buyer?._id}`);
   };
-  const handleOrderDispute = async (reason = "Item not as described") => {
+  const handleOrderDispute = async (reason: string) => {
     if (!orderId) return;
 
     try {
-      await raiseDispute(orderId, reason);
+      const disputeRes = await raiseDispute(orderId, reason);
+      const changeOrderRes = await changeOrderStatus(
+        orderId,
+        "disputed",
+        false
+      );
       toast.success("Dispute has been filed successfully");
-      navigate(`/trades/viewtrades/${orderId}?status=cancelled`, {
-        replace: true,
-      });
+      if (disputeRes && changeOrderRes?.status === "disputed") {
+        navigate(`/trades/viewtrades/${orderId}?status=cancelled`, {
+          replace: true,
+        });
+      }
     } catch (error) {
       toast.error("Failed to file dispute. Please try again.");
-      console.log(error);
+      // console.log(error);
     }
   };
 
@@ -112,7 +119,7 @@ const ViewOrderDetail = () => {
       });
     } catch (error) {
       toast.error("Failed Release. Please try again.");
-      console.log(error);
+      // console.log(error);
     }
   };
 
@@ -129,7 +136,7 @@ const ViewOrderDetail = () => {
       toast.success("Order has been completed successfully!");
     } catch (error) {
       toast.error("Failed to complete the order. Please try again.");
-      console.log(error);
+      // console.log(error);
     } finally {
       //   setIsProcessing(false);
     }

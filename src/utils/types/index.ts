@@ -84,7 +84,7 @@ export interface Order {
     rating?: number;
   };
   amount: number;
-  status: "pending" | "completed" | "disputed";
+  status: OrderStatus;
   dispute?: {
     raisedBy: string;
     reason: string;
@@ -94,6 +94,18 @@ export interface Order {
   quantity: number;
   updatedAt: string;
 }
+
+export interface OrderStatusUpdate {
+  _id: string;
+  product: string;
+  buyer: string;
+  seller: string;
+  amount: number;
+  status: OrderStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface CreateTradeParams {
   seller: string;
   productCost: string | number;
@@ -203,7 +215,7 @@ export interface StatusProps {
   transactionInfo?: TradeTransactionInfo;
   onContactSeller?: () => void;
   onContactBuyer?: () => void;
-  onOrderDispute?: () => void;
+  onOrderDispute?: (reason: string) => Promise<void>;
   onReleaseNow?: () => void;
   onConfirmDelivery?: () => void;
   orderId?: string;

@@ -95,9 +95,10 @@ const ViewTradeDetail = () => {
     toast.info("Opening chat with buyer...");
   };
 
-  const handleOrderDispute = () => {
-    toast.info("Dispute request has been sent");
-  };
+  // const handleOrderDispute = (): Promise<void> => {
+  //   toast.info("Dispute request has been sent");
+  //   return
+  // };
 
   const handleReleaseNow = () => {
     if (!tradeId) return;
@@ -231,10 +232,11 @@ const ViewTradeDetail = () => {
             transactionInfo={transactionInfo}
             onContactSeller={handleContactSeller}
             onContactBuyer={handleContactBuyer}
-            onOrderDispute={handleOrderDispute}
+            // onOrderDispute={handleOrderDispute}
             onReleaseNow={handleReleaseNow}
             orderId={tradeId}
-            navigatePath=""
+            // navigatePath=""
+            showTimer
           />
         </motion.div>
       </div>

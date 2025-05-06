@@ -13,7 +13,7 @@ interface CancelledStatusProps {
   orderDetails?: OrderDetails;
   transactionInfo?: TradeTransactionInfo;
   onContactSeller?: () => void;
-  onOrderDispute?: () => void;
+  // onOrderDispute?: () => void;
 }
 
 const CancelledStatus: FC<CancelledStatusProps> = ({

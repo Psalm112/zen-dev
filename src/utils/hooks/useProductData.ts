@@ -58,7 +58,7 @@ export const useProductData = () => {
         return true;
       } catch (err: any) {
         if (err.name === "AbortError") {
-          console.log("Request was cancelled");
+          // console.log("Request was cancelled");
           return false;
         }
 
@@ -99,7 +99,7 @@ export const useProductData = () => {
         return result.data;
       } catch (err: any) {
         if (err.name === "AbortError") {
-          console.log("Request was cancelled");
+          // console.log("Request was cancelled");
           return [];
         }
 

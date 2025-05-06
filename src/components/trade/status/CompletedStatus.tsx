@@ -61,11 +61,11 @@ const CompletedStatus: FC<CompletedStatusProps> = ({
   const copyOrderId = (id: string) => {
     navigator.clipboard.writeText(id);
     setCopied(true);
-    console.log(
-      tradeDetails
-        ? tradeDetails.amount.toString()
-        : orderDetails?.product.price.toString()
-    );
+    // console.log(
+    //   tradeDetails
+    //     ? tradeDetails.amount.toString()
+    //     : orderDetails?.product.price.toString()
+    // );
     setTimeout(() => {
       setCopied(false);
     }, 2000);

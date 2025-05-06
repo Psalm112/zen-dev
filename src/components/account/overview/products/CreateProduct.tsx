@@ -103,7 +103,7 @@ const CreateProduct = () => {
     images.forEach((image) => {
       formData.append("images", image);
     });
-    console.log(formData);
+    // console.log(formData);
     try {
       const result = await createProduct(formData);
       if (result) {

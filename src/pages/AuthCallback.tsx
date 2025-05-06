@@ -18,10 +18,10 @@ const AuthCallback = () => {
         const token = searchParams.get("token");
         const userId = searchParams.get("userId");
 
-        console.log("Auth callback received:", {
-          token: token?.substring(0, 10) + "...",
-          userId,
-        });
+        // console.log("Auth callback received:", {
+        //   token: token?.substring(0, 10) + "...",
+        //   userId,
+        // });
 
         if (!token || !userId) {
           throw new Error("Authentication failed: Missing token or user ID");
@@ -35,7 +35,7 @@ const AuthCallback = () => {
                 handleAuthCallback(token, response.data);
                 const redirectPath = "/";
                 navigate(redirectPath, { replace: true });
-                console.log("Complete user profile loaded");
+                // console.log("Complete user profile loaded");
               }
             });
           });

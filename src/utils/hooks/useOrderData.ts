@@ -24,6 +24,7 @@ import {
 import { useSnackbar } from "../../context/SnackbarContext";
 import { useEffect } from "react";
 import { api } from "../services/apiService";
+import { OrderStatus } from "../types";
 
 export const useOrderData = () => {
   const dispatch = useAppDispatch();
@@ -125,7 +126,7 @@ export const useOrderData = () => {
   );
 
   const changeOrderStatus = useCallback(
-    async (orderId: string, status: string, showNotification = true) => {
+    async (orderId: string, status: OrderStatus, showNotification = true) => {
       try {
         const result = await dispatch(
           updateOrderStatus({ orderId, status })

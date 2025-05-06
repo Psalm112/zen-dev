@@ -226,24 +226,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
             if (decoded.exp < currentTime) {
               clearAuthState();
-              console.log("Token expired, clearing auth state");
+              // console.log("Token expired, clearing auth state");
             } else {
               const parsedUser = JSON.parse(storedUser);
               setUser(parsedUser);
-              console.log(
-                "User authenticated from local storage:",
-                parsedUser.email
-              );
+              // console.log(
+              //   "User authenticated from local storage:",
+              //   parsedUser.email
+              // );
             }
           } catch (error) {
             console.error("Invalid token:", error);
             clearAuthState();
           }
         } else {
-          console.log("No token or user found in storage");
+          // console.log("No token or user found in storage");
         }
       } catch (error) {
-        console.error("Error checking auth status:", error);
+        // console.error("Error checking auth status:", error);
         clearAuthState();
       } finally {
         setIsLoading(false);
@@ -268,7 +268,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       const redirectUrl = `${API_URL}/auth/google`;
       // ?frontend=${FRONTEND_URL}
-      console.log("Redirecting to:", redirectUrl);
+      // console.log("Redirecting to:", redirectUrl);
       window.location.href = redirectUrl;
     }
   };
@@ -327,7 +327,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = () => {
-    console.log("Logging out");
+    // console.log("Logging out");
     clearAuthState();
   };
 
