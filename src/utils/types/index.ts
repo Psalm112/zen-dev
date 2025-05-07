@@ -127,15 +127,15 @@ export interface ReferralInfo {
 }
 export type NotificationType = "update" | "funds" | "buyer" | "system";
 
-export interface Notification {
-  id: string;
-  type: NotificationType;
-  message: string;
-  isRead: boolean;
-  timestamp: Date;
-  icon?: string;
-  link?: string;
-}
+// export interface Notification {
+//   id: string;
+//   type: NotificationType;
+//   message: string;
+//   isRead: boolean;
+//   timestamp: Date;
+//   icon?: string;
+//   link?: string;
+// }
 
 export type TabType = "1" | "2" | "3" | "4" | "5";
 export type TradeTab = "buy" | "sell" | "active" | "completed";
@@ -171,6 +171,71 @@ export interface ReferralData
   activePoints: number;
   usedPoints: number;
   promoCode: string;
+}
+
+export interface WatchlistItem {
+  _id: string;
+  user: string;
+  product: {
+    _id: string;
+    name: string;
+    price: number;
+    seller: string;
+    images: string[];
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WatchlistCheck {
+  isWatchlist: boolean;
+}
+
+export interface Reward {
+  _id: string;
+  userId: string;
+  actionType: string;
+  points: number;
+  referenceId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RewardSummary {
+  milestones: {
+    sales: number;
+    purchases: number;
+  };
+  _id: string;
+  totalPoints: number;
+  availablePoints: number;
+}
+
+export interface Notification {
+  _id: string;
+  recipient: string;
+  type: string;
+  message: string;
+  read: boolean;
+  metadata: {
+    orderId?: string;
+    [key: string]: any;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NotificationCount {
+  count: number;
+}
+
+export interface MarkReadResponse {
+  success: boolean;
+  acknowledged: boolean;
+  modifiedCount: number;
+  upsertedId: null | string;
+  upsertedCount: number;
+  matchedCount: number;
 }
 
 export type TradeStatusType = "cancelled" | "pending" | "release" | "completed";

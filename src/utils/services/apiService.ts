@@ -384,6 +384,136 @@ export const api = {
       body: JSON.stringify({ reason }),
     });
   },
+
+  // Watchlist API endpoints
+  addToWatchlist: async (productId: string) => {
+    return fetchWithAuth(`/watchlist/${productId}`, {
+      method: "POST",
+    });
+  },
+  getUserWatchlist: async (skipCache = false) => {
+    const key = cacheKey("/watchlist");
+    if (!skipCache && requestCache.has(key)) {
+      return requestCache.get(key);
+    }
+    if (abortControllers.has(key)) {
+      abortControllers.get(key).abort();
+    }
+    const controller = new AbortController();
+    abortControllers.set(key, controller);
+    const result = await fetchWithAuth("/watchlist", {
+      signal: controller.signal,
+    });
+    if (result.ok) {
+      requestCache.set(key, result);
+    }
+    return result;
+  },
+  checkWatchlist: async (productId: string) => {
+    const key = cacheKey(`/watchlist/${productId}/check`);
+    if (abortControllers.has(key)) {
+      abortControllers.get(key).abort();
+    }
+    const controller = new AbortController();
+    abortControllers.set(key, controller);
+    return fetchWithAuth(`/watchlist/${productId}/check`, {
+      signal: controller.signal,
+    });
+  },
+  removeFromWatchlist: async (productId: string) => {
+    // Clear cache on delete
+    requestCache.delete(cacheKey("/watchlist"));
+    return fetchWithAuth(`/watchlist/${productId}`, {
+      method: "DELETE",
+    });
+  },
+
+  // Rewards API endpoints
+  getUserRewards: async (skipCache = false) => {
+    const key = cacheKey("/rewards");
+    if (!skipCache && requestCache.has(key)) {
+      return requestCache.get(key);
+    }
+    if (abortControllers.has(key)) {
+      abortControllers.get(key).abort();
+    }
+    const controller = new AbortController();
+    abortControllers.set(key, controller);
+    const result = await fetchWithAuth("/rewards", {
+      signal: controller.signal,
+    });
+    if (result.ok) {
+      requestCache.set(key, result);
+    }
+    return result;
+  },
+  getRewardsSummary: async (skipCache = false) => {
+    const key = cacheKey("/rewards/summary");
+    if (!skipCache && requestCache.has(key)) {
+      return requestCache.get(key);
+    }
+    if (abortControllers.has(key)) {
+      abortControllers.get(key).abort();
+    }
+    const controller = new AbortController();
+    abortControllers.set(key, controller);
+    const result = await fetchWithAuth("/rewards/summary", {
+      signal: controller.signal,
+    });
+    if (result.ok) {
+      requestCache.set(key, result);
+    }
+    return result;
+  },
+
+  // Notifications API endpoints
+  markNotificationsAsRead: async (notificationIds: string[]) => {
+    // Clear cache when notifications are read
+    requestCache.delete(cacheKey("/notifications"));
+    requestCache.delete(cacheKey("/notifications/unread-count"));
+    return fetchWithAuth("/notifications/mark-read", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ notificationIds }),
+    });
+  },
+  getUserNotifications: async (skipCache = false) => {
+    const key = cacheKey("/notifications");
+    if (!skipCache && requestCache.has(key)) {
+      return requestCache.get(key);
+    }
+    if (abortControllers.has(key)) {
+      abortControllers.get(key).abort();
+    }
+    const controller = new AbortController();
+    abortControllers.set(key, controller);
+    const result = await fetchWithAuth("/notifications", {
+      signal: controller.signal,
+    });
+    if (result.ok) {
+      requestCache.set(key, result);
+    }
+    return result;
+  },
+  getUnreadNotificationCount: async (skipCache = false) => {
+    const key = cacheKey("/notifications/unread-count");
+    if (!skipCache && requestCache.has(key)) {
+      return requestCache.get(key);
+    }
+    if (abortControllers.has(key)) {
+      abortControllers.get(key).abort();
+    }
+    const controller = new AbortController();
+    abortControllers.set(key, controller);
+    const result = await fetchWithAuth("/notifications/unread-count", {
+      signal: controller.signal,
+    });
+    if (result.ok) {
+      requestCache.set(key, result);
+    }
+    return result;
+  },
+
   clearCache: () => {
     requestCache.clear();
   },

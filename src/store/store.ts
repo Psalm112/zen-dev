@@ -5,6 +5,9 @@ import reviewReducer from "./slices/reviewSlice";
 import referralReducer from "./slices/referralSlice";
 import orderReducer from "./slices/orderSlice";
 import contractReducer from "./slices/contractSlice";
+import watchlistReducer from "./slices/watchlistSlice";
+import rewardsReducer from "./slices/rewardsSlice";
+import notificationsReducer from "./slices/notificationsSlice";
 
 export const store = configureStore({
   reducer: {
@@ -14,6 +17,9 @@ export const store = configureStore({
     referrals: referralReducer,
     orders: orderReducer,
     contract: contractReducer,
+    watchlist: watchlistReducer,
+    rewards: rewardsReducer,
+    notifications: notificationsReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

@@ -101,9 +101,9 @@ const ViewOrderDetail = () => {
 
       if (disputeRes && changeOrderRes?.status === "disputed") {
         toast.success("Dispute has been filled successfully");
-        // navigate(`/trades/viewtrades/${orderId}?status=cancelled`, {
-        //   replace: true,
-        // });
+        navigate(`/trades/viewtrades/${orderId}?status=cancelled`, {
+          replace: true,
+        });
       }
     } catch (error) {
       toast.error("Failed to file dispute. Please try again.");
