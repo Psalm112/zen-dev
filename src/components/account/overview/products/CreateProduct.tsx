@@ -286,7 +286,7 @@ const CreateProduct = () => {
           {/* Price */}
           <div>
             <label htmlFor="price" className="block text-white mb-2">
-              Price (ETH)
+              Price (cUSD)
             </label>
             <div className="relative">
               <input
@@ -303,7 +303,7 @@ const CreateProduct = () => {
                 placeholder="0.00"
               />
               <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
-                ETH
+                cUSD
               </div>
             </div>
             {errors.price && (

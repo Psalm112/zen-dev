@@ -51,7 +51,7 @@ const SavedItem: React.FC<SavedItemProps> = ({ item, index, onRemove }) => {
 
         <div className="flex justify-between text-sm text-white mb-2">
           <span>Price:</span>
-          <span>{item.product.price} ETH</span>
+          <span>{item.product.price} cUSD</span>
         </div>
         <div className="flex justify-between text-sm text-white mb-2">
           <span>Saved:</span>

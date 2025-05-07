@@ -9,10 +9,10 @@ type SectionType = "About this product" | "Properties" | "Description" | null;
 
 interface ProductDetailsProps {
   product?: Product;
-  ethPrice?: string;
+  // ethPrice?: string;
 }
 
-const ProductDetails = ({ product, ethPrice }: ProductDetailsProps) => {
+const ProductDetails = ({ product }: ProductDetailsProps) => {
   const [openSection, setOpenSection] =
     useState<SectionType>("About this product");
   const [animating, setAnimating] = useState<SectionType | null>(null);
@@ -63,7 +63,7 @@ const ProductDetails = ({ product, ethPrice }: ProductDetailsProps) => {
         }`}
       >
         <div className="text-gray-400 text-sm bg-[#212428] px-3 sm:px-6 md:px-12 lg:px-20 pt-4 sm:pt-6 md:pt-8 pb-4 sm:pb-6 md:pb-10">
-          <Component product={product} ethPrice={ethPrice} />
+          <Component product={product} />
         </div>
       </div>
     </div>

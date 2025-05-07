@@ -20,8 +20,6 @@ const ProductCard = React.memo(
     const { isProductInWatchlist, toggleWatchlist } = useWatchlist();
     const isFavorite = isProductInWatchlist(_id);
 
-    const ethPrice = (price / 1000000).toFixed(6);
-
     const imageUrl =
       images && images.length > 0
         ? `${API_URL}/uploads/${images[0]}`
@@ -77,7 +75,7 @@ const ProductCard = React.memo(
             {description}
           </h4>
           <h4 className="text-[#AEAEB2] text-xs md:text-sm py-1 md:py-3 group-hover:hidden">
-            {price} ETH
+            {price} cUSD
           </h4>
           <button
             className="mt-[5px] gap-3 lg:gap-7 font-bold text-white bg-Red py-2 hidden group-hover:flex justify-center items-center w-full transition-all duration-300"

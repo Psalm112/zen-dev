@@ -98,8 +98,8 @@ const SingleProduct = () => {
     );
   }
 
-  const ethPrice =
-    formattedProduct?.formattedPrice || (product.price / 1000000).toFixed(6);
+  // const ethPrice =
+  //   formattedProduct?.formattedPrice || (product.price / 1000000).toFixed(6);
 
   const backgroundStyle = {
     background: `linear-gradient(to bottom, #292B30 0%, rgba(41, 43, 48, 0.95) 100%)`,
@@ -168,7 +168,7 @@ const SingleProduct = () => {
                   </h1>
                   <div className="flex items-center">
                     <span className="text-xl sm:text-2xl font-bold">
-                      {product.price} ETH
+                      {product.price} cUSD
                     </span>
                   </div>
                 </div>
@@ -184,7 +184,7 @@ const SingleProduct = () => {
               {/* Tab Content */}
               <div className="transition-all duration-300">
                 {activeTab === "details" ? (
-                  <ProductDetails product={product} ethPrice={ethPrice} />
+                  <ProductDetails product={product} />
                 ) : (
                   <CustomerReviews
                     productId={product._id}

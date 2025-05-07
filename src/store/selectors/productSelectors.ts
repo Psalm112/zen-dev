@@ -127,6 +127,6 @@ export const selectFormattedProduct = (state: RootState) => {
   return {
     ...product,
     formattedPrice: `${(product.price / 100).toFixed(2)}`,
-    ethPrice: (product.price / 1000000).toFixed(6),
+    // ethPrice: (product.price / 1000000).toFixed(6),
   };
 };
