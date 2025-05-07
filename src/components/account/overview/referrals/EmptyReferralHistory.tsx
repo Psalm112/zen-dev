@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { FiUserPlus } from "react-icons/fi";
+import { RiGift2Line } from "react-icons/ri";
 
 // interface EmptyReferralHistoryProps {
 //   onInviteFriends: () => void;
@@ -19,7 +19,7 @@ const EmptyReferralHistory = () => {
         animate={{ scale: 1 }}
         transition={{ type: "spring", stiffness: 300, damping: 15 }}
       >
-        <FiUserPlus size={32} className="text-Red" />
+        <RiGift2Line size={32} className="text-Red" />
       </motion.div>
 
       <h3 className="text-xl font-medium text-white mb-2">No rewards yet</h3>
