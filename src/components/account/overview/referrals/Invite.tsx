@@ -13,13 +13,16 @@ const ShareModal = lazy(() => import("./ShareModal"));
 
 interface ReferralInviteProps {
   promoCode: string;
+  shareLink?: string;
   isShareModalOpen?: boolean;
   setIsShareModalOpen?: (isOpen: boolean) => void;
 }
+
 const ReferralInvite = forwardRef<any, ReferralInviteProps>(
   (
     {
       promoCode,
+      shareLink = "",
       isShareModalOpen: externalShareModalOpen,
       setIsShareModalOpen: setExternalShareModalOpen,
     },
@@ -42,9 +45,15 @@ const ReferralInvite = forwardRef<any, ReferralInviteProps>(
     }));
 
     const handleCopyCode = useCallback(() => {
-      navigator.clipboard.writeText(promoCode);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      if (!promoCode) return;
+
+      navigator.clipboard
+        .writeText(promoCode)
+        .then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        })
+        .catch((err) => console.error("Failed to copy code:", err));
     }, [promoCode]);
 
     const openShareModal = useCallback(() => {
@@ -82,7 +91,9 @@ const ReferralInvite = forwardRef<any, ReferralInviteProps>(
                 <span className="text-gray-400">
                   <FiCopy size={18} />
                 </span>
-                <span className="text-white font-medium">{promoCode}</span>
+                <span className="text-white font-medium">
+                  {promoCode || "Loading..."}
+                </span>
               </motion.div>
 
               <motion.button
@@ -90,6 +101,7 @@ const ReferralInvite = forwardRef<any, ReferralInviteProps>(
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={openShareModal}
+                disabled={!promoCode}
               >
                 Invite Friends
               </motion.button>
@@ -111,13 +123,16 @@ const ReferralInvite = forwardRef<any, ReferralInviteProps>(
         {isShareModalOpen && (
           <Suspense
             fallback={
-              <div className="fixed inset-0 bg-black bg-opacity-50 z-50" />
+              <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+                <div className="w-12 h-12 border-4 border-Red border-t-transparent rounded-full animate-spin"></div>
+              </div>
             }
           >
             <ShareModal
               isOpen={isShareModalOpen}
               onClose={closeShareModal}
               promoCode={promoCode}
+              shareLink={shareLink}
             />
           </Suspense>
         )}

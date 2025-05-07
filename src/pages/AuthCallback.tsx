@@ -33,7 +33,16 @@ const AuthCallback = () => {
             api.getUserProfile(true).then((response) => {
               if (response.ok && response.data) {
                 handleAuthCallback(token, response.data);
+                // const pendingCode = sessionStorage.getItem(
+                //   "pendingReferralCode"
+                // );
                 const redirectPath = "/";
+                // if (pendingCode) {
+                //   navigate("/", { replace: true });
+                // } else {
+                //   const redirectPath = "/";
+                //   navigate(redirectPath, { replace: true });
+                // }
                 navigate(redirectPath, { replace: true });
                 // console.log("Complete user profile loaded");
               }

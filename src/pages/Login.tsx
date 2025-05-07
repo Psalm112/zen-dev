@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import { googleIcon, facebookIcon, xIcon, Logo } from ".";
 import Button from "../components/common/Button";
 import { useAuth } from "../context/AuthContext";
@@ -9,8 +9,13 @@ import { useAuth } from "../context/AuthContext";
 // import { IoChevronBack } from "react-icons/io5";
 // import { FaWallet, FaCheck } from "react-icons/fa";
 
-const Login = () => {
-  const navigate = useNavigate();
+interface LoginProps {
+  isFromReferral?: boolean;
+}
+
+const Login: React.FC<LoginProps> = ({ isFromReferral = false }) => {
+  const pageTitle = isFromReferral ? "Create an account" : "Log in or sign up";
+  // const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   // const [showConnectWallet, setShowConnectWallet] = useState(false);
@@ -147,9 +152,7 @@ const Login = () => {
             alt="Dezenmart Logo"
             className="w-[75px] h-[75px] mx-auto"
           />
-          <h2 className="text-2xl text-white font-bold mb-6">
-            Log in or sign up
-          </h2>
+          <h2 className="text-2xl text-white font-bold mb-6">{pageTitle}</h2>
         </div>
 
         <form onSubmit={handleEmailLogin} className="w-full">

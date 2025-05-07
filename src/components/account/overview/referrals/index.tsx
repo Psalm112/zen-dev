@@ -14,6 +14,7 @@ const ReferralsTab = () => {
 
   const {
     referralInfo,
+    formattedReferralInfo,
     loading: referralLoading,
     error: referralError,
     getReferralInfo,
@@ -72,24 +73,20 @@ const ReferralsTab = () => {
   }, [rewards]);
 
   useEffect(() => {
-    let isMounted = true;
-
     const loadData = async () => {
-      if (isMounted) {
+      try {
         await Promise.all([
           getReferralInfo(false, true),
           fetchRewards(false, true),
           fetchSummary(false, true),
         ]);
+      } catch (err) {
+        console.error("Error loading referral data:", err);
       }
     };
 
     loadData();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [getReferralInfo, fetchSummary, fetchRewards]);
+  }, [getReferralInfo, fetchRewards, fetchSummary]);
 
   if (loading) {
     return <ReferralSkeleton />;
@@ -132,6 +129,7 @@ const ReferralsTab = () => {
 
       <ReferralInvite
         promoCode={referralInfo?.referralCode || ""}
+        shareLink={formattedReferralInfo?.shareLink || ""}
         isShareModalOpen={isShareModalOpen}
         setIsShareModalOpen={setIsShareModalOpen}
         ref={inviteRef}

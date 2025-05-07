@@ -15,6 +15,7 @@ import { WalletProvider } from "./context/WalletContext.tsx";
 import ErrorBoundary from "./components/error/ErrorBoundary.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import { setupGlobalErrorHandling } from "./utils/errorHandling";
+import ReferralHandler from "./components/referrals/ReferralHandler.tsx";
 // import GoogleCallback from "./pages/GoogleCallback.tsx";
 
 const Login = lazy(() => import("./pages/Login.tsx"));
@@ -30,6 +31,7 @@ const ViewTradeDetail = lazy(() => import("./pages/ViewTradeDetail.tsx"));
 const ViewOrderDetail = lazy(() => import("./pages/ViewOrderDetail.tsx"));
 const Notifications = lazy(() => import("./pages/Notifications.tsx"));
 const Community = lazy(() => import("./pages/Community.tsx"));
+const ReferralLanding = lazy(() => import("./pages/ReferralLanding.tsx"));
 // import About from "./pages/About.tsx";
 // import Market from "./pages/Market.tsx";
 // import Photos from "./pages/Photos.tsx";
@@ -53,6 +55,7 @@ const RouterLayout = () => {
                 <Suspense fallback={<Loadscreen />}>
                   <Outlet />
                 </Suspense>
+                <ReferralHandler />
               </Layout>
             </SnackbarProvider>
           </AuthProvider>
@@ -142,6 +145,10 @@ const router = createBrowserRouter([
       {
         path: "/orders/:orderId",
         element: <ViewOrderDetail />,
+      },
+      {
+        path: "/referral",
+        element: <ReferralLanding />,
       },
       {
         path: "/load",
