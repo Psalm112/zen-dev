@@ -55,7 +55,9 @@ const ProductCard: FC<ProductCardProps> = ({
           <RiVerifiedBadgeFill className="text-[#4FA3FF] text-xs" />
         </span>
 
-        <p className="text-xl font-bold text-white mb-2">{product.price}</p>
+        <p className="text-xl font-bold text-white mb-2">
+          {product.price} cUSD
+        </p>
 
         <div className="text-right text-sm text-[rgb(174, 174, 178)] mb-3">
           {/* {product.orders} Orders | {product.rating}% */}
