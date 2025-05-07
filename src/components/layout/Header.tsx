@@ -21,12 +21,22 @@ const NavList = [
 
 const Header = () => {
   const navigate = useNavigate();
-  const { unreadCount } = useNotifications();
   const { user, isAuthenticated, logout } = useAuth();
   const { isConnected, account, disconnect } = useWallet();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showWallet, setShowWallet] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const { unreadCount, fetchUserUnreadCount } = useNotifications();
+
+  useEffect(() => {
+    fetchUserUnreadCount();
+
+    const interval = setInterval(() => {
+      fetchUserUnreadCount(false, true);
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, [fetchUserUnreadCount]);
 
   // Compute shortened address
   const shortenedAddress = account
@@ -51,8 +61,8 @@ const Header = () => {
 
   const handleLogout = async () => {
     try {
-      await disconnect(); // Disconnect wallet
-      logout(); // Log out user
+      await disconnect();
+      logout();
       navigate("/");
       setShowUserMenu(false);
     } catch (err) {

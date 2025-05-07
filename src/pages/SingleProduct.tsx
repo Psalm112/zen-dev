@@ -4,6 +4,7 @@ import { LiaAngleLeftSolid } from "react-icons/lia";
 import { FaRegHeart, FaHeart } from "react-icons/fa";
 import { IoShareSocialOutline } from "react-icons/io5";
 import { motion } from "framer-motion";
+import { useWatchlist } from "../utils/hooks/useWatchlist";
 
 import ProductImage from "../components/product/singleProduct/ProductImage";
 import ProductTabs from "../components/product/singleProduct/ProductTabs";
@@ -11,9 +12,8 @@ import ProductDetails from "../components/product/singleProduct/ProductDetails";
 import CustomerReviews from "../components/product/singleProduct/CustomerReviews";
 import PurchaseSection from "../components/product/singleProduct/PurchaseSection";
 import ProductLoadingSkeleton from "../components/product/singleProduct/LoadingSkeleton";
-// import ProductList from "../components/product/ProductList";
-import { useProductData } from "../utils/hooks/useProductData";
 import ProductCard from "../components/product/ProductCard";
+import { useProductData } from "../utils/hooks/useProductData";
 
 type TabType = "details" | "reviews";
 
@@ -29,14 +29,17 @@ const SingleProduct = () => {
     relatedProducts,
   } = useProductData();
   const [activeTab, setActiveTab] = useState<TabType>("details");
-  const [isFavorite, setIsFavorite] = useState(false);
   const [reviewCount, setReviewCount] = useState(0);
+  const { isProductInWatchlist, toggleWatchlist, checkProductWatchlist } =
+    useWatchlist();
+  const isFavorite = productId ? isProductInWatchlist(productId) : false;
 
   const handleGoBack = () => navigate(-1);
 
-  const toggleFavorite = () => {
-    setIsFavorite((prev) => !prev);
-    // favorite/wishlist logic
+  const handleToggleFavorite = () => {
+    if (productId) {
+      toggleWatchlist(productId);
+    }
   };
 
   const handleShare = async () => {
@@ -58,9 +61,11 @@ const SingleProduct = () => {
       alert("Link copied to clipboard!");
     }
   };
+
   useEffect(() => {
     if (productId) {
       fetchProductById(productId);
+      checkProductWatchlist(productId);
       setActiveTab("details");
     }
 
@@ -68,13 +73,7 @@ const SingleProduct = () => {
 
     // Cleanup
     return () => {};
-  }, [productId, fetchProductById]);
-  // useEffect(() => {
-  //   if (product) {
-  //     // Mock review count for now
-  //     setReviewCount(4);
-  //   }
-  // }, [product]);
+  }, [productId, fetchProductById, checkProductWatchlist]);
 
   if (loading || !product) {
     return <ProductLoadingSkeleton />;
@@ -85,7 +84,6 @@ const SingleProduct = () => {
       <div className="bg-Dark min-h-screen flex items-center justify-center">
         <div className="bg-[#292B30] p-8 rounded-xl shadow-lg">
           <h2 className="text-xl font-bold mb-4">Cannot Find Product</h2>
-          {/* <p className="text-white mb-6">{error}</p> */}
           <p className="text-gray-400 mb-6">
             Sorry, we couldn't find the order you're looking for.
           </p>
@@ -141,7 +139,7 @@ const SingleProduct = () => {
                   </button>
 
                   <button
-                    onClick={toggleFavorite}
+                    onClick={handleToggleFavorite}
                     aria-label={
                       isFavorite ? "Remove from favorites" : "Add to favorites"
                     }

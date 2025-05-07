@@ -1,9 +1,10 @@
 import React from "react";
-import { FaRegHeart } from "react-icons/fa";
+import { FaRegHeart, FaHeart } from "react-icons/fa";
 import { RiVerifiedBadgeFill } from "react-icons/ri";
 import { Link, useNavigate } from "react-router-dom";
 import { BsCart3 } from "react-icons/bs";
 import { Product } from "../../utils/types";
+import { useWatchlist } from "../../utils/hooks/useWatchlist";
 
 interface ProductCardProps {
   product: Product;
@@ -16,6 +17,8 @@ const ProductCard = React.memo(
   ({ product, isNew = false }: ProductCardProps) => {
     const navigate = useNavigate();
     const { _id, name, description, price, images, seller } = product;
+    const { isProductInWatchlist, toggleWatchlist } = useWatchlist();
+    const isFavorite = isProductInWatchlist(_id);
 
     const ethPrice = (price / 1000000).toFixed(6);
 
@@ -24,10 +27,10 @@ const ProductCard = React.memo(
         ? `${API_URL}/uploads/${images[0]}`
         : "https://placehold.co/300x300?text=No+Image";
 
-    // const sellerName =
-    //   typeof seller === "object" && seller !== null
-    //     ? seller?.name || "Unknown Seller"
-    //     : seller || "Unknown Seller";
+    const handleToggleFavorite = (e: React.MouseEvent) => {
+      e.preventDefault();
+      toggleWatchlist(_id);
+    };
 
     return (
       <Link
@@ -42,13 +45,16 @@ const ProductCard = React.memo(
           )}
           <button
             className="ml-auto"
-            aria-label="Add to favorites"
-            onClick={(e) => {
-              e.preventDefault();
-              // Add wishlist logic
-            }}
+            aria-label={
+              isFavorite ? "Remove from favorites" : "Add to favorites"
+            }
+            onClick={handleToggleFavorite}
           >
-            <FaRegHeart className="text-xl md:text-2xl text-white hover:text-Red transition-colors" />
+            {isFavorite ? (
+              <FaHeart className="text-xl md:text-2xl text-Red transition-colors" />
+            ) : (
+              <FaRegHeart className="text-xl md:text-2xl text-white hover:text-Red transition-colors" />
+            )}
           </button>
         </div>
 

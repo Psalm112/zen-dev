@@ -151,7 +151,7 @@ export interface TabNavigationProps {
   options: TabOption[];
 }
 
-export interface ReferralItem {
+export interface RewardItem {
   id: string;
   name: string;
   action?: "from" | "to";
@@ -162,7 +162,7 @@ export interface ReferralItem {
 }
 
 export interface ReferralHistoryProps {
-  history: ReferralItem[];
+  history: RewardItem[];
   onInviteFriends: () => void;
 }
 
