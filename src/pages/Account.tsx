@@ -21,8 +21,8 @@ const Settings = lazy(() => import("../components/account/settings/Settings"));
 const TAB_OPTIONS: TabOption[] = [
   { id: "1", label: "Order History" },
   { id: "2", label: "Saved Items" },
-  { id: "3", label: "Dispute Center" },
-  { id: "4", label: "Referrals" },
+  { id: "3", label: "Dispute History" },
+  { id: "4", label: "Rewards" },
   { id: "5", label: "Create Product" },
 ];
 

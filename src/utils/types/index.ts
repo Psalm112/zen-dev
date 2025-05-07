@@ -163,7 +163,7 @@ export interface RewardItem {
 
 export interface ReferralHistoryProps {
   history: RewardItem[];
-  onInviteFriends: () => void;
+  // onInviteFriends: () => void;
 }
 
 export interface ReferralData

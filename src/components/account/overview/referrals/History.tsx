@@ -144,10 +144,10 @@ const ReferralHistoryItem = React.memo(
 
 const ReferralHistory: React.FC<ReferralHistoryProps> = ({
   history,
-  onInviteFriends,
+  // onInviteFriends,
 }) => {
   if (!history || history.length === 0) {
-    return <EmptyReferralHistory onInviteFriends={onInviteFriends} />;
+    return <EmptyReferralHistory />;
   }
 
   return (

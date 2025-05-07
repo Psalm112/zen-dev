@@ -69,6 +69,7 @@ const ShareModal: React.FC<ShareModalProps> = ({
     navigator.clipboard
       .writeText(text)
       .then(() => {
+        onClose();
         showSnackbar("Copied referral link successfully", "success");
       })
       .catch((err) => {
@@ -106,28 +107,10 @@ const ShareModal: React.FC<ShareModalProps> = ({
               Share your code
             </h3>
 
-            <div className="p-3 bg-[#333] rounded-lg mb-6 flex items-center justify-between">
-              <span className="text-white font-medium">
-                {finalShareLink.length > 25
-                  ? `${finalShareLink.slice(0, 20)}...${finalShareLink.slice(
-                      -5
-                    )}`
-                  : finalShareLink}
-              </span>
-              <motion.button
-                className="text-gray-400 hover:text-white"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => copyToClipboard(finalShareLink)}
-              >
-                <FiCopy size={20} />
-              </motion.button>
-            </div>
-
             {shareLink && (
               <div className="p-3 bg-[#333] rounded-lg mb-6 flex items-center justify-between">
                 <span className="text-white font-medium truncate pr-2">
-                  {shareLink}
+                  {finalShareLink}
                 </span>
                 <motion.button
                   className="text-gray-400 hover:text-white flex-shrink-0"
@@ -140,7 +123,7 @@ const ShareModal: React.FC<ShareModalProps> = ({
               </div>
             )}
 
-            <div className="grid grid-cols-5 gap-4">
+            <div className="flex flex-wrap items-center gap-4">
               {socialLinks.map((social) => (
                 <motion.a
                   key={social.name}

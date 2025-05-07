@@ -33,9 +33,9 @@ const ReferralsTab = () => {
   const loading = referralLoading || rewardsLoading;
   const error = referralError || rewardsError;
 
-  const handleInviteFriends = useCallback(() => {
-    setIsShareModalOpen(true);
-  }, []);
+  // const handleInviteFriends = useCallback(() => {
+  //   setIsShareModalOpen(true);
+  // }, []);
 
   const formatRewardsHistory = useCallback(() => {
     if (!rewards || rewards.length === 0) return [];
@@ -132,12 +132,13 @@ const ReferralsTab = () => {
         shareLink={formattedReferralInfo?.shareLink || ""}
         isShareModalOpen={isShareModalOpen}
         setIsShareModalOpen={setIsShareModalOpen}
+        referralCount={referralInfo?.referralCount || 0}
         ref={inviteRef}
       />
 
       <ReferralHistory
         history={formatRewardsHistory()}
-        onInviteFriends={handleInviteFriends}
+        // onInviteFriends={handleInviteFriends}
       />
     </motion.div>
   );

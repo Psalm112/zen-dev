@@ -152,7 +152,19 @@ const Login: React.FC<LoginProps> = ({ isFromReferral = false }) => {
             alt="Dezenmart Logo"
             className="w-[75px] h-[75px] mx-auto"
           />
+          {isFromReferral && (
+            <h1 className="text-2xl font-bold text-white mb-2">
+              You've been invited!
+            </h1>
+          )}
           <h2 className="text-2xl text-white font-bold mb-6">{pageTitle}</h2>
+          {isFromReferral && (
+            <>
+              <p className="text-gray-400">
+                Sign up to receive points on your first purchase
+              </p>
+            </>
+          )}
         </div>
 
         <form onSubmit={handleEmailLogin} className="w-full">

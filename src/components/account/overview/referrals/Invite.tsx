@@ -16,6 +16,7 @@ interface ReferralInviteProps {
   shareLink?: string;
   isShareModalOpen?: boolean;
   setIsShareModalOpen?: (isOpen: boolean) => void;
+  referralCount?: number;
 }
 
 const ReferralInvite = forwardRef<any, ReferralInviteProps>(
@@ -25,6 +26,7 @@ const ReferralInvite = forwardRef<any, ReferralInviteProps>(
       shareLink = "",
       isShareModalOpen: externalShareModalOpen,
       setIsShareModalOpen: setExternalShareModalOpen,
+      referralCount = 0,
     },
     ref
   ) => {
@@ -80,7 +82,11 @@ const ReferralInvite = forwardRef<any, ReferralInviteProps>(
               Give a friend promo code on Points and you'll get 5 points off
               your next purchase.
             </p>
-
+            <p className="text-gray-400 text-center text-sm mb-4">
+              You've invited{" "}
+              <span className="text-Red font-medium">{referralCount}</span>{" "}
+              friend{referralCount !== 1 ? "s" : ""} so far
+            </p>
             <div className="flex flex-col sm:flex-row gap-3 items-center">
               <motion.div
                 className="flex-1 w-full bg-[#333] p-3 rounded-lg flex items-center gap-2 cursor-pointer"
