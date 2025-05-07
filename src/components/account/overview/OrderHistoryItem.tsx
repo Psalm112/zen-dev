@@ -65,7 +65,7 @@ const OrderHistoryItem: React.FC<OrderHistoryItemProps> = (item) => {
           </span>
           <h6 className="text-[#AEAEB2] text-[12px]">
             {item.quantity || 2} {item.quantity === 1 ? "item" : "items"} @{" "}
-            {item.product.price} ETH
+            {item.product.price} cUSD
           </h6>
         </div>
 
