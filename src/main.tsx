@@ -13,7 +13,6 @@ import { Provider } from "react-redux";
 import { store } from "./store/store.ts";
 import { WalletProvider } from "./context/WalletContext.tsx";
 import ErrorBoundary from "./components/error/ErrorBoundary.tsx";
-import NotFound from "./pages/NotFound.tsx";
 import { setupGlobalErrorHandling } from "./utils/errorHandling";
 import ReferralHandler from "./components/referrals/ReferralHandler.tsx";
 // import GoogleCallback from "./pages/GoogleCallback.tsx";
@@ -32,15 +31,9 @@ const ViewOrderDetail = lazy(() => import("./pages/ViewOrderDetail.tsx"));
 const Notifications = lazy(() => import("./pages/Notifications.tsx"));
 const Community = lazy(() => import("./pages/Community.tsx"));
 const ReferralLanding = lazy(() => import("./pages/ReferralLanding.tsx"));
-// import About from "./pages/About.tsx";
-// import Market from "./pages/Market.tsx";
-// import Photos from "./pages/Photos.tsx";
-// import Members from "./pages/Members.tsx";
-// import Heros from "./pages/Heros.tsx";
-// import Article from "./pages/Article.tsx";
-// import Contact from "./pages/Contact.tsx";
-// import Account from "./pages/Account.tsx";
-// import NotFound from "./pages/NotFound.tsx";
+const Chat = lazy(() => import("./pages/Chat.tsx"));
+const ChatDetail = lazy(() => import("./pages/ChatDetail.tsx"));
+const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 
 setupGlobalErrorHandling();
 
@@ -122,6 +115,14 @@ const router = createBrowserRouter([
           {
             path: "/orders/:orderId",
             element: <ViewOrderDetail />,
+          },
+          {
+            path: "/chat",
+            element: <Chat />,
+          },
+          {
+            path: "/chat/:userId",
+            element: <ChatDetail />,
           },
         ],
       },

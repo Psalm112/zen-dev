@@ -11,11 +11,14 @@ import Button from "../common/Button";
 import { useWallet } from "../../utils/hooks/useWallet";
 import Modal from "../common/Modal";
 import ConnectWallet from "../trade/ConnectWallet";
+import { selectTotalUnreadMessages } from "../../store/selectors/chatSelectors";
+import { useAppSelector } from "../../utils/hooks/redux";
 
 const NavList = [
   { title: "Home", path: "/" },
   { title: "Product", path: "/product" },
   { title: "Trade", path: "/trades" },
+  { title: "Chat", path: "/chat" },
   { title: "Community", path: "/community" },
 ];
 
@@ -27,6 +30,7 @@ const Header = () => {
   const [showWallet, setShowWallet] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const { unreadCount, fetchUserUnreadCount } = useNotifications();
+  const totalUnreadChats = useAppSelector(selectTotalUnreadMessages);
 
   useEffect(() => {
     fetchUserUnreadCount();
@@ -104,6 +108,11 @@ const Header = () => {
               }
             >
               {title}
+              {title === "Chat" && totalUnreadChats > 0 && (
+                <span className="absolute -top-2 -right-4 bg-Red text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {totalUnreadChats > 9 ? "9+" : totalUnreadChats}
+                </span>
+              )}
             </NavLink>
           ))}
         </nav>

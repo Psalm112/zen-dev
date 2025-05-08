@@ -24,7 +24,7 @@ import { useSnackbar } from "../../context/SnackbarContext";
 import { Message, SendMessageParams, MarkReadParams } from "../types";
 import { useAuth } from "../../context/AuthContext";
 
-export const useChatManagement = () => {
+export const useChat = () => {
   const dispatch = useAppDispatch();
   const { showSnackbar } = useSnackbar();
   const { user } = useAuth();
