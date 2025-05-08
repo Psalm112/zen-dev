@@ -88,7 +88,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           whileTap={{ scale: 0.98 }}
           onClick={handleCopyId}
         >
-          <span className="text-white text-base sm:text-lg my-2">{id}</span>
+          <span className="text-gray-400 text-xs sm:text-sm">{id}</span>
           <FiCopy size={18} className="text-gray-400" />
         </motion.button>
       </motion.div>

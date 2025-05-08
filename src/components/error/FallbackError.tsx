@@ -68,8 +68,10 @@ const FallbackError = memo(({ resetErrorBoundary }: FallbackErrorProps) => {
 
             <Button
               title="Back to Home"
-              onClick={() => navigate("/", { replace: true })}
-              className="bg-Red text-white px-6 py-3 rounded-md hover:bg-opacity-90 transition-all"
+              onClick={() =>
+                navigate(`${window.location.origin}`, { replace: true })
+              }
+              className="flex items-center justify-center bg-Red text-white px-6 py-3 rounded-md hover:bg-opacity-90 transition-all"
             />
 
             {/* </Link> */}

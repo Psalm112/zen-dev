@@ -54,7 +54,7 @@ const ChatDetail = () => {
   ]);
 
   return (
-    <div className="bg-Dark min-h-screen">
+    <div className="bg-Dark">
       <Container className="py-4 md:py-6">
         <motion.div
           initial={{ opacity: 0 }}

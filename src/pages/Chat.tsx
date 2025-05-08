@@ -30,8 +30,8 @@ const Chat = () => {
   }, [isAuthenticated, loadConversations, navigate]);
 
   return (
-    <div className="bg-Dark min-h-screen">
-      <Container className="py-4 md:py-6">
+    <div className="bg-Dark">
+      <Container className="py-4 md:py-6 ">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

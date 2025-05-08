@@ -29,7 +29,11 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
     : conversations;
 
   return (
-    <div className="flex flex-col w-full md:w-1/3 border-r border-[#292B30]">
+    <div
+      className={`${
+        activeId ? "max-md:hidden flex" : "flex"
+      }flex-col w-full md:w-1/3 border-r border-[#292B30]`}
+    >
       <div className="p-4 border-b border-[#292B30]">
         <h2 className="text-xl font-semibold text-white mb-3">Messages</h2>
         <div className="relative">
