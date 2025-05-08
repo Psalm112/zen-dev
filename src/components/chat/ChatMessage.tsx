@@ -35,7 +35,7 @@ const ChatMessage: React.FC<ChatMessageProps> = memo(
             {isOwn && (
               <IoCheckmarkDoneOutline
                 className={`${
-                  isRead ? "text-Red/20" : "text-[#AEAEB2] text-xs"
+                  isRead ? "text-blue-200" : "text-[#AEAEB2] text-xs"
                 }`}
               />
             )}

@@ -82,7 +82,7 @@ const ChatConversation: React.FC<ChatConversationProps> = ({
           </div>
         ) : messages.length > 0 ? (
           <AnimatePresence initial={false}>
-            {messages.map((message, index) => (
+            {messages.reverse().map((message, index) => (
               <motion.div
                 key={(message._id as string) || index}
                 initial={{ opacity: 0, y: 20 }}
