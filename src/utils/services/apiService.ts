@@ -530,13 +530,16 @@ export const api = {
     });
   },
 
-  getConversation: async (userId: string) => {
+  getConversation: async (userId: string, preventAbort = false) => {
     const key = cacheKey(`/messages/${userId}`);
-    if (abortControllers.has(key)) {
+    if (!preventAbort && abortControllers.has(key)) {
       abortControllers.get(key).abort();
     }
     const controller = new AbortController();
-    abortControllers.set(key, controller);
+    if (!preventAbort) {
+      abortControllers.set(key, controller);
+    }
+
     return fetchWithAuth(`/messages/${userId}`, {
       signal: controller.signal,
     });
@@ -552,16 +555,18 @@ export const api = {
     });
   },
 
-  getConversations: async (skipCache = false) => {
+  getConversations: async (skipCache = false, preventAbort = false) => {
     const key = cacheKey("/messages");
     if (!skipCache && requestCache.has(key)) {
       return requestCache.get(key);
     }
-    if (abortControllers.has(key)) {
+    if (!preventAbort && abortControllers.has(key)) {
       abortControllers.get(key).abort();
     }
     const controller = new AbortController();
-    abortControllers.set(key, controller);
+    if (!preventAbort) {
+      abortControllers.set(key, controller);
+    }
     const result = await fetchWithAuth("/messages", {
       signal: controller.signal,
     });

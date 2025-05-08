@@ -43,13 +43,16 @@ export const useProductData = () => {
       preventAbort = false
     ) => {
       try {
-        const result = await api.getProducts(forceRefresh, preventAbort);
+        // const result = await api.getProducts(forceRefresh, preventAbort);
+        const result = await dispatch(
+          fetchAllProducts({ forceRefresh, preventAbort })
+        ).unwrap();
         if (!result.ok) {
           throw new Error(result.error || "Failed to load products");
         }
 
         await dispatch(
-          fetchAllProducts.fulfilled(result.data, "", forceRefresh)
+          fetchAllProducts.fulfilled(result.data, "", { forceRefresh })
         );
 
         if (showNotification) {
@@ -81,16 +84,19 @@ export const useProductData = () => {
       preventAbort = false
     ) => {
       try {
-        const result = await api.getSponsoredProducts(
-          forceRefresh,
-          preventAbort
-        );
+        // const result = await api.getSponsoredProducts(
+        //   forceRefresh,
+        //   preventAbort
+        // );
+        const result = await dispatch(
+          fetchSponsoredProducts({ forceRefresh, preventAbort })
+        ).unwrap();
         if (!result.ok) {
           throw new Error(result.error || "Failed to load sponsored products");
         }
 
         await dispatch(
-          fetchSponsoredProducts.fulfilled(result.data, "", forceRefresh)
+          fetchSponsoredProducts.fulfilled(result.data, "", { forceRefresh })
         );
 
         if (showNotification) {
@@ -166,7 +172,7 @@ export const useProductData = () => {
           return null;
         }
         // Refresh products list after successful creation
-        await dispatch(fetchAllProducts(true)).unwrap();
+        await dispatch(fetchAllProducts({ forceRefresh: true })).unwrap();
         if (showNotification) {
           showSnackbar("Product created successfully", "success");
         }
@@ -197,7 +203,7 @@ export const useProductData = () => {
         }
         // Refresh product details and list after successful update
         await dispatch(fetchProductById(productId)).unwrap();
-        await dispatch(fetchAllProducts(true)).unwrap();
+        await dispatch(fetchAllProducts({ forceRefresh: true })).unwrap();
         if (showNotification) {
           showSnackbar("Product updated successfully", "success");
         }
@@ -223,7 +229,7 @@ export const useProductData = () => {
           return false;
         }
         // Refresh products list after successful deletion
-        await dispatch(fetchAllProducts(true)).unwrap();
+        await dispatch(fetchAllProducts({ forceRefresh: true })).unwrap();
         if (showNotification) {
           showSnackbar("Product deleted successfully", "success");
         }

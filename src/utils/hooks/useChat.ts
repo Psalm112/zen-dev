@@ -60,7 +60,7 @@ export const useChat = () => {
         await dispatch(sendMessage(messageData)).unwrap();
 
         // Auto-refresh conversations after sending
-        dispatch(getConversations(true));
+        dispatch(getConversations({ forceRefresh: true }));
 
         if (showNotifications) {
           showSnackbar("Message sent successfully", "success");
@@ -77,9 +77,9 @@ export const useChat = () => {
   );
 
   const handleLoadConversation = useCallback(
-    async (userId: string, showNotifications = false) => {
+    async (userId: string, preventAbort = false, showNotifications = false) => {
       try {
-        await dispatch(getConversation(userId)).unwrap();
+        await dispatch(getConversation({ userId, preventAbort })).unwrap();
 
         if (showNotifications) {
           showSnackbar("Conversation loaded successfully", "success");
@@ -104,7 +104,7 @@ export const useChat = () => {
         await dispatch(markMessagesAsRead(params)).unwrap();
 
         // Auto-refresh conversations to update unread counts
-        dispatch(getConversations(true));
+        dispatch(getConversations({ forceRefresh: true }));
 
         if (showNotifications) {
           showSnackbar("Messages marked as read", "success");
@@ -124,9 +124,15 @@ export const useChat = () => {
   );
 
   const handleLoadConversations = useCallback(
-    async (showNotifications = false, forceRefresh = false) => {
+    async (
+      forceRefresh = false,
+      preventAbort = false,
+      showNotifications = false
+    ) => {
       try {
-        await dispatch(getConversations(forceRefresh)).unwrap();
+        await dispatch(
+          getConversations({ forceRefresh, preventAbort })
+        ).unwrap();
 
         if (showNotifications) {
           showSnackbar("Conversations loaded successfully", "success");

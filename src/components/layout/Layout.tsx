@@ -22,7 +22,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     <>
       {!isAuthPage && <Header />}
       <ErrorBoundary>
-        <main className="min-h-screen pb-16 md:pb-0">{children}</main>
+        <main className="h-full pb-16 md:pb-0">{children}</main>
       </ErrorBoundary>
       {!isAuthPage && (
         <>

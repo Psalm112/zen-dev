@@ -50,24 +50,27 @@ export const sendMessage = createAsyncThunk<
 
 export const getConversation = createAsyncThunk<
   Message[],
-  string,
+  { userId: string; preventAbort?: boolean },
   { rejectValue: string }
->("chat/getConversation", async (userId, { rejectWithValue, dispatch }) => {
-  try {
-    dispatch(setCurrentRecipient(userId));
-    const response = await api.getConversation(userId);
+>(
+  "chat/getConversation",
+  async ({ userId, preventAbort = false }, { rejectWithValue, dispatch }) => {
+    try {
+      dispatch(setCurrentRecipient(userId));
+      const response = await api.getConversation(userId, preventAbort);
 
-    if (!response.ok) {
-      return rejectWithValue(response.error || "Failed to load conversation");
+      if (!response.ok) {
+        return rejectWithValue(response.error || "Failed to load conversation");
+      }
+
+      return response.data;
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "An unknown error occurred";
+      return rejectWithValue(message);
     }
-
-    return response.data;
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "An unknown error occurred";
-    return rejectWithValue(message);
   }
-});
+);
 
 export const markMessagesAsRead = createAsyncThunk<
   { success: boolean; messageIds: string[] },
@@ -93,11 +96,17 @@ export const markMessagesAsRead = createAsyncThunk<
 
 export const getConversations = createAsyncThunk<
   Conversation[],
-  boolean | undefined,
+  { forceRefresh?: boolean; preventAbort?: boolean } | undefined,
   { rejectValue: string; state: { chat: ChatState } }
 >(
   "chat/getConversations",
-  async (forceRefresh = false, { getState, rejectWithValue }) => {
+  async (
+    {
+      forceRefresh = false,
+      preventAbort = false,
+    }: { forceRefresh?: boolean; preventAbort?: boolean } = {},
+    { getState, rejectWithValue }
+  ) => {
     try {
       const state = getState();
       const now = Date.now();
@@ -112,7 +121,7 @@ export const getConversations = createAsyncThunk<
         return state.chat.conversations;
       }
 
-      const response = await api.getConversations(forceRefresh);
+      const response = await api.getConversations(forceRefresh, preventAbort);
 
       if (!response.ok) {
         return rejectWithValue(
@@ -144,7 +153,7 @@ const chatSlice = createSlice({
     },
     addLocalMessage: (state, action: PayloadAction<Message>) => {
       state.currentConversation.unshift(action.payload);
-
+      console.log("local", state.currentConversation);
       // Also update the conversations list if the conversation exists
       const conversationIndex = state.conversations.findIndex(
         (conv) => conv.user._id === action.payload.recipient
