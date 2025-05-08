@@ -65,7 +65,7 @@ const ChatConversation: React.FC<ChatConversationProps> = ({
         onBack={() => navigate("/chat")}
       />
 
-      <div className="flex-1 overflow-y-auto p-4 hide-scrollbar bg-[#1A1D21] scrollbar-thin scrollbar-thumb-[#292B30] scrollbar-track-transparent hover:scrollbar-thumb-[#3A3D42]">
+      <div className="flex-1 overflow-y-auto p-4 bg-[#1A1D21] scrollbar-thin">
         {isLoading && messages.length === 0 ? (
           <div className="flex flex-col space-y-4">
             {[...Array(3)].map((_, i) => (
