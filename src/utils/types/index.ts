@@ -31,7 +31,7 @@ export interface Product {
   description: string;
   price: number;
   category: string;
-  seller: string;
+  seller: string | { _id: string; name: string };
   images: string[];
   isSponsored: boolean;
   isActive: boolean;

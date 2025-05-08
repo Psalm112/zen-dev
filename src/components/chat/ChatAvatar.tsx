@@ -56,9 +56,9 @@ const ChatAvatar: React.FC<ChatAvatarProps> = ({
         {getInitials(name)}
       </div>
 
-      {online !== undefined && (
+      {online && (
         <div
-          className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-[#212428] ${
+          className={`absolute z-20 bottom-0 right-0 w-3 h-3 rounded-full border-2 border-[#212428] ${
             online ? "bg-green-500" : "bg-[#545456]"
           }`}
         />

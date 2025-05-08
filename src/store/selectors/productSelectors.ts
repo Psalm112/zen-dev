@@ -112,12 +112,20 @@ export const selectRelatedProducts = (state: RootState): Product[] => {
   const { category } = state.products.currentProduct;
   const productId = state.products.currentProduct._id;
 
-  return state.products.products.filter(
-    (product) =>
-      product.category &&
-      product.category === category &&
-      product._id !== productId
-  );
+  return state.products.products
+    .filter(
+      (product) =>
+        product.category &&
+        product.category === category &&
+        product._id !== productId
+    )
+    .map((product) => ({
+      ...product,
+      seller:
+        typeof product.seller === "object"
+          ? product.seller._id
+          : product.seller,
+    }));
 };
 
 export const selectFormattedProduct = (state: RootState) => {

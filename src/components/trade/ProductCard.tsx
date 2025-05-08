@@ -51,7 +51,10 @@ const ProductCard: FC<ProductCardProps> = ({
           {product.name}
         </h3>
         <span className="flex items-center gap-2 text-sm text-[#AEAEB2] mb-4">
-          By {product.seller}
+          By{" "}
+          {typeof product.seller === "object"
+            ? product.seller.name
+            : product.seller}
           <RiVerifiedBadgeFill className="text-[#4FA3FF] text-xs" />
         </span>
 

@@ -141,7 +141,10 @@ const PurchaseSection = ({ product }: PurchaseSectionProps) => {
     try {
       const order = await placeOrder({
         product: product._id,
-        seller: product.seller,
+        seller:
+          typeof product.seller === "object"
+            ? product.seller._id
+            : product.seller,
         amount: product.price * quantity,
         // quantity: quantity,
       });

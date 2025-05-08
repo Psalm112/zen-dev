@@ -59,7 +59,10 @@ const ProductAbout = ({ product }: { product: Product }) => {
               target="_blank"
               rel="noopener noreferrer"
             > */}
-            {product.seller} <BiLinkExternal className="inline h-3 w-3" />
+            {typeof product.seller === "object"
+              ? product.seller.name
+              : product.seller}{" "}
+            <BiLinkExternal className="inline h-3 w-3" />
             {/* </a> */}
           </span>
           {/* {product.verified && ( */}
