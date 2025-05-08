@@ -4,12 +4,23 @@ import { BiPackage } from "react-icons/bi";
 import { IoSwapHorizontalOutline } from "react-icons/io5";
 import { BsPeople } from "react-icons/bs";
 import { RiUser3Line } from "react-icons/ri";
-import { useAppSelector } from "../../utils/hooks/redux";
-import { selectTotalUnreadMessages } from "../../store/selectors/chatSelectors";
 import { IoChatbubbleOutline } from "react-icons/io5";
+import { useChat } from "../../utils/hooks/useChat";
+import { useEffect } from "react";
 
 const MobileNavigation = () => {
-  const totalUnreadChats = useAppSelector(selectTotalUnreadMessages);
+  const { loadConversations, totalUnreadMessages } = useChat();
+
+  useEffect(() => {
+    loadConversations();
+
+    const interval = setInterval(() => {
+      loadConversations(false, true);
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, [loadConversations]);
+
   const navItems = [
     { icon: <AiOutlineHome size={24} />, label: "Home", path: "/" },
     { icon: <BiPackage size={24} />, label: "Product", path: "/product" },
@@ -22,7 +33,7 @@ const MobileNavigation = () => {
       icon: <IoChatbubbleOutline size={24} />,
       label: "Chat",
       path: "/chat",
-      badge: totalUnreadChats > 0 ? totalUnreadChats : undefined,
+      badge: totalUnreadMessages > 0 ? totalUnreadMessages : undefined,
     },
     { icon: <BsPeople size={24} />, label: "Community", path: "/community" },
     { icon: <RiUser3Line size={24} />, label: "Account", path: "/account" },
@@ -35,7 +46,7 @@ const MobileNavigation = () => {
           key={item.path}
           to={item.path}
           className={({ isActive }) => `
-            flex flex-col items-center text-xs p-2
+            relative flex flex-col items-center text-xs p-2
             ${isActive ? "text-Red" : "text-[#545456]"}
           `}
         >

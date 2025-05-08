@@ -11,8 +11,7 @@ import Button from "../common/Button";
 import { useWallet } from "../../utils/hooks/useWallet";
 import Modal from "../common/Modal";
 import ConnectWallet from "../trade/ConnectWallet";
-import { selectTotalUnreadMessages } from "../../store/selectors/chatSelectors";
-import { useAppSelector } from "../../utils/hooks/redux";
+import { useChat } from "../../utils/hooks/useChat";
 
 const NavList = [
   { title: "Home", path: "/" },
@@ -30,17 +29,19 @@ const Header = () => {
   const [showWallet, setShowWallet] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const { unreadCount, fetchUserUnreadCount } = useNotifications();
-  const totalUnreadChats = useAppSelector(selectTotalUnreadMessages);
+  const { loadConversations, totalUnreadMessages } = useChat();
 
   useEffect(() => {
     fetchUserUnreadCount();
+    loadConversations();
 
     const interval = setInterval(() => {
       fetchUserUnreadCount(false, true);
+      loadConversations(false, true);
     }, 60000);
 
     return () => clearInterval(interval);
-  }, [fetchUserUnreadCount]);
+  }, [fetchUserUnreadCount, loadConversations]);
 
   // Compute shortened address
   const shortenedAddress = account
@@ -88,7 +89,7 @@ const Header = () => {
               alt="DezenMart"
             />
           </div>
-          <span className="ml-2 text-white font-medium hidden md:inline transition-opacity group-hover:opacity-90">
+          <span className="ml-2 text-white font-medium hidden lg:inline transition-opacity group-hover:opacity-90">
             DezenMart
           </span>
         </Link>
@@ -100,17 +101,17 @@ const Header = () => {
               key={path}
               to={path}
               className={({ isActive }) =>
-                `font-semibold text-md transition-all ${
+                `font-semibold text-md transition-all relative ${
                   isActive
-                    ? "text-Red relative after:content-[''] after:absolute after:bottom-[-6px] after:left-0 after:w-full after:h-0.5 after:bg-Red after:rounded-full"
+                    ? "text-Red after:content-[''] after:absolute after:bottom-[-6px] after:left-0 after:w-full after:h-0.5 after:bg-Red after:rounded-full"
                     : "text-[#545456] hover:text-white"
                 }`
               }
             >
               {title}
-              {title === "Chat" && totalUnreadChats > 0 && (
+              {title === "Chat" && totalUnreadMessages > 0 && (
                 <span className="absolute -top-2 -right-4 bg-Red text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {totalUnreadChats > 9 ? "9+" : totalUnreadChats}
+                  {totalUnreadMessages > 9 ? "9+" : totalUnreadMessages}
                 </span>
               )}
             </NavLink>
