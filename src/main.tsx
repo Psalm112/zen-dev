@@ -103,6 +103,26 @@ const router = createBrowserRouter([
             path: "/notifications",
             element: <Notifications />,
           },
+          {
+            path: "/trades/viewtrades",
+            element: <ViewTrade />,
+          },
+          {
+            path: "/trades/buy/:productId",
+            element: <BuyCheckout />,
+          },
+          {
+            path: "/trades/sell/:productId",
+            element: <SellCheckout />,
+          },
+          {
+            path: "/trades/viewtrades/:tradeId",
+            element: <ViewTradeDetail />,
+          },
+          {
+            path: "/orders/:orderId",
+            element: <ViewOrderDetail />,
+          },
         ],
       },
 
@@ -125,26 +145,6 @@ const router = createBrowserRouter([
       {
         path: "/community",
         element: <Community />,
-      },
-      {
-        path: "/trades/viewtrades",
-        element: <ViewTrade />,
-      },
-      {
-        path: "/trades/buy/:productId",
-        element: <BuyCheckout />,
-      },
-      {
-        path: "/trades/sell/:productId",
-        element: <SellCheckout />,
-      },
-      {
-        path: "/trades/viewtrades/:tradeId",
-        element: <ViewTradeDetail />,
-      },
-      {
-        path: "/orders/:orderId",
-        element: <ViewOrderDetail />,
       },
       {
         path: "/referral",

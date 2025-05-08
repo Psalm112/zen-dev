@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useReferralData } from "../../utils/hooks/useReferralData";
+import { useReferralData } from "../../utils/hooks/useReferral";
 import { useAuth } from "../../context/AuthContext";
 import {
   clearPendingReferralCode,

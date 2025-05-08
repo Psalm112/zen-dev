@@ -1,4 +1,10 @@
-import { CreateTradeParams, TradeResponse, UserProfile } from "../types";
+import {
+  CreateTradeParams,
+  MarkReadParams,
+  SendMessageParams,
+  TradeResponse,
+  UserProfile,
+} from "../types";
 const API_URL = import.meta.env.VITE_API_URL;
 export const fetchWithAuth = async (
   endpoint: string,
@@ -506,6 +512,57 @@ export const api = {
     const controller = new AbortController();
     abortControllers.set(key, controller);
     const result = await fetchWithAuth("/notifications/unread-count", {
+      signal: controller.signal,
+    });
+    if (result.ok) {
+      requestCache.set(key, result);
+    }
+    return result;
+  },
+
+  // chats API endpoints
+
+  sendMessage: async (messageData: SendMessageParams) => {
+    return fetchWithAuth("/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(messageData),
+    });
+  },
+
+  getConversation: async (userId: string) => {
+    const key = cacheKey(`/messages/${userId}`);
+    if (abortControllers.has(key)) {
+      abortControllers.get(key).abort();
+    }
+    const controller = new AbortController();
+    abortControllers.set(key, controller);
+    return fetchWithAuth(`/messages/${userId}`, {
+      signal: controller.signal,
+    });
+  },
+
+  markMessagesAsRead: async (params: MarkReadParams) => {
+    // Clear cache when messages are marked as read
+    requestCache.delete(cacheKey("/messages"));
+    return fetchWithAuth("/messages/mark-read", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(params),
+    });
+  },
+
+  getConversations: async (skipCache = false) => {
+    const key = cacheKey("/messages");
+    if (!skipCache && requestCache.has(key)) {
+      return requestCache.get(key);
+    }
+    if (abortControllers.has(key)) {
+      abortControllers.get(key).abort();
+    }
+    const controller = new AbortController();
+    abortControllers.set(key, controller);
+    const result = await fetchWithAuth("/messages", {
       signal: controller.signal,
     });
     if (result.ok) {

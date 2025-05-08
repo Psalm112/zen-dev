@@ -5,7 +5,7 @@ import ReferralInvite from "./Invite";
 import ReferralHistory from "./History";
 import ReferralSkeleton from "./Skeleton";
 import { RewardItem } from "../../../../utils/types";
-import { useReferralData } from "../../../../utils/hooks/useReferralData";
+import { useReferralData } from "../../../../utils/hooks/useReferral";
 import { useRewards } from "../../../../utils/hooks/useRewards";
 
 const ReferralsTab = () => {

@@ -1,3 +1,4 @@
+//user
 export interface UserProfile {
   milestones: {
     sales: number;
@@ -23,6 +24,7 @@ export interface UserProfile {
   phoneNumber?: string;
 }
 
+//product
 export interface Product {
   _id: string;
   name: string;
@@ -36,7 +38,7 @@ export interface Product {
   createdAt: string;
   updatedAt: string;
 }
-
+//review
 export interface Review {
   _id: string;
   reviewer:
@@ -64,6 +66,8 @@ export interface Review {
   createdAt: string;
   updatedAt: string;
 }
+
+//trade and order
 
 export interface Order {
   _id: string;
@@ -121,11 +125,7 @@ export interface TradeResponse {
   data: any;
 }
 
-export interface ReferralInfo {
-  referralCode: string;
-  referralCount: number;
-}
-export type NotificationType = "update" | "funds" | "buyer" | "system";
+// export type NotificationType = "update" | "funds" | "buyer" | "system";
 
 // export interface Notification {
 //   id: string;
@@ -151,6 +151,12 @@ export interface TabNavigationProps {
   options: TabOption[];
 }
 
+//referrals
+
+export interface ReferralInfo {
+  referralCode: string;
+  referralCount: number;
+}
 export interface RewardItem {
   id: string;
   name: string;
@@ -173,6 +179,8 @@ export interface ReferralData
   promoCode: string;
 }
 
+// watchlist/favourites
+
 export interface WatchlistItem {
   _id: string;
   user: string;
@@ -190,6 +198,8 @@ export interface WatchlistItem {
 export interface WatchlistCheck {
   isWatchlist: boolean;
 }
+
+//rewards
 
 export interface Reward {
   _id: string;
@@ -211,6 +221,7 @@ export interface RewardSummary {
   availablePoints: number;
 }
 
+//notifications
 export interface Notification {
   _id: string;
   recipient: string;
@@ -238,6 +249,7 @@ export interface MarkReadResponse {
   matchedCount: number;
 }
 
+//order and trade
 export type TradeStatusType = "cancelled" | "pending" | "release" | "completed";
 
 export type OrderStatus =
@@ -291,4 +303,36 @@ export interface pendingTransactionProps {
   contractAddress?: string;
   amount?: string;
   tradeId?: string;
+}
+
+//chat
+export interface Message {
+  _id: string;
+  sender: string | UserProfile;
+  recipient: string | UserProfile;
+  content: string;
+  read: boolean;
+  order?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Conversation {
+  user: {
+    _id: string;
+    name: string;
+    profileImage: string;
+  };
+  lastMessage: Message;
+  unreadCount: number;
+}
+
+export interface SendMessageParams {
+  recipient: string;
+  content: string;
+  order?: string;
+}
+
+export interface MarkReadParams {
+  messageIds: string[];
 }

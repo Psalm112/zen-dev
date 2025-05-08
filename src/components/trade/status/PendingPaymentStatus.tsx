@@ -8,7 +8,7 @@ import BaseStatus from "./BaseStatus";
 import StatusAlert from "./StatusAlert";
 import Button from "../../common/Button";
 import { BsShieldExclamation } from "react-icons/bs";
-import { useContractData } from "../../../utils/hooks/useContractData";
+import { useContractData } from "../../../utils/hooks/useContract";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import Modal from "../../common/Modal";

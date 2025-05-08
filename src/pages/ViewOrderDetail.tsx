@@ -6,7 +6,7 @@ import { TradeStatusType } from "../utils/types";
 import TradeStatus from "../components/trade/status/TradeStatus";
 import { toast } from "react-toastify";
 import LoadingSpinner from "../components/common/LoadingSpinner";
-import { useOrderData } from "../utils/hooks/useOrderData";
+import { useOrderData } from "../utils/hooks/useOrder";
 
 const ViewOrderDetail = () => {
   const { orderId } = useParams<{ orderId: string }>();

@@ -6,7 +6,7 @@ import {
   FaExclamationTriangle,
 } from "react-icons/fa";
 import { motion } from "framer-motion";
-import { useContractData } from "../../utils/hooks/useContractData";
+import { useContractData } from "../../utils/hooks/useContract";
 
 interface ConfirmDeliveryProps {
   tradeId: string;

@@ -6,7 +6,7 @@ import TabNavigation from "../components/account/overview/TabNavigation";
 import { LiaAngleDownSolid } from "react-icons/lia";
 import Button from "../components/common/Button";
 import LoadingSpinner from "../components/common/LoadingSpinner";
-import { useUserManagement } from "../utils/hooks/useUserManagement";
+import { useUserManagement } from "../utils/hooks/useUser";
 import { Product1 } from ".";
 import { TabOption, TabType } from "../utils/types";
 

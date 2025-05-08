@@ -8,6 +8,7 @@ import contractReducer from "./slices/contractSlice";
 import watchlistReducer from "./slices/watchlistSlice";
 import rewardsReducer from "./slices/rewardsSlice";
 import notificationsReducer from "./slices/notificationsSlice";
+import chatsReducer from "./slices/chatSlice";
 
 export const store = configureStore({
   reducer: {
@@ -20,6 +21,7 @@ export const store = configureStore({
     watchlist: watchlistReducer,
     rewards: rewardsReducer,
     notifications: notificationsReducer,
+    chat: chatsReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

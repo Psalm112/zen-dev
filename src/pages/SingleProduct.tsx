@@ -13,7 +13,7 @@ import CustomerReviews from "../components/product/singleProduct/CustomerReviews
 import PurchaseSection from "../components/product/singleProduct/PurchaseSection";
 import ProductLoadingSkeleton from "../components/product/singleProduct/LoadingSkeleton";
 import ProductCard from "../components/product/ProductCard";
-import { useProductData } from "../utils/hooks/useProductData";
+import { useProductData } from "../utils/hooks/useProduct";
 
 type TabType = "details" | "reviews";
 

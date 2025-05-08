@@ -9,7 +9,7 @@ import StatusAlert from "./StatusAlert";
 import Button from "../../common/Button";
 import { BsShieldExclamation } from "react-icons/bs";
 import { toast } from "react-toastify";
-import { useContractData } from "../../../utils/hooks/useContractData";
+import { useContractData } from "../../../utils/hooks/useContract";
 import Modal from "../../common/Modal";
 import ConnectWallet from "../ConnectWallet";
 import { useWallet } from "../../../utils/hooks/useWallet";

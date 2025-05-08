@@ -3,7 +3,7 @@ import { twMerge } from "tailwind-merge";
 import ProductCard from "./ProductCard";
 import Title from "../common/Title";
 import { Link } from "react-router-dom";
-import { useProductData } from "../../utils/hooks/useProductData";
+import { useProductData } from "../../utils/hooks/useProduct";
 import { Product } from "../../utils/types";
 import LoadingSpinner from "../common/LoadingSpinner";
 

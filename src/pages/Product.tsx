@@ -3,7 +3,7 @@ import { Link, useLocation, useParams } from "react-router-dom";
 import Container from "../components/common/Container";
 import { IoChevronBackOutline, IoSearch } from "react-icons/io5";
 import ProductList from "../components/product/ProductList";
-import { useProductData } from "../utils/hooks/useProductData";
+import { useProductData } from "../utils/hooks/useProduct";
 import { debounce } from "../utils/helpers";
 import ProductCard from "../components/product/ProductCard";
 // import LoadingSpinner from "../components/common/LoadingSpinner";

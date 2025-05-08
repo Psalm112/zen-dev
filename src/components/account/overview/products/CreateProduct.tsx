@@ -2,7 +2,7 @@ import { useState, useRef, ChangeEvent, FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiImage, FiX, FiPlus } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
-import { useProductData } from "../../../../utils/hooks/useProductData";
+import { useProductData } from "../../../../utils/hooks/useProduct";
 import LoadingSpinner from "../../../common/LoadingSpinner";
 import Button from "../../../common/Button";
 

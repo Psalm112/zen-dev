@@ -102,7 +102,7 @@ import { useState } from "react";
 import { FaWallet, FaSpinner } from "react-icons/fa";
 import { Product } from "../../../utils/types";
 import { useWallet } from "../../../context/WalletContext";
-import { useOrderData } from "../../../utils/hooks/useOrderData";
+import { useOrderData } from "../../../utils/hooks/useOrder";
 import { useNavigate } from "react-router-dom";
 import QuantitySelector from "./QuantitySelector";
 
