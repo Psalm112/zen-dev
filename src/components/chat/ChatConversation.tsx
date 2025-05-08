@@ -97,6 +97,7 @@ const ChatConversation: React.FC<ChatConversationProps> = ({
                       ? message.sender === currentUserId
                       : (message.sender as any)._id === currentUserId
                   }
+                  isRead={message.read}
                 />
               </motion.div>
             ))}
