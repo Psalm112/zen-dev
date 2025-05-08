@@ -58,7 +58,7 @@ const ChatConversation: React.FC<ChatConversationProps> = ({
   };
 
   return (
-    <div className="flex flex-col flex-1 w-full md:w-2/3">
+    <div className="flex flex-col flex-1 w-full md:w-2/3 overflow-hidden">
       <ChatHeader
         name={recipientName}
         image={recipientImage}

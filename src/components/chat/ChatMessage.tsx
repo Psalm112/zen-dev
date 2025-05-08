@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { motion } from "framer-motion";
-import { IoCheckmarkDoneOutline } from "react-icons/io5";
+import { IoCheckmark, IoCheckmarkDoneOutline } from "react-icons/io5";
 
 interface ChatMessageProps {
   content: string;
@@ -32,12 +32,15 @@ const ChatMessage: React.FC<ChatMessageProps> = memo(
             >
               {time}
             </p>
-            {isOwn && (
+            {isOwn && isRead && (
               <IoCheckmarkDoneOutline
                 className={`${
-                  isRead ? "text-blue-200" : "text-[#AEAEB2] text-xs"
+                  isRead ? "text-[#d4af37]" : "text-[#AEAEB2] text-xs"
                 }`}
               />
+            )}
+            {isOwn && !isRead && (
+              <IoCheckmark className="text-[#AEAEB2] text-xs" />
             )}
           </div>
         </motion.div>
