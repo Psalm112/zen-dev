@@ -156,6 +156,7 @@ const Account = () => {
                   : ""
               }
               name={selectedUser.name}
+              id={selectedUser._id}
               email={selectedUser.email}
               showSettings={handleShowSettings}
             />
