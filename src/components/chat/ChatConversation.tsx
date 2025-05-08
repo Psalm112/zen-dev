@@ -1,7 +1,7 @@
+// src/components/chat/ChatConversation.tsx
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-// import { BiArrowBack, BiSend, BiImage } from "react-icons/bi";
 import ChatHeader from "./ChatHeader";
 import ChatMessage from "./ChatMessage";
 import ChatInput from "./ChatInput";
@@ -31,7 +31,12 @@ const ChatConversation: React.FC<ChatConversationProps> = ({
   const navigate = useNavigate();
   const { sendMessage } = useChat();
 
+  const sortedMessages = [...messages].sort((a, b) => {
+    return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+  });
+
   useEffect(() => {
+    // Scroll to bottom on new messages
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
@@ -60,7 +65,7 @@ const ChatConversation: React.FC<ChatConversationProps> = ({
         onBack={() => navigate("/chat")}
       />
 
-      <div className="flex-1 overflow-y-auto p-4 hide-scrollbar bg-[#1A1D21]">
+      <div className="flex-1 overflow-y-auto p-4 hide-scrollbar bg-[#1A1D21] scrollbar-thin scrollbar-thumb-[#292B30] scrollbar-track-transparent hover:scrollbar-thumb-[#3A3D42]">
         {isLoading && messages.length === 0 ? (
           <div className="flex flex-col space-y-4">
             {[...Array(3)].map((_, i) => (
@@ -80,9 +85,9 @@ const ChatConversation: React.FC<ChatConversationProps> = ({
               </div>
             ))}
           </div>
-        ) : messages.length > 0 ? (
+        ) : sortedMessages.length > 0 ? (
           <AnimatePresence initial={false}>
-            {messages.map((message, index) => (
+            {sortedMessages.map((message, index) => (
               <motion.div
                 key={(message._id as string) || index}
                 initial={{ opacity: 0, y: 20 }}

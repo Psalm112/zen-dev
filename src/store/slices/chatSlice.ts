@@ -152,7 +152,7 @@ const chatSlice = createSlice({
       state.currentRecipient = action.payload;
     },
     addLocalMessage: (state, action: PayloadAction<Message>) => {
-      state.currentConversation.unshift(action.payload);
+      state.currentConversation.push(action.payload);
       console.log("local", state.currentConversation);
       // Also update the conversations list if the conversation exists
       const conversationIndex = state.conversations.findIndex(
@@ -181,7 +181,7 @@ const chatSlice = createSlice({
             state.currentRecipient === action.payload.recipient ||
             state.currentRecipient === action.payload.sender
           ) {
-            state.currentConversation.unshift(action.payload);
+            state.currentConversation.push(action.payload);
           }
 
           // Update conversation list
@@ -191,9 +191,20 @@ const chatSlice = createSlice({
 
           if (existingConvIndex !== -1) {
             state.conversations[existingConvIndex].lastMessage = action.payload;
+            const updatedConv = state.conversations[existingConvIndex];
+            state.conversations.splice(existingConvIndex, 1);
+            state.conversations.unshift(updatedConv);
           } else {
-            // If it's a new conversation, we should refresh the list
-            // This is a simplification - you might want to add a new conversation object here
+            // new conversation,  refresh the list
+            // if (action.payload.recipient) {
+            //   const newConversation: Conversation = {
+            //     user: action.payload.recipient,
+            //     lastMessage: action.payload,
+            //     unreadCount: 0,
+            //   };
+            //   state.conversations.unshift(newConversation);
+            // }
+            // state.lastFetched = null;
           }
         }
       )

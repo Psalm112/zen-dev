@@ -1,5 +1,5 @@
-import { useState, KeyboardEvent } from "react";
-import { BiSend, BiImage, BiSmile } from "react-icons/bi";
+import { useRef, useEffect, KeyboardEvent } from "react";
+import { BiSend } from "react-icons/bi";
 import { motion } from "framer-motion";
 
 interface ChatInputProps {
@@ -15,6 +15,26 @@ const ChatInput: React.FC<ChatInputProps> = ({
   onSend,
   isLoading,
 }) => {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Adjust textarea height based on content
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    // Reset height to auto to get the correct scrollHeight
+    textarea.style.height = "24px";
+
+    // Calculate new height with a maximum of 4 rows
+    const lineHeight = 24;
+    const maxHeight = lineHeight * 4;
+    const newHeight = Math.min(textarea.scrollHeight, maxHeight);
+
+    textarea.style.height = `${newHeight}px`;
+    textarea.style.overflowY =
+      textarea.scrollHeight > maxHeight ? "auto" : "hidden";
+  }, [value]);
+
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -27,13 +47,12 @@ const ChatInput: React.FC<ChatInputProps> = ({
       <div className="flex items-end">
         <div className="flex-1 bg-[#292B30] rounded-lg px-3 py-2">
           <textarea
+            ref={textareaRef}
             value={value}
             onChange={(e) => onChange(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Type a message..."
-            className="w-full bg-transparent text-white outline-none resize-none max-h-24"
-            rows={1}
-            style={{ height: "auto", minHeight: "24px" }}
+            className="w-full bg-transparent text-white outline-none resize-none min-h-[24px] scrollbar-thin scrollbar-thumb-[#3A3D42] scrollbar-track-transparent"
             disabled={isLoading}
           />
         </div>
