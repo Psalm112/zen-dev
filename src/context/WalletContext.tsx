@@ -12,12 +12,12 @@ import {
 import { ethers } from "ethers";
 import { inAppWallet } from "thirdweb/wallets";
 import { createThirdwebClient, defineChain } from "thirdweb";
+import { useCurrencyConverter } from "../utils/hooks/useCurrencyConverter";
 
 export type WalletType = "eoa" | "smart" | null;
 
 // Chain definitions
 const supportedChains = {
-  
   celoAlfajores: defineChain({
     id: 44787,
     name: "Celo Alfajores Testnet",
@@ -42,9 +42,7 @@ const walletStorage = {
 
 // ThirdWeb client
 const thirdwebClient = createThirdwebClient({
-  clientId:
-    import.meta.env.VITE_THIRDWEB_CLIENT_ID ||
-    "b81c12c8d9ae57479a26c52be1d198eb",
+  clientId: import.meta.env.VITE_THIRDWEB_CLIENT_ID,
 });
 
 // Context shape
@@ -57,6 +55,12 @@ export interface WalletContextType {
   isConnecting: boolean;
   provider: ethers.Provider | null;
   signer: ethers.Signer | null;
+  displayCurrency: "USDT" | "CELO" | "FIAT";
+  setDisplayCurrency: (currency: "USDT" | "CELO" | "FIAT") => void;
+  formattedBalance: string;
+  balanceInUSDT: string | null;
+  balanceInCELO: string | null;
+  balanceInFiat: string | null;
   connectMetaMask: () => Promise<string>;
   connectEmail: (
     email: string,
@@ -116,14 +120,19 @@ export function WalletProvider({
   const [isInitialized, setIsInitialized] = useState(false);
   const [provider, setProvider] = useState<ethers.Provider | null>(null);
   const [signer, setSigner] = useState<ethers.Signer | any>(null);
+  const [displayCurrency, setDisplayCurrency] = useState<
+    "USDT" | "CELO" | "FIAT"
+  >("CELO");
+  const { rates, userCountry, convertPrice, formatPrice } =
+    useCurrencyConverter();
 
   // inAppWallet instance (memoized per chain)
   const smartWallet = useMemo(
     () =>
       inAppWallet({
         smartAccount: {
-          chain:supportedChains.celoAlfajores,
-               sponsorGas: true,
+          chain: supportedChains.celoAlfajores,
+          sponsorGas: true,
         },
         auth: {
           mode: "popup",
@@ -183,6 +192,55 @@ export function WalletProvider({
     [chainId]
   );
 
+  const balanceValue = useMemo(() => {
+    if (!balance) return null;
+
+    const balanceStr = balance.split(" ")[0];
+    return parseFloat(balanceStr);
+  }, [balance]);
+
+  const balanceInUSDT = useMemo(() => {
+    if (balanceValue === null) return null;
+
+    // If we have CELO balance, convert to USDT
+    if (chainId === 44787) {
+      const usdtValue = convertPrice(balanceValue, "CELO", "USDT");
+      return formatPrice(usdtValue, "USDT");
+    }
+
+    return formatPrice(balanceValue, "USDT");
+  }, [balanceValue, chainId, convertPrice, formatPrice]);
+
+  const balanceInCELO = useMemo(() => {
+    if (balanceValue === null) return null;
+
+    // If we have USDT balance, convert to CELO
+    if (chainId !== 44787) {
+      const celoValue = convertPrice(balanceValue, "USDT", "CELO");
+      return formatPrice(celoValue, "CELO");
+    }
+
+    return formatPrice(balanceValue, "CELO");
+  }, [balanceValue, chainId, convertPrice, formatPrice]);
+
+  const balanceInFiat = useMemo(() => {
+    if (balanceValue === null) return null;
+
+    if (chainId === 44787) {
+      const fiatValue = convertPrice(balanceValue, "CELO", "FIAT");
+      return formatPrice(fiatValue, "FIAT");
+    } else {
+      const fiatValue = convertPrice(balanceValue, "USDT", "FIAT");
+      return formatPrice(fiatValue, "FIAT");
+    }
+  }, [balanceValue, chainId, convertPrice, formatPrice]);
+
+  const formattedBalance = useMemo(() => {
+    if (displayCurrency === "USDT") return balanceInUSDT || "Loading...";
+    if (displayCurrency === "CELO") return balanceInCELO || "Loading...";
+    return balanceInFiat || "Loading...";
+  }, [displayCurrency, balanceInUSDT, balanceInCELO, balanceInFiat]);
+
   // Reset all wallet state
   const reset = useCallback(() => {
     setAccount(null);
@@ -215,7 +273,7 @@ export function WalletProvider({
           setSigner(s);
           await fetchBalance(acc, bp);
         } else if (wt === "smart") {
-          const chain =supportedChains.celoAlfajores;
+          const chain = supportedChains.celoAlfajores;
           const rp = new ethers.JsonRpcProvider(chain.rpc);
           setProvider(rp);
           await fetchBalance(acc, rp);
@@ -277,7 +335,6 @@ export function WalletProvider({
           chainId === 44787
             ? supportedChains.celoAlfajores
             : supportedChains.celoAlfajores;
-          
 
         // For email/phone, opts may contain verificationCode
         const connOpts: any = {
@@ -397,6 +454,12 @@ export function WalletProvider({
       isConnecting,
       provider,
       signer,
+      displayCurrency,
+      setDisplayCurrency,
+      formattedBalance,
+      balanceInUSDT,
+      balanceInCELO,
+      balanceInFiat,
       connectMetaMask,
       connectEmail,
       connectPhone,
@@ -416,6 +479,11 @@ export function WalletProvider({
       isConnecting,
       provider,
       signer,
+      displayCurrency,
+      formattedBalance,
+      balanceInUSDT,
+      balanceInCELO,
+      balanceInFiat,
       connectMetaMask,
       connectEmail,
       connectPhone,

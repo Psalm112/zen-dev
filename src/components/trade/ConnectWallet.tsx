@@ -1,6 +1,6 @@
 "use client";
 import { motion } from "framer-motion";
-import { FC, useState, useCallback } from "react";
+import { FC, useState, useCallback, useEffect } from "react";
 import {
   FaWallet,
   FaSpinner,
@@ -15,6 +15,7 @@ import TransactionConfirmation from "./TransactionConfirmation";
 import ConfirmDelivery from "./ConfirmDelivery";
 import { useWallet } from "../../utils/hooks/useWallet";
 import { pendingTransactionProps } from "../../utils/types";
+import { useRef } from "react";
 
 export interface ConnectWalletProps {
   showAlternatives?: boolean;
@@ -40,6 +41,12 @@ const ConnectWallet: FC<ConnectWalletProps> = ({
     connectPasskey,
     connectGuest,
     disconnect,
+    displayCurrency,
+    setDisplayCurrency,
+    formattedBalance,
+    balanceInUSDT,
+    balanceInCELO,
+    balanceInFiat,
   } = useWallet();
 
   const [error, setError] = useState<string | null>(null);
@@ -52,7 +59,28 @@ const ConnectWallet: FC<ConnectWalletProps> = ({
   const [isVerifying, setIsVerifying] = useState(false);
   const [authMethod, setAuthMethod] = useState<"email" | "phone" | null>(null);
   const [showDetails, setShowDetails] = useState(false);
+  const currencyDropdownRef = useRef<HTMLDivElement>(null);
+  const [showCurrencyDropdown, setShowCurrencyDropdown] = useState(false);
 
+  const toggleCurrencyDropdown = useCallback(() => {
+    setShowCurrencyDropdown((prev) => !prev);
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        currencyDropdownRef.current &&
+        !currencyDropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowCurrencyDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
   const handleConnect = useCallback(async () => {
     setError(null);
     try {
@@ -174,8 +202,62 @@ const ConnectWallet: FC<ConnectWalletProps> = ({
               </p>
             </div>
             <div className="bg-[#2A2D35] p-4 rounded-lg">
-              <p className="text-gray-400 text-sm">Balance</p>
-              <p className="text-white">{balance || "Loading..."}</p>
+              <div className="flex justify-between items-center">
+                <p className="text-gray-400 text-sm">Balance</p>
+                <div className="relative" ref={currencyDropdownRef}>
+                  <button
+                    onClick={toggleCurrencyDropdown}
+                    className="text-xs px-2 py-1 bg-[#35383F] hover:bg-[#3F4249] rounded text-gray-300 flex items-center"
+                  >
+                    {displayCurrency}
+                    <svg
+                      className="w-3 h-3 ml-1"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </button>
+                  {showCurrencyDropdown && (
+                    <div className="absolute right-0 mt-1 w-24 bg-[#35383F] rounded shadow-lg z-10">
+                      <button
+                        onClick={() => {
+                          setDisplayCurrency("USDT");
+                          setShowCurrencyDropdown(false);
+                        }}
+                        className="block w-full text-left px-3 py-2 text-xs text-gray-300 hover:bg-[#3F4249]"
+                      >
+                        USDT
+                      </button>
+                      <button
+                        onClick={() => {
+                          setDisplayCurrency("CELO");
+                          setShowCurrencyDropdown(false);
+                        }}
+                        className="block w-full text-left px-3 py-2 text-xs text-gray-300 hover:bg-[#3F4249]"
+                      >
+                        CELO
+                      </button>
+                      <button
+                        onClick={() => {
+                          setDisplayCurrency("FIAT");
+                          setShowCurrencyDropdown(false);
+                        }}
+                        className="block w-full text-left px-3 py-2 text-xs text-gray-300 hover:bg-[#3F4249]"
+                      >
+                        FIAT
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <p className="text-white">{formattedBalance}</p>
             </div>
             <div className="bg-[#2A2D35] p-4 rounded-lg">
               <p className="text-gray-400 text-sm">Chain ID</p>

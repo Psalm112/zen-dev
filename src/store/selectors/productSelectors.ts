@@ -128,9 +128,40 @@ export const selectRelatedProducts = (state: RootState): Product[] => {
     }));
 };
 
-export const selectFormattedProduct = (state: RootState) => {
+export const selectFormattedProduct = (
+  state: RootState,
+  exchangeRates?: {
+    USDT_CELO: number;
+    USDT_FIAT: number;
+    CELO_FIAT: number;
+  },
+  userCurrency?: string
+) => {
   const product = state.products.currentProduct;
   if (!product) return null;
+
+  const formattedProduct = {
+    ...product,
+    formattedUsdtPrice: `$${product.price.toFixed(2)}`,
+  };
+
+  if (exchangeRates) {
+    const celoPrice = product.price * exchangeRates.USDT_CELO;
+    const fiatPrice = product.price * exchangeRates.USDT_FIAT;
+
+    return {
+      ...formattedProduct,
+      celoPrice,
+      fiatPrice,
+      formattedCeloPrice: `${celoPrice.toFixed(4)} CELO`,
+      formattedFiatPrice: userCurrency
+        ? new Intl.NumberFormat(navigator.language, {
+            style: "currency",
+            currency: userCurrency,
+          }).format(fiatPrice)
+        : `${fiatPrice.toFixed(2)}`,
+    };
+  }
 
   return {
     ...product,

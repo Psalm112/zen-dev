@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useAppDispatch, useAppSelector } from "./redux";
 import {
   fetchAllProducts,
@@ -22,19 +22,58 @@ import {
 import { useSnackbar } from "../../context/SnackbarContext";
 import { useEffect } from "react";
 import { api } from "../services/apiService";
+import { useCurrencyConverter } from "./useCurrencyConverter";
 
 export const useProductData = () => {
   const dispatch = useAppDispatch();
   const { showSnackbar } = useSnackbar();
+  const {
+    rates,
+    loading: exchangeRatesLoading,
+    userCountry,
+    selectedCurrency,
+    setSelectedCurrency,
+    convertPrice,
+    formatPrice,
+  } = useCurrencyConverter();
 
   const products = useAppSelector(selectAllProducts);
   const product = useAppSelector(selectCurrentProduct);
-  const formattedProduct = useAppSelector(selectFormattedProduct);
+  const rawFormattedProduct = useAppSelector(selectFormattedProduct);
   const sponsoredProducts = useAppSelector(selectSponsoredProducts);
   const loading = useAppSelector(selectProductLoading) === "pending";
   const error = useAppSelector(selectProductError);
   const searchResults = useAppSelector(selectSearchResults);
   const relatedProducts = useAppSelector(selectRelatedProducts);
+
+  const formattedProduct = useMemo(() => {
+    if (!rawFormattedProduct) return null;
+
+    return {
+      ...rawFormattedProduct,
+      ...selectFormattedProduct(
+        { products: { currentProduct: rawFormattedProduct } } as any,
+        rates,
+        userCountry
+      ),
+    };
+  }, [rawFormattedProduct, rates, userCountry]);
+
+  const formattedProducts = useMemo(() => {
+    return products.map((product) => {
+      const celoPrice = convertPrice(product.price, "USDT", "CELO");
+      const fiatPrice = convertPrice(product.price, "USDT", "FIAT");
+
+      return {
+        ...product,
+        celoPrice,
+        fiatPrice,
+        formattedUsdtPrice: formatPrice(product.price, "USDT"),
+        formattedCeloPrice: formatPrice(celoPrice, "CELO"),
+        formattedFiatPrice: formatPrice(fiatPrice, "FIAT"),
+      };
+    });
+  }, [products, convertPrice, formatPrice]);
 
   const fetchAllProductsAsync = useCallback(
     async (
@@ -270,13 +309,13 @@ export const useProductData = () => {
   }, []);
 
   return {
-    products,
+    products: formattedProducts,
     product,
     formattedProduct,
     sponsoredProducts,
     searchResults,
     relatedProducts,
-    loading,
+    loading: loading || exchangeRatesLoading,
     error,
     fetchAllProducts: fetchAllProductsAsync,
     fetchProductById: fetchProductByIdAsync,

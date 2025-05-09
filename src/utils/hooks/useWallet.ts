@@ -21,6 +21,12 @@ type UseWalletHook = Pick<
   | "disconnect"
   | "signer"
   | "provider"
+  | "displayCurrency"
+  | "setDisplayCurrency"
+  | "formattedBalance"
+  | "balanceInUSDT"
+  | "balanceInCELO"
+  | "balanceInFiat"
 >;
 
 export function useWallet(): UseWalletHook {
@@ -45,6 +51,12 @@ export function useWallet(): UseWalletHook {
     disconnect,
     signer,
     provider,
+    displayCurrency,
+    setDisplayCurrency,
+    formattedBalance,
+    balanceInUSDT,
+    balanceInCELO,
+    balanceInFiat,
   } = ctx;
 
   const connect = useCallback((): Promise<
@@ -87,6 +99,12 @@ export function useWallet(): UseWalletHook {
       disconnect,
       signer,
       provider,
+      displayCurrency,
+      setDisplayCurrency,
+      formattedBalance,
+      balanceInUSDT,
+      balanceInCELO,
+      balanceInFiat,
     }),
     [
       account,
@@ -106,6 +124,12 @@ export function useWallet(): UseWalletHook {
       disconnect,
       signer,
       provider,
+      displayCurrency,
+      setDisplayCurrency,
+      formattedBalance,
+      balanceInUSDT,
+      balanceInCELO,
+      balanceInFiat,
     ]
   );
 }
