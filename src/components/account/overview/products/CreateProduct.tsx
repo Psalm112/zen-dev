@@ -377,7 +377,7 @@ const CreateProduct = () => {
   const navigate = useNavigate();
   const { createProduct, loading } = useProductData();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { convertPrice, formatPrice, userCountry } = useCurrencyConverter();
+  const { convertPrice, userCountry } = useCurrencyConverter();
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");

@@ -11,9 +11,9 @@ interface ExchangeRates {
 
 // Default fallback rates
 const DEFAULT_RATES: Omit<ExchangeRates, "lastUpdated"> = {
-  USDT_CELO: 0.5,
-  USDT_FIAT: 1,
-  CELO_FIAT: 2,
+  USDT_CELO: 2.9,
+  USDT_FIAT: 1500,
+  CELO_FIAT: 5,
 };
 
 // Cache keys
@@ -30,7 +30,6 @@ interface GeoData {
 
 export const useCurrencyConverter = () => {
   const [rates, setRates] = useState<ExchangeRates>(() => {
-    // Try to load cached rates from localStorage
     const cachedRates = localStorage.getItem(CACHE_KEYS.RATES);
     if (cachedRates) {
       try {
@@ -43,7 +42,7 @@ export const useCurrencyConverter = () => {
         // Invalid cache, ignore
       }
     }
-    // Default state
+
     return { ...DEFAULT_RATES, lastUpdated: 0 };
   });
 
@@ -250,7 +249,7 @@ export const useCurrencyConverter = () => {
     [userCountry]
   );
 
-  // Manual refresh function that consumers can call
+  // Manual refresh function
   const refreshRates = useCallback(() => {
     return fetchRates(true);
   }, [fetchRates]);
