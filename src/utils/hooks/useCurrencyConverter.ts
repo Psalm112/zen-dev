@@ -11,9 +11,9 @@ interface ExchangeRates {
 
 // Default fallback rates
 const DEFAULT_RATES: Omit<ExchangeRates, "lastUpdated"> = {
-  USDT_CELO: 2.9,
-  USDT_FIAT: 1500,
-  CELO_FIAT: 5,
+  USDT_CELO: 0.5,
+  USDT_FIAT: 1,
+  CELO_FIAT: 2,
 };
 
 // Cache keys
@@ -30,6 +30,7 @@ interface GeoData {
 
 export const useCurrencyConverter = () => {
   const [rates, setRates] = useState<ExchangeRates>(() => {
+    // Try to load cached rates from localStorage
     const cachedRates = localStorage.getItem(CACHE_KEYS.RATES);
     if (cachedRates) {
       try {
@@ -42,7 +43,7 @@ export const useCurrencyConverter = () => {
         // Invalid cache, ignore
       }
     }
-
+    // Default state
     return { ...DEFAULT_RATES, lastUpdated: 0 };
   });
 
@@ -67,13 +68,17 @@ export const useCurrencyConverter = () => {
 
   const [selectedCurrency, setSelectedCurrency] = useState<Currency>("USDT");
 
+  // Fetch exchange rates from CoinGecko API with proper caching
   const fetchRates = useCallback(
     async (forceRefresh = false) => {
+      // Skip fetching if we already have recent data (< 5 mins) unless forced
       if (
         !forceRefresh &&
         rates.lastUpdated &&
         Date.now() - rates.lastUpdated < 5 * 60 * 1000
       ) {
+        // Important: Set loading to false since we're skipping the fetch
+        setLoading(false);
         return;
       }
 
@@ -118,7 +123,7 @@ export const useCurrencyConverter = () => {
           shouldUpdateGeo = false;
         }
 
-        //couldn't get fresh geo data but have cached data
+        // If we couldn't get fresh geo data but have cached data
         if (!shouldUpdateGeo && userCountry !== "USD") {
           localCurrency = userCountry;
         }
@@ -188,7 +193,7 @@ export const useCurrencyConverter = () => {
     [userCountry, rates.lastUpdated]
   );
 
-  // Convert price between currencies
+  // Convert price between currencies with memoization
   const convertPrice = useCallback(
     (price: number, from: Currency, to: Currency): number => {
       if (from === to) return price;
@@ -214,7 +219,7 @@ export const useCurrencyConverter = () => {
     [rates]
   );
 
-  // Format price with currency symbol
+  // Format price with currency symbol and proper locale formatting
   const formatPrice = useCallback(
     (price: number, currency: Currency): string => {
       if (isNaN(price)) return "—";
@@ -229,7 +234,7 @@ export const useCurrencyConverter = () => {
       }
 
       if (currency === "CELO") {
-        // standard number format for CELO with 4 decimals
+        // Use standard number format for CELO with 4 decimals
         return `${price.toLocaleString(navigator.language, {
           minimumFractionDigits: 2,
           maximumFractionDigits: 4,
@@ -247,13 +252,21 @@ export const useCurrencyConverter = () => {
     [userCountry]
   );
 
-  // Manual refresh function
+  // Manual refresh function that consumers can call
   const refreshRates = useCallback(() => {
     return fetchRates(true);
   }, [fetchRates]);
 
   // Initial fetch and refresh interval
   useEffect(() => {
+    // Set loading immediately to handle initial state
+    // Check if we don't have rates or if they're stale
+    if (!rates.lastUpdated || Date.now() - rates.lastUpdated > 5 * 60 * 1000) {
+      setLoading(true);
+    } else {
+      setLoading(false);
+    }
+
     fetchRates();
 
     // Refresh rates every 5 minutes
