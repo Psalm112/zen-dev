@@ -343,7 +343,7 @@ export const useProductData = () => {
     sponsoredProducts: formattedSponsoredProducts,
     searchResults: formattedSearchResults,
     relatedProducts: formattedRelatedProducts,
-    loading: loading,
+    loading: loading || exchangeRatesLoading,
     error,
     fetchAllProducts: fetchAllProductsAsync,
     fetchProductById: fetchProductByIdAsync,
