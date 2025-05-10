@@ -13,10 +13,11 @@ import {
 } from "react-icons/fa";
 import TransactionConfirmation from "./TransactionConfirmation";
 import ConfirmDelivery from "./ConfirmDelivery";
-import { useWallet } from "../../utils/hooks/useWallet";
+// import { useWallet } from "../../utils/hooks/useWallet";
 import { pendingTransactionProps } from "../../utils/types";
 import { useRef } from "react";
 import { IoChevronDown } from "react-icons/io5";
+import { useWallet } from "../../context/WalletContext";
 
 export interface ConnectWalletProps {
   showAlternatives?: boolean;

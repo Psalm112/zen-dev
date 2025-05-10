@@ -13,8 +13,9 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import Modal from "../../common/Modal";
 import ConnectWallet from "../ConnectWallet";
-import { useWallet } from "../../../utils/hooks/useWallet";
+// import { useWallet } from "../../../utils/hooks/useWallet";
 import { motion } from "framer-motion";
+import { useWallet } from "../../../context/WalletContext";
 
 interface PendingPaymentStatusProps {
   tradeDetails?: TradeDetails;

@@ -19,9 +19,10 @@ import {
 } from "../../store/selectors/contractSelectors";
 import { useSnackbar } from "../../context/SnackbarContext";
 import { CreateTradeParams, TradeResponse } from "../types";
-import { useWallet } from "./useWallet";
+// import { useWallet } from "./useWallet";
 import { ethers } from "ethers";
 import { raiseOrderDispute } from "../../store/slices/orderSlice";
+import { useWallet } from "../../context/WalletContext";
 
 export const useContractData = () => {
   const dispatch = useAppDispatch();

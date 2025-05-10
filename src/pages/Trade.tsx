@@ -6,7 +6,7 @@ import Title from "../components/common/Title";
 import BannerCarousel from "../components/common/BannerCarousel";
 // import FloatingActionButton from "../components/common/FloatingActionButton";
 import { Pen, Pen2 } from ".";
-import { useWallet } from "../utils/hooks/useWallet";
+// import { useWallet } from "../utils/hooks/useWallet";
 import { Product, TradeTab } from "../utils/types";
 import ProductListingSkeleton from "../components/trade/ProductListingSkeleton";
 // import IncomingOrderCard from "../components/trade/IncomingOrderCard";
@@ -15,6 +15,7 @@ import ProductListingSkeleton from "../components/trade/ProductListingSkeleton";
 import ConnectWallet from "../components/trade/ConnectWallet";
 import Tab from "../components/trade/Tab";
 import LazyFloatingButton from "../components/common/LazyFloatingButton";
+import { useWallet } from "../context/WalletContext";
 const ProductCard = lazy(() => import("../components/trade/ProductCard"));
 const IncomingOrderCard = lazy(
   () => import("../components/trade/IncomingOrderCard")

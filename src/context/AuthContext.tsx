@@ -178,7 +178,7 @@ import {
 } from "react";
 import { jwtDecode } from "jwt-decode";
 import { UserProfile } from "../utils/types";
-import { useWallet } from "../utils/hooks/useWallet";
+// import { useWallet } from "../utils/hooks/useWallet";
 
 interface JwtPayload {
   sub: string;

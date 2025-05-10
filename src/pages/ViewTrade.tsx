@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Container from "../components/common/Container";
 import Title from "../components/common/Title";
-import { useWallet } from "../utils/hooks/useWallet";
+// import { useWallet } from "../utils/hooks/useWallet";
 import { Product, TradeTab } from "../utils/types";
 import ProductListingSkeleton from "../components/trade/ProductListingSkeleton";
 import ActiveTradeCard from "../components/trade/view/ActiveTradeCard";
@@ -11,6 +11,7 @@ import ConnectWallet from "../components/trade/ConnectWallet";
 import Tab from "../components/trade/Tab";
 import EmptyState from "../components/trade/view/EmptyState";
 import { useNavigate } from "react-router-dom";
+import { useWallet } from "../context/WalletContext";
 
 const ViewTrade = () => {
   const navigate = useNavigate();
