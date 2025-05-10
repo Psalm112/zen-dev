@@ -5,9 +5,14 @@ import { Link, useNavigate } from "react-router-dom";
 import { BsCart3 } from "react-icons/bs";
 import { Product } from "../../utils/types";
 import { useWatchlist } from "../../utils/hooks/useWatchlist";
+import { useCurrency } from "../../context/CurrencyContext";
 
 interface ProductCardProps {
-  product: Product;
+  product: Product & {
+    formattedCeloPrice: string;
+    formattedFiatPrice: string;
+    formattedUsdtPrice: string;
+  };
   isNew?: boolean;
 }
 
@@ -16,9 +21,15 @@ const API_URL = import.meta.env.VITE_API_URL;
 const ProductCard = React.memo(
   ({ product, isNew = false }: ProductCardProps) => {
     const navigate = useNavigate();
-    const { _id, name, description, price, images, seller } = product;
+    const { _id, name, description, images, seller } = product;
     const { isProductInWatchlist, toggleWatchlist } = useWatchlist();
+    const { secondaryCurrency } = useCurrency();
     const isFavorite = isProductInWatchlist(_id);
+
+    const secondaryPrice =
+      secondaryCurrency === "USDT"
+        ? product.formattedUsdtPrice
+        : product.formattedFiatPrice;
 
     const imageUrl =
       images && images.length > 0
@@ -74,9 +85,14 @@ const ProductCard = React.memo(
           <h4 className="text-white text-xs md:text-sm py-0 line-clamp-1">
             {description}
           </h4>
-          <h4 className="text-[#AEAEB2] text-xs md:text-sm py-1 md:py-3 group-hover:hidden">
-            {price} cUSD
-          </h4>
+          <div className="py-1 md:py-3 group-hover:hidden">
+            <h4 className="text-white text-sm md:text-base font-semibold">
+              {product.formattedCeloPrice}
+            </h4>
+            <h4 className="text-[#AEAEB2] text-xs md:text-sm">
+              {secondaryPrice}
+            </h4>
+          </div>
           <button
             className="mt-[5px] gap-3 lg:gap-7 font-bold text-white bg-Red py-2 hidden group-hover:flex justify-center items-center w-full transition-all duration-300"
             onClick={() => navigate(`/product/${_id}`)}

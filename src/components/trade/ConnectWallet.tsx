@@ -16,6 +16,7 @@ import ConfirmDelivery from "./ConfirmDelivery";
 import { useWallet } from "../../utils/hooks/useWallet";
 import { pendingTransactionProps } from "../../utils/types";
 import { useRef } from "react";
+import { IoChevronDown } from "react-icons/io5";
 
 export interface ConnectWalletProps {
   showAlternatives?: boolean;
@@ -170,7 +171,17 @@ const ConnectWallet: FC<ConnectWalletProps> = ({
   const shortenedAddress = account
     ? `${account.slice(0, 6)}...${account.slice(-4)}`
     : "";
+  const handleCopyAddress = useCallback(() => {
+    if (!account) return;
 
+    navigator.clipboard
+      .writeText(account)
+      // .then(() => {
+      //   setCopied(true);
+      //   setTimeout(() => setCopied(false), 2000);
+      // })
+      .catch((err) => console.error("Failed to copy code:", err));
+  }, [account]);
   if (isConnected && account) {
     return (
       <motion.div
@@ -197,7 +208,10 @@ const ConnectWallet: FC<ConnectWalletProps> = ({
           <div className="space-y-4">
             <div className="bg-[#2A2D35] p-4 rounded-lg">
               <p className="text-gray-400 text-sm">Address</p>
-              <p className="text-white font-mono text-sm break-all">
+              <p
+                className="text-white font-mono text-sm break-all"
+                onClick={handleCopyAddress}
+              >
                 {account}
               </p>
             </div>
@@ -210,7 +224,7 @@ const ConnectWallet: FC<ConnectWalletProps> = ({
                     className="text-xs px-2 py-1 bg-[#35383F] hover:bg-[#3F4249] rounded text-gray-300 flex items-center"
                   >
                     {displayCurrency}
-                    <svg
+                    {/* <svg
                       className="w-3 h-3 ml-1"
                       fill="none"
                       stroke="currentColor"
@@ -222,7 +236,8 @@ const ConnectWallet: FC<ConnectWalletProps> = ({
                         strokeWidth={2}
                         d="M19 9l-7 7-7-7"
                       />
-                    </svg>
+                    </svg> */}
+                    <IoChevronDown className="w-3 h-3" />
                   </button>
                   {showCurrencyDropdown && (
                     <div className="absolute right-0 mt-1 w-24 bg-[#35383F] rounded shadow-lg z-10">

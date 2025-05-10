@@ -12,6 +12,7 @@ import { useWallet } from "../../utils/hooks/useWallet";
 import Modal from "../common/Modal";
 import ConnectWallet from "../trade/ConnectWallet";
 import { useChat } from "../../utils/hooks/useChat";
+import CurrencyToggle from "../common/CurrencyToggle";
 
 const NavList = [
   { title: "Home", path: "/" },
@@ -120,6 +121,7 @@ const Header = () => {
 
         {/* Right section: Buttons */}
         <div className="flex items-center gap-3">
+          <CurrencyToggle />
           <button
             onClick={() => setShowWallet(true)}
             className="flex items-center gap-1.5 bg-[#292B30] text-white px-3 py-1.5 rounded-md hover:bg-[#33363b] transition-all"

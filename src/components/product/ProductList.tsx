@@ -16,7 +16,13 @@ interface Props {
   isFeatured?: boolean;
   maxItems?: number;
 }
-
+interface formattedProductProp extends Product {
+  celoPrice: number;
+  fiatPrice: number;
+  formattedCeloPrice: string;
+  formattedFiatPrice: string;
+  formattedUsdtPrice: string;
+}
 const ProductList = ({
   title,
   path,
@@ -36,7 +42,9 @@ const ProductList = ({
     getProductsByCategory,
   } = useProductData();
 
-  const [displayProducts, setDisplayProducts] = useState<Product[]>([]);
+  const [displayProducts, setDisplayProducts] = useState<
+    (formattedProductProp | null)[]
+  >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -142,6 +150,7 @@ const ProductList = ({
         ) : (
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 md:gap-5">
             {displayProducts.map((product) => {
+              if (!product) return <></>;
               const isNew = (() => {
                 const createdDate = new Date(product.createdAt);
                 const now = new Date();
@@ -152,7 +161,7 @@ const ProductList = ({
 
               return (
                 <ProductCard
-                  key={product._id}
+                  key={product?._id}
                   product={product}
                   isNew={isNew}
                 />

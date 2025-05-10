@@ -14,6 +14,8 @@ import PurchaseSection from "../components/product/singleProduct/PurchaseSection
 import ProductLoadingSkeleton from "../components/product/singleProduct/LoadingSkeleton";
 import ProductCard from "../components/product/ProductCard";
 import { useProductData } from "../utils/hooks/useProduct";
+import { useCurrency } from "../context/CurrencyContext";
+import { IoMdSwap } from "react-icons/io";
 
 type TabType = "details" | "reviews";
 
@@ -21,13 +23,13 @@ const SingleProduct = () => {
   const { productId } = useParams();
   const navigate = useNavigate();
   const {
-    product,
     formattedProduct,
     loading,
     error,
     fetchProductById,
     relatedProducts,
   } = useProductData();
+  const { secondaryCurrency, toggleSecondaryCurrency } = useCurrency();
   const [activeTab, setActiveTab] = useState<TabType>("details");
   const [reviewCount, setReviewCount] = useState(0);
   const { isProductInWatchlist, toggleWatchlist, checkProductWatchlist } =
@@ -46,10 +48,10 @@ const SingleProduct = () => {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: product?.name || "Check out this product",
+          title: formattedProduct?.name || "Check out this product",
           text:
-            typeof product?.description === "string"
-              ? product.description.slice(0, 100)
+            typeof formattedProduct?.description === "string"
+              ? formattedProduct.description.slice(0, 100)
               : "I found this amazing product",
           url: window.location.href,
         });
@@ -75,7 +77,7 @@ const SingleProduct = () => {
     return () => {};
   }, [productId, fetchProductById, checkProductWatchlist]);
 
-  if (loading || !product) {
+  if (loading || !formattedProduct) {
     return <ProductLoadingSkeleton />;
   }
 
@@ -155,7 +157,7 @@ const SingleProduct = () => {
               </div>
 
               {/* Product Image */}
-              <ProductImage images={product.images} />
+              <ProductImage images={formattedProduct.images} />
             </div>
           </div>
 
@@ -164,11 +166,33 @@ const SingleProduct = () => {
               <div className="px-4 sm:px-8 md:px-12 py-6">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <h1 className="text-2xl sm:text-3xl font-bold">
-                    {product.name}
+                    {formattedProduct.name}
                   </h1>
-                  <div className="flex items-center">
+                  {/* <div className="flex items-center">
                     <span className="text-xl sm:text-2xl font-bold">
                       {product.price} cUSD
+                    </span>
+                  </div> */}
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl font-bold">
+                        {formattedProduct.formattedCeloPrice}
+                      </span>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          toggleSecondaryCurrency();
+                        }}
+                        className="p-1 rounded-full bg-gray-700 hover:bg-gray-600 transition-colors"
+                        aria-label="Toggle currency display"
+                      >
+                        <IoMdSwap className="text-white text-sm" />
+                      </button>
+                    </div>
+                    <span className="text-sm text-gray-400">
+                      {secondaryCurrency === "USDT"
+                        ? formattedProduct.formattedUsdtPrice
+                        : formattedProduct.formattedFiatPrice}
                     </span>
                   </div>
                 </div>
@@ -184,24 +208,25 @@ const SingleProduct = () => {
               {/* Tab Content */}
               <div className="transition-all duration-300">
                 {activeTab === "details" ? (
-                  <ProductDetails product={product} />
+                  <ProductDetails product={formattedProduct} />
                 ) : (
                   <CustomerReviews
-                    productId={product._id}
+                    productId={formattedProduct._id}
                     reviewcount={setReviewCount}
                   />
                 )}
               </div>
 
-              <PurchaseSection product={product} />
+              <PurchaseSection product={formattedProduct} />
             </div>
           </div>
         </div>
         <div className="mt-8">
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 md:gap-5">
-            {relatedProducts.map((product) => (
-              <ProductCard key={product._id} product={product} />
-            ))}
+            {relatedProducts.map((product) => {
+              if (!product) return <></>;
+              return <ProductCard key={product?._id} product={product} />;
+            })}
           </div>
         </div>
       </div>

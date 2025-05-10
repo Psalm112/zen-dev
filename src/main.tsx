@@ -15,6 +15,7 @@ import { WalletProvider } from "./context/WalletContext.tsx";
 import ErrorBoundary from "./components/error/ErrorBoundary.tsx";
 import { setupGlobalErrorHandling } from "./utils/errorHandling";
 import ReferralHandler from "./components/referrals/ReferralHandler.tsx";
+import { CurrencyProvider } from "./context/CurrencyContext.tsx";
 // import GoogleCallback from "./pages/GoogleCallback.tsx";
 
 const Login = lazy(() => import("./pages/Login.tsx"));
@@ -44,12 +45,14 @@ const RouterLayout = () => {
         <WalletProvider>
           <AuthProvider>
             <SnackbarProvider>
-              <Layout>
-                <Suspense fallback={<Loadscreen />}>
-                  <Outlet />
-                </Suspense>
-                <ReferralHandler />
-              </Layout>
+              <CurrencyProvider>
+                <Layout>
+                  <Suspense fallback={<Loadscreen />}>
+                    <Outlet />
+                  </Suspense>
+                  <ReferralHandler />
+                </Layout>
+              </CurrencyProvider>
             </SnackbarProvider>
           </AuthProvider>
         </WalletProvider>

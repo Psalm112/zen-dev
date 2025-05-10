@@ -115,7 +115,8 @@ const PurchaseSection = ({ product }: PurchaseSectionProps) => {
   const { placeOrder, currentOrder } = useOrderData();
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { isConnected, connectMetaMask, balance, account } = useWallet();
+  const { isConnected, connectMetaMask, balance, account, formattedBalance } =
+    useWallet();
   const [quantity, setQuantity] = useState(1);
 
   const handleConnectWallet = async () => {
@@ -206,7 +207,10 @@ const PurchaseSection = ({ product }: PurchaseSectionProps) => {
 
       {isConnected && (
         <div className="text-center text-xs text-gray-400">
-          {balance ? `Balance: ${balance}` : "Checking balance..."} ·{" "}
+          {formattedBalance
+            ? `Balance: ${formattedBalance}`
+            : "Checking balance..."}{" "}
+          ·{" "}
           {account
             ? `${account.substring(0, 6)}...${account.substring(
                 account.length - 4

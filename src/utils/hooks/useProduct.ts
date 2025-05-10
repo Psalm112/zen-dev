@@ -17,50 +17,38 @@ import {
   selectSearchResults,
   // selectProductsByCategory,
   selectRelatedProducts,
-  selectFormattedProduct,
+  // selectFormattedProduct,
 } from "../../store/selectors/productSelectors";
 import { useSnackbar } from "../../context/SnackbarContext";
 import { useEffect } from "react";
 import { api } from "../services/apiService";
 import { useCurrencyConverter } from "./useCurrencyConverter";
+import { Product } from "../types";
+import { useCurrency } from "../../context/CurrencyContext";
 
 export const useProductData = () => {
+  const { secondaryCurrency } = useCurrency();
   const dispatch = useAppDispatch();
   const { showSnackbar } = useSnackbar();
   const {
-    rates,
     loading: exchangeRatesLoading,
-    userCountry,
-    selectedCurrency,
-    setSelectedCurrency,
     convertPrice,
     formatPrice,
   } = useCurrencyConverter();
 
   const products = useAppSelector(selectAllProducts);
   const product = useAppSelector(selectCurrentProduct);
-  const rawFormattedProduct = useAppSelector(selectFormattedProduct);
+  // const rawFormattedProduct = useAppSelector(selectFormattedProduct);
   const sponsoredProducts = useAppSelector(selectSponsoredProducts);
   const loading = useAppSelector(selectProductLoading) === "pending";
   const error = useAppSelector(selectProductError);
   const searchResults = useAppSelector(selectSearchResults);
   const relatedProducts = useAppSelector(selectRelatedProducts);
 
-  const formattedProduct = useMemo(() => {
-    if (!rawFormattedProduct) return null;
+  const formatProductWithCurrencies = useCallback(
+    (product: Product) => {
+      if (!product) return null;
 
-    return {
-      ...rawFormattedProduct,
-      ...selectFormattedProduct(
-        { products: { currentProduct: rawFormattedProduct } } as any,
-        rates,
-        userCountry
-      ),
-    };
-  }, [rawFormattedProduct, rates, userCountry]);
-
-  const formattedProducts = useMemo(() => {
-    return products.map((product) => {
       const celoPrice = convertPrice(product.price, "USDT", "CELO");
       const fiatPrice = convertPrice(product.price, "USDT", "FIAT");
 
@@ -72,8 +60,42 @@ export const useProductData = () => {
         formattedCeloPrice: formatPrice(celoPrice, "CELO"),
         formattedFiatPrice: formatPrice(fiatPrice, "FIAT"),
       };
-    });
-  }, [products, convertPrice, formatPrice]);
+    },
+    [convertPrice, formatPrice]
+  );
+
+  // const formattedProduct = useMemo(() => {
+  //   if (!rawFormattedProduct) return null;
+
+  //   return {
+  //     ...rawFormattedProduct,
+  //     ...selectFormattedProduct(
+  //       { products: { currentProduct: rawFormattedProduct } } as any,
+  //       rates,
+  //       userCountry
+  //     ),
+  //   };
+  // }, [rawFormattedProduct, rates, userCountry]);
+
+  const formattedProduct = useMemo(() => {
+    if (!product) return null;
+    return formatProductWithCurrencies(product);
+  }, [products, formatProductWithCurrencies]);
+  const formattedProducts = useMemo(() => {
+    return products.map(formatProductWithCurrencies);
+  }, [products, formatProductWithCurrencies]);
+
+  const formattedRelatedProducts = useMemo(() => {
+    return relatedProducts.map(formatProductWithCurrencies);
+  }, [relatedProducts, formatProductWithCurrencies]);
+
+  const formattedSponsoredProducts = useMemo(() => {
+    return sponsoredProducts.map(formatProductWithCurrencies);
+  }, [sponsoredProducts, formatProductWithCurrencies]);
+
+  const formattedSearchResults = useMemo(() => {
+    return searchResults.map(formatProductWithCurrencies);
+  }, [searchResults, formatProductWithCurrencies]);
 
   const fetchAllProductsAsync = useCallback(
     async (
@@ -285,15 +307,21 @@ export const useProductData = () => {
 
   const getProductsByCategory = useCallback(
     (category: string) => {
-      if (category === "All") return products || [];
+      let filteredProducts;
 
-      return products.filter(
-        (product) =>
-          product.category &&
-          product.category.toLowerCase() === category.toLowerCase()
-      );
+      if (category === "All") {
+        filteredProducts = products || [];
+      } else {
+        filteredProducts = products.filter(
+          (product) =>
+            product.category &&
+            product.category.toLowerCase() === category.toLowerCase()
+        );
+      }
+
+      return filteredProducts.map(formatProductWithCurrencies);
     },
-    [products]
+    [products, formatProductWithCurrencies]
   );
 
   const clearProduct = useCallback(() => {
@@ -312,9 +340,9 @@ export const useProductData = () => {
     products: formattedProducts,
     product,
     formattedProduct,
-    sponsoredProducts,
-    searchResults,
-    relatedProducts,
+    sponsoredProducts: formattedSponsoredProducts,
+    searchResults: formattedSearchResults,
+    relatedProducts: formattedRelatedProducts,
     loading: loading || exchangeRatesLoading,
     error,
     fetchAllProducts: fetchAllProductsAsync,
@@ -326,5 +354,6 @@ export const useProductData = () => {
     deleteProduct: deleteProductAsync,
     getProductsByCategory,
     clearProduct,
+    secondaryCurrency,
   };
 };
