@@ -67,10 +67,8 @@ export const useCurrencyConverter = () => {
 
   const [selectedCurrency, setSelectedCurrency] = useState<Currency>("USDT");
 
-  // Fetch exchange rates from CoinGecko API with proper caching
   const fetchRates = useCallback(
     async (forceRefresh = false) => {
-      // Skip fetching if we already have recent data (< 5 mins) unless forced
       if (
         !forceRefresh &&
         rates.lastUpdated &&
@@ -120,7 +118,7 @@ export const useCurrencyConverter = () => {
           shouldUpdateGeo = false;
         }
 
-        // If we couldn't get fresh geo data but have cached data
+        //couldn't get fresh geo data but have cached data
         if (!shouldUpdateGeo && userCountry !== "USD") {
           localCurrency = userCountry;
         }
@@ -190,7 +188,7 @@ export const useCurrencyConverter = () => {
     [userCountry, rates.lastUpdated]
   );
 
-  // Convert price between currencies with memoization
+  // Convert price between currencies
   const convertPrice = useCallback(
     (price: number, from: Currency, to: Currency): number => {
       if (from === to) return price;
@@ -216,7 +214,7 @@ export const useCurrencyConverter = () => {
     [rates]
   );
 
-  // Format price with currency symbol and proper locale formatting
+  // Format price with currency symbol
   const formatPrice = useCallback(
     (price: number, currency: Currency): string => {
       if (isNaN(price)) return "—";
@@ -231,7 +229,7 @@ export const useCurrencyConverter = () => {
       }
 
       if (currency === "CELO") {
-        // Use standard number format for CELO with 4 decimals
+        // standard number format for CELO with 4 decimals
         return `${price.toLocaleString(navigator.language, {
           minimumFractionDigits: 2,
           maximumFractionDigits: 4,
