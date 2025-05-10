@@ -521,8 +521,8 @@ const CreateProduct = () => {
     } else if (isNaN(parseFloat(priceInUSDT)) || parseFloat(priceInUSDT) <= 0) {
       newErrors.price = "Price must be a positive number";
     }
-    if (mediaFiles.length === 0)
-      newErrors.media = "At least one image or video is required";
+    // if (mediaFiles.length === 0)
+    //   newErrors.media = "At least one image or video is required";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -541,20 +541,19 @@ const CreateProduct = () => {
     formData.append("category", category);
     formData.append("price", priceInUSDT);
 
-    mediaFiles.forEach((media) => {
-      formData.append("mediaFiles", media.file);
-      formData.append("mediaTypes", media.type);
-    });
+    // mediaFiles.forEach((media) => {
+    //   formData.append("mediaFiles", media.file);
+    //   formData.append("mediaTypes", media.type);
+    // });
 
-    console.log(formData);
-    // try {
-    //   const result = await createProduct(formData);
-    //   if (result) {
-    //     navigate(`/product/${result._id}`);
-    //   }
-    // } finally {
-    //   setIsSubmitting(false);
-    // }
+    try {
+      const result = await createProduct(formData);
+      if (result) {
+        navigate(`/product/${result._id}`);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
