@@ -8,11 +8,12 @@ import { useNotifications } from "../../utils/hooks/useNotifications";
 import NotificationBadge from "../notifications/NotificationBadge";
 import { useAuth } from "../../context/AuthContext";
 import Button from "../common/Button";
-import { useWallet } from "../../utils/hooks/useWallet";
+// import { useWallet } from "../../utils/hooks/useWallet";
 import Modal from "../common/Modal";
 import ConnectWallet from "../trade/ConnectWallet";
 import { useChat } from "../../utils/hooks/useChat";
 import CurrencyToggle from "../common/CurrencyToggle";
+import { useWallet } from "../../context/WalletContext";
 
 const NavList = [
   { title: "Home", path: "/" },

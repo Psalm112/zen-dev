@@ -29,7 +29,7 @@ const SingleProduct = () => {
     fetchProductById,
     relatedProducts,
   } = useProductData();
-  const { secondaryCurrency, toggleSecondaryCurrency } = useCurrency();
+  const { secondaryCurrency } = useCurrency();
   const [activeTab, setActiveTab] = useState<TabType>("details");
   const [reviewCount, setReviewCount] = useState(0);
   const { isProductInWatchlist, toggleWatchlist, checkProductWatchlist } =
@@ -178,7 +178,7 @@ const SingleProduct = () => {
                       <span className="text-2xl font-bold">
                         {formattedProduct.formattedCeloPrice}
                       </span>
-                      <button
+                      {/* <button
                         onClick={(e) => {
                           e.preventDefault();
                           toggleSecondaryCurrency();
@@ -187,9 +187,9 @@ const SingleProduct = () => {
                         aria-label="Toggle currency display"
                       >
                         <IoMdSwap className="text-white text-sm" />
-                      </button>
+                      </button> */}
                     </div>
-                    <span className="text-sm text-gray-400">
+                    <span className="text-sm text-gray-400 justify-self-start sm:justify-self-end">
                       {secondaryCurrency === "USDT"
                         ? formattedProduct.formattedUsdtPrice
                         : formattedProduct.formattedFiatPrice}

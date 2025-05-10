@@ -98,13 +98,14 @@
 
 // export default PurchaseSection;
 
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { FaWallet, FaSpinner } from "react-icons/fa";
 import { Product } from "../../../utils/types";
 import { useWallet } from "../../../context/WalletContext";
 import { useOrderData } from "../../../utils/hooks/useOrder";
 import { useNavigate } from "react-router-dom";
 import QuantitySelector from "./QuantitySelector";
+import { useCurrency } from "../../../context/CurrencyContext";
 
 interface PurchaseSectionProps {
   product?: Product;
@@ -112,12 +113,19 @@ interface PurchaseSectionProps {
 
 const PurchaseSection = ({ product }: PurchaseSectionProps) => {
   const navigate = useNavigate();
-  const { placeOrder, currentOrder } = useOrderData();
+  const { placeOrder } = useOrderData();
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { isConnected, connectMetaMask, balance, account, formattedBalance } =
-    useWallet();
   const [quantity, setQuantity] = useState(1);
+  const { secondaryCurrency } = useCurrency();
+  const {
+    isConnected,
+    connectMetaMask,
+    account,
+    formattedBalance,
+    balanceInCELO,
+    setDisplayCurrency,
+  } = useWallet();
 
   const handleConnectWallet = async () => {
     setIsProcessing(true);
@@ -166,6 +174,11 @@ const PurchaseSection = ({ product }: PurchaseSectionProps) => {
     setQuantity(newQuantity);
   };
 
+  const balance = useMemo(() => {
+    setDisplayCurrency(secondaryCurrency);
+    return formattedBalance;
+  }, [secondaryCurrency]);
+
   return (
     <div className="bg-[#212428] p-4 md:p-6 space-y-4">
       {error && (
@@ -207,10 +220,10 @@ const PurchaseSection = ({ product }: PurchaseSectionProps) => {
 
       {isConnected && (
         <div className="text-center text-xs text-gray-400">
-          {formattedBalance
-            ? `Balance: ${formattedBalance}`
-            : "Checking balance..."}{" "}
-          ·{" "}
+          {formattedBalance && balanceInCELO
+            ? `Balance: ${balanceInCELO}  ·  ${balance}`
+            : "Checking balance..."}
+          <br />
           {account
             ? `${account.substring(0, 6)}...${account.substring(
                 account.length - 4

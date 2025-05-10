@@ -123,8 +123,7 @@ export function WalletProvider({
   const [displayCurrency, setDisplayCurrency] = useState<
     "USDT" | "CELO" | "FIAT"
   >("CELO");
-  const { rates, userCountry, convertPrice, formatPrice } =
-    useCurrencyConverter();
+  const { convertPrice, formatPrice } = useCurrencyConverter();
 
   // inAppWallet instance (memoized per chain)
   const smartWallet = useMemo(
@@ -480,6 +479,7 @@ export function WalletProvider({
       provider,
       signer,
       displayCurrency,
+      setDisplayCurrency,
       formattedBalance,
       balanceInUSDT,
       balanceInCELO,

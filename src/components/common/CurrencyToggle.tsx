@@ -1,8 +1,10 @@
 import { IoMdSwap } from "react-icons/io";
 import { useCurrency } from "../../context/CurrencyContext";
+import { useCurrencyConverter } from "../../utils/hooks/useCurrencyConverter";
 
 const CurrencyToggle = () => {
   const { secondaryCurrency, toggleSecondaryCurrency } = useCurrency();
+  const { userCountry } = useCurrencyConverter();
 
   return (
     <button
@@ -11,7 +13,7 @@ const CurrencyToggle = () => {
       aria-label="Toggle secondary currency display"
     >
       <span className="text-xs text-white">
-        {secondaryCurrency === "USDT" ? "USD" : "Local"}
+        {secondaryCurrency === "USDT" ? "USD" : userCountry}
       </span>
       <IoMdSwap className="text-white text-xs" />
     </button>
