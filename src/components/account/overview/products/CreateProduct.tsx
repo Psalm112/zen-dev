@@ -6,17 +6,21 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  lazy,
+  Suspense,
 } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiImage, FiX, FiPlus, FiVideo, FiTag } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { useProductData } from "../../../../utils/hooks/useProduct";
-import LoadingSpinner from "../../../common/LoadingSpinner";
 import Button from "../../../common/Button";
 import { useCurrencyConverter } from "../../../../utils/hooks/useCurrencyConverter";
 import { useContractData } from "../../../../utils/hooks/useContract";
 import { LogisticsProvider } from "../../../../utils/types";
 // import { toast } from "react-toastify";
+
+// Lazy load the LoadingSpinner component
+const LoadingSpinner = lazy(() => import("../../../common/LoadingSpinner"));
 
 interface FormErrors {
   name?: string;
@@ -28,6 +32,7 @@ interface FormErrors {
   logistics?: string;
   variants?: string;
   sellerWalletAddress?: string;
+  submit?: string;
 }
 
 interface MediaFile {
@@ -73,6 +78,7 @@ const CreateProduct = () => {
   const { createProduct, loading } = useProductData();
   const { initiateTradeContract } = useContractData();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const nameInputRef = useRef<HTMLInputElement>(null);
   const { convertPrice, userCountry } = useCurrencyConverter();
 
   const [name, setName] = useState("");
@@ -81,6 +87,7 @@ const CreateProduct = () => {
   const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [priceInUSDT, setPriceInUSDT] = useState("");
   const [priceInFiat, setPriceInFiat] = useState("");
   const [inputFocus, setInputFocus] = useState<"USDT" | "FIAT" | null>(null);
@@ -92,16 +99,6 @@ const CreateProduct = () => {
   const [searchLogistics, setSearchLogistics] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
 
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedSearchTerm(searchLogistics);
-    }, 300);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [searchLogistics]);
-
   // Product variants
   const [variants, setVariants] = useState<ProductVariant[]>([
     { id: `variant-${Date.now()}`, properties: [] },
@@ -111,7 +108,22 @@ const CreateProduct = () => {
     name: "",
     value: "",
   });
-  // filter logistics providers
+
+  // Focus the name input when component mounts
+  useEffect(() => {
+    nameInputRef.current?.focus();
+  }, []);
+
+  // Debounce search term
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchLogistics);
+    }, 300);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchLogistics]);
 
   const categories = [
     "Electronics",
@@ -161,7 +173,7 @@ const CreateProduct = () => {
     [convertPrice]
   );
 
-  // clear price error when either price field changes
+  // Clear price error when either price field changes
   useEffect(() => {
     if (priceInUSDT || priceInFiat) {
       setErrors((prev) => ({ ...prev, price: undefined }));
@@ -182,6 +194,24 @@ const CreateProduct = () => {
     }
   }, [sellerWalletAddress]);
 
+  // Handle search change with error handling
+  const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
+    try {
+      setSearchLogistics(e.target.value);
+    } catch (error) {
+      console.error("Error in search:", error);
+      setSearchLogistics("");
+    }
+  };
+
+  // Handle keyboard events for accessibility
+  const handleKeyPress = (e: React.KeyboardEvent, callback: () => void) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      callback();
+    }
+  };
+
   const handleMediaChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
 
@@ -199,6 +229,7 @@ const CreateProduct = () => {
     // Filter out files that are too large and process valid ones
     const validFiles: MediaFile[] = [];
     const oversizedFiles: string[] = [];
+    const invalidTypeFiles: string[] = [];
 
     newFiles.forEach((file) => {
       if (file.size > MAX_FILE_SIZE) {
@@ -212,7 +243,10 @@ const CreateProduct = () => {
         ? "video"
         : null;
 
-      if (!fileType) return; // Skip unsupported file types
+      if (!fileType) {
+        invalidTypeFiles.push(file.name);
+        return;
+      }
 
       validFiles.push({
         file,
@@ -221,12 +255,18 @@ const CreateProduct = () => {
       });
     });
 
+    let errorMessage = "";
     if (oversizedFiles.length > 0) {
-      setErrors((prev) => ({
-        ...prev,
-        media: `Some files exceed the 5MB limit: ${oversizedFiles.join(", ")}`,
-      }));
+      errorMessage += `Files exceeding 5MB: ${oversizedFiles.join(", ")}. `;
+    }
+    if (invalidTypeFiles.length > 0) {
+      errorMessage += `Unsupported file types: ${invalidTypeFiles.join(
+        ", "
+      )}. `;
+    }
 
+    if (errorMessage) {
+      setErrors((prev) => ({ ...prev, media: errorMessage.trim() }));
       if (validFiles.length === 0) return;
     } else {
       setErrors((prev) => ({ ...prev, media: undefined }));
@@ -299,23 +339,32 @@ const CreateProduct = () => {
     newVariants[variantIndex].properties.splice(propertyIndex, 1);
     setVariants(newVariants);
   };
-  // Format variants to string for backend
-  const formatVariantsForBackend = (): string => {
+
+  // Format variants for backend as array of objects
+  const formatVariantsForBackend = (): Array<
+    Record<string, string | number>
+  > => {
     const validVariants = variants.filter(
       (variant) => variant.properties.length > 0
     );
 
-    if (validVariants.length === 0) return "";
+    if (validVariants.length === 0) return [];
 
-    return validVariants
-      .map((variant) => {
-        return variant.properties
-          .map((prop) => `${prop.name}:${prop.value}`)
-          .join("_");
-      })
-      .join(", ");
+    return validVariants.map((variant) => {
+      const variantObject: Record<string, string | number> = {};
+
+      variant.properties.forEach((prop) => {
+        // Try to convert to number if it's a numeric value
+        const numValue = Number(prop.value);
+        variantObject[prop.name] =
+          !isNaN(numValue) && prop.value.trim() !== "" ? numValue : prop.value;
+      });
+
+      return variantObject;
+    });
   };
 
+  // Memoize filtered logistics providers
   const filteredLogistics = useMemo(() => {
     if (!debouncedSearchTerm.trim()) {
       return logisticsProviders;
@@ -328,54 +377,122 @@ const CreateProduct = () => {
         provider.location.toLowerCase().includes(searchTerm)
     );
   }, [debouncedSearchTerm]);
-  // const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
-  //   try {
-  //     setSearchLogistics(e.target.value);
-  //   } catch (error) {
-  //     console.error("Error in search:", error);
-  //     setSearchLogistics("");
-  //   }
-  // };
 
-  // handle logistics selection
-  const toggleLogisticsProvider = (provider: LogisticsProvider) => {
-    if (selectedLogistics.some((p) => p.address === provider.address)) {
-      setSelectedLogistics(
-        selectedLogistics.filter((p) => p.address !== provider.address)
-      );
-    } else {
-      setSelectedLogistics([...selectedLogistics, provider]);
-    }
-  };
-  // Fix variants validation and responsiveness
+  // Handle logistics selection
+  const toggleLogisticsProvider = useCallback((provider: LogisticsProvider) => {
+    setSelectedLogistics((prev) => {
+      if (prev.some((p) => p.address === provider.address)) {
+        return prev.filter((p) => p.address === provider.address);
+      } else {
+        return [...prev, provider];
+      }
+    });
+  }, []);
+
+  // Memoize rendered logistics providers to avoid unnecessary re-renders
+  const renderedLogisticsProviders = useMemo(() => {
+    return filteredLogistics.map((provider) => (
+      <div
+        key={provider.address}
+        className={`flex items-center justify-between p-3 hover:bg-[#3A3B3F] cursor-pointer ${
+          selectedLogistics.some((p) => p.address === provider.address)
+            ? "bg-[#3A3B3F]"
+            : ""
+        }`}
+        onClick={() => toggleLogisticsProvider(provider)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            toggleLogisticsProvider(provider);
+          }
+        }}
+        role="checkbox"
+        aria-checked={selectedLogistics.some(
+          (p) => p.address === provider.address
+        )}
+        tabIndex={0}
+      >
+        <div className="flex-1 min-w-0 mr-2">
+          <div className="text-white font-medium truncate">{provider.name}</div>
+          <div className="text-gray-400 text-sm truncate">
+            {provider.location}
+          </div>
+        </div>
+        <div className="flex items-center flex-shrink-0">
+          <span className="text-gray-400 text-sm mr-3 whitespace-nowrap">
+            {provider.cost} USDT
+          </span>
+          <div
+            className={`w-5 h-5 rounded border ${
+              selectedLogistics.some((p) => p.address === provider.address)
+                ? "bg-Red border-Red"
+                : "border-gray-400"
+            } flex items-center justify-center`}
+          >
+            {selectedLogistics.some((p) => p.address === provider.address) && (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-3 w-3 text-white"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            )}
+          </div>
+        </div>
+      </div>
+    ));
+  }, [filteredLogistics, selectedLogistics, toggleLogisticsProvider]);
+
+  // Enhanced form validation
   const validateForm = () => {
     const newErrors: FormErrors = {};
 
+    // Basic validation
     if (!name.trim()) newErrors.name = "Product name is required";
     if (!description.trim()) newErrors.description = "Description is required";
     if (!category) newErrors.category = "Category is required";
+
+    // Price validation
     if (!priceInUSDT.trim()) {
       newErrors.price = "Price is required";
-    } else if (isNaN(parseFloat(priceInUSDT)) || parseFloat(priceInUSDT) <= 0) {
-      newErrors.price = "Price must be a positive number";
+    } else {
+      const price = parseFloat(priceInUSDT);
+      if (isNaN(price)) {
+        newErrors.price = "Price must be a valid number";
+      } else if (price <= 0) {
+        newErrors.price = "Price must be greater than zero";
+      }
     }
 
+    // Stock validation
     if (!stock.trim()) {
       newErrors.stock = "Stock quantity is required";
-    } else if (isNaN(Number(stock)) || Number(stock) <= 0) {
-      newErrors.stock = "Stock must be a positive number";
+    } else {
+      const stockNum = Number(stock);
+      if (isNaN(stockNum) || !Number.isInteger(stockNum) || stockNum <= 0) {
+        newErrors.stock = "Stock must be a positive whole number";
+      }
     }
 
+    // Wallet address validation
     if (!sellerWalletAddress.trim()) {
       newErrors.sellerWalletAddress = "Seller wallet address is required";
+    } else if (!/^0x[a-fA-F0-9]{40}$/.test(sellerWalletAddress)) {
+      newErrors.sellerWalletAddress = "Invalid Ethereum wallet address format";
     }
 
-    // Add logistics provider validation
+    // Logistics provider validation
     if (selectedLogistics.length === 0) {
       newErrors.logistics = "Please select at least one logistics provider";
     }
 
-    // Check for empty variants (excluding when there's only one empty variant)
+    // Check for variants with no properties
     const nonEmptyVariants = variants.filter((v) => v.properties.length > 0);
     if (variants.length > 1 && nonEmptyVariants.length < variants.length) {
       newErrors.variants = "Please fill all variants or remove empty ones";
@@ -391,6 +508,7 @@ const CreateProduct = () => {
     if (!validateForm()) return;
 
     setIsSubmitting(true);
+    setErrors({});
 
     const formData = new FormData();
     formData.append("name", name);
@@ -399,35 +517,24 @@ const CreateProduct = () => {
     formData.append("price", priceInUSDT);
     formData.append("stock", stock);
     formData.append("sellerWalletAddress", sellerWalletAddress);
+
     // Add logistics provider addresses and costs
     if (selectedLogistics.length > 0) {
       const addresses = selectedLogistics.map((provider) => provider.address);
       const costs = selectedLogistics.map(
         (provider) => provider.cost * Math.pow(10, 18)
       );
-      console.log({
-        logisticsProvider: JSON.stringify(addresses),
-        logisticsCost: JSON.stringify(costs),
-      });
       formData.append("logisticsProvider", JSON.stringify(addresses));
       formData.append("logisticsCost", JSON.stringify(costs));
     }
 
-    // Add type (variants) if available
-    const variantsString = formatVariantsForBackend();
-    if (variantsString) {
-      formData.append("type", variantsString);
+    // Add type (variants) if available using the new format
+    const variantsArray = formatVariantsForBackend();
+    if (variantsArray.length > 0) {
+      formData.append("type", JSON.stringify(variantsArray));
     }
-    console.log({
-      name: name,
-      description: description,
-      category: category,
-      price: priceInUSDT,
-      stock: stock,
-      sellerWalletAddress: sellerWalletAddress,
-      type: variantsString,
-    });
 
+    // Add media files
     // mediaFiles.forEach((media) => {
     //   formData.append("mediaFiles", media.file);
     //   formData.append("mediaTypes", media.type);
@@ -436,13 +543,22 @@ const CreateProduct = () => {
     try {
       const result = await createProduct(formData);
       if (result) {
-        navigate(`/product/${result._id}`);
+        setSuccessMessage("Product created successfully! Redirecting...");
+        // Delay navigation to show success message
+        setTimeout(() => {
+          navigate(`/product/${result._id}`);
+        }, 1500);
       }
+    } catch (error) {
+      console.error("Error creating product:", error);
+      setErrors((prev) => ({
+        ...prev,
+        submit: "Failed to create product. Please try again.",
+      }));
     } finally {
       setIsSubmitting(false);
     }
   };
-
   return (
     <motion.div
       className="w-full mx-auto py-4"
@@ -480,6 +596,7 @@ const CreateProduct = () => {
                         src={media.preview}
                         alt={`Product preview ${index + 1}`}
                         className="w-full h-full object-cover"
+                        loading="lazy"
                       />
                     ) : (
                       <div className="relative w-full h-full">
@@ -487,6 +604,7 @@ const CreateProduct = () => {
                           src={media.preview}
                           className="w-full h-full object-cover"
                           muted
+                          preload="metadata"
                           onMouseOver={(e) =>
                             (e.target as HTMLVideoElement).play()
                           }
