@@ -5,7 +5,7 @@ import EmptyState from "./EmptyState";
 import SavedItem from "./SavedItem";
 import { Order, TabType } from "../../../utils/types";
 import ReferralsTab from "./referrals";
-import { useEffect, useState, lazy, Suspense } from "react";
+import { useEffect, useState, lazy, Suspense, useMemo } from "react";
 import LoadingSpinner from "../../common/LoadingSpinner";
 import { useOrderData } from "../../../utils/hooks/useOrder";
 import { useWatchlist } from "../../../utils/hooks/useWatchlist";
@@ -46,12 +46,21 @@ const TabContent: React.FC<TabContentProps> = ({ activeTab, productImage }) => {
     error: watchlistError,
   } = useWatchlist();
 
-  const [disputeOrders, setDisputeOrders] = useState<OrderProps[]>([]);
-  const [nonDisputeOrders, setNonDisputeOrders] = useState<OrderProps[]>([]);
+  // const [disputeOrders, setDisputeOrders] = useState<OrderProps[]>([]);
+  // const [nonDisputeOrders, setNonDisputeOrders] = useState<OrderProps[]>([]);
+  const disputeOrders = useMemo(
+    () => formattedOrders?.filter((order) => order.status === "disputed") || [],
+    [formattedOrders]
+  );
+
+  const nonDisputeOrders = useMemo(
+    () => formattedOrders?.filter((order) => order.status !== "disputed") || [],
+    [formattedOrders]
+  );
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   useEffect(() => {
-    if (activeTab === "1") {
+    if (activeTab === "1" && (isInitialLoad || !formattedOrders)) {
       const loadOrders = async () => {
         await fetchBuyerOrders(false, isInitialLoad);
         setIsInitialLoad(false);
@@ -60,29 +69,29 @@ const TabContent: React.FC<TabContentProps> = ({ activeTab, productImage }) => {
       loadOrders();
     }
 
-    if (activeTab === "2") {
+    if (activeTab === "2" && (isInitialLoad || !watchlistItems)) {
       fetchUserWatchlist(false, isInitialLoad);
       setIsInitialLoad(false);
     }
   }, [activeTab, fetchBuyerOrders, fetchUserWatchlist, isInitialLoad]);
 
   // Filter orders when they change
-  useEffect(() => {
-    if (formattedOrders?.length > 0) {
-      const disputed = formattedOrders.filter(
-        (order) => order.status === "disputed"
-      );
-      const nonDisputed = formattedOrders.filter(
-        (order) => order.status !== "disputed"
-      );
+  // useEffect(() => {
+  //   if (formattedOrders?.length > 0) {
+  //     const disputed = formattedOrders.filter(
+  //       (order) => order.status === "disputed"
+  //     );
+  //     const nonDisputed = formattedOrders.filter(
+  //       (order) => order.status !== "disputed"
+  //     );
 
-      setDisputeOrders(disputed);
-      setNonDisputeOrders(nonDisputed);
-    } else {
-      setDisputeOrders([]);
-      setNonDisputeOrders([]);
-    }
-  }, [formattedOrders]);
+  //     setDisputeOrders(disputed);
+  //     setNonDisputeOrders(nonDisputed);
+  //   } else {
+  //     setDisputeOrders([]);
+  //     setNonDisputeOrders([]);
+  //   }
+  // }, [formattedOrders]);
 
   return (
     <LazyMotion features={domAnimation}>
@@ -219,8 +228,8 @@ const TabContent: React.FC<TabContentProps> = ({ activeTab, productImage }) => {
               {disputeOrders.map((order, index) => (
                 <DisputeItem
                   key={order._id}
-                  productImage={order.product.images[0]}
-                  productName={order.product.name}
+                  productImage={order.product.images[0] || ""}
+                  productName={order.product.name || "Product Unavailable"}
                   vendor={order.seller?.name || "Unknown Vendor"}
                   disputeDate={new Date(order.createdAt).toLocaleDateString(
                     "en-US",
