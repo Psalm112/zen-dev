@@ -126,6 +126,17 @@ const CreateProduct = () => {
     LogisticsProvider[]
   >([]);
   const [searchLogistics, setSearchLogistics] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchLogistics);
+    }, 300);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchLogistics]);
 
   // Product variants
   const [variants, setVariants] = useState<ProductVariant[]>([
@@ -342,12 +353,26 @@ const CreateProduct = () => {
   };
 
   const filteredLogistics = useMemo(() => {
+    if (!debouncedSearchTerm.trim()) {
+      return logisticsProviders;
+    }
+
+    const searchTerm = debouncedSearchTerm.toLowerCase().trim();
     return logisticsProviders.filter(
       (provider) =>
-        provider.name.toLowerCase().includes(searchLogistics.toLowerCase()) ||
-        provider.location.toLowerCase().includes(searchLogistics.toLowerCase())
+        provider.name.toLowerCase().includes(searchTerm) ||
+        provider.location.toLowerCase().includes(searchTerm)
     );
-  }, [searchLogistics]);
+  }, [debouncedSearchTerm, logisticsProviders]);
+  const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
+    try {
+      setSearchLogistics(e.target.value);
+    } catch (error) {
+      console.error("Error in search:", error);
+      setSearchLogistics("");
+    }
+  };
+
   // handle logistics selection
   const toggleLogisticsProvider = (provider: LogisticsProvider) => {
     if (selectedLogistics.some((p) => p.address === provider.address)) {
@@ -934,9 +959,10 @@ const CreateProduct = () => {
                 <input
                   type="text"
                   value={searchLogistics}
-                  onChange={(e) => setSearchLogistics(e.target.value)}
+                  onChange={handleSearchChange}
                   className="w-full bg-[#222] text-white px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-Red transition-all"
                   placeholder="Search by name or location..."
+                  aria-label="Search logistics providers"
                 />
               </div>
 
@@ -953,6 +979,17 @@ const CreateProduct = () => {
                           : ""
                       }`}
                       onClick={() => toggleLogisticsProvider(provider)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          toggleLogisticsProvider(provider);
+                        }
+                      }}
+                      role="checkbox"
+                      aria-checked={selectedLogistics.some(
+                        (p) => p.address === provider.address
+                      )}
+                      tabIndex={0}
                     >
                       <div className="flex-1 min-w-0 mr-2">
                         <div className="text-white font-medium truncate">
