@@ -25,6 +25,8 @@ interface FormErrors {
   price?: string;
   media?: string;
   stock?: string;
+  logistics?: string;
+  variants?: string;
   sellerWalletAddress?: string;
 }
 
@@ -320,6 +322,7 @@ const CreateProduct = () => {
       setSelectedLogistics([...selectedLogistics, provider]);
     }
   };
+  // Fix variants validation and responsiveness
   const validateForm = () => {
     const newErrors: FormErrors = {};
 
@@ -340,6 +343,17 @@ const CreateProduct = () => {
 
     if (!sellerWalletAddress.trim()) {
       newErrors.sellerWalletAddress = "Seller wallet address is required";
+    }
+
+    // Add logistics provider validation
+    if (selectedLogistics.length === 0) {
+      newErrors.logistics = "Please select at least one logistics provider";
+    }
+
+    // Check for empty variants (excluding when there's only one empty variant)
+    const nonEmptyVariants = variants.filter((v) => v.properties.length > 0);
+    if (variants.length > 1 && nonEmptyVariants.length < variants.length) {
+      newErrors.variants = "Please fill all variants or remove empty ones";
     }
 
     setErrors(newErrors);
@@ -630,7 +644,7 @@ const CreateProduct = () => {
               htmlFor="sellerWalletAddress"
               className="block text-white mb-2"
             >
-              Seller Wallet Address
+              Wallet Address
             </label>
             <input
               id="sellerWalletAddress"
@@ -669,8 +683,24 @@ const CreateProduct = () => {
               />
             </div>
 
+            {/* Variant guide */}
+            {variants.length === 1 && variants[0].properties.length === 0 && (
+              <div className="mb-3 bg-[#2A2C31] p-3 rounded-lg border border-[#444] text-sm">
+                <p className="text-gray-300">
+                  <span className="text-Red font-medium">Tip:</span> Add
+                  variants for products with options like:
+                </p>
+                <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2 text-gray-400">
+                  <div>• Size: S, M, L, XL</div>
+                  <div>• Color: Red, Blue, Black</div>
+                  <div>• Material: Cotton, Silk</div>
+                  <div>• Style: Classic, Modern</div>
+                </div>
+              </div>
+            )}
+
             <div className="space-y-4">
-              {/* Variant selector and property inputs */}
+              {/* Variant selector tabs - make responsive */}
               <div className="space-y-3">
                 <div className="flex flex-wrap gap-2">
                   {variants.map((variant, idx) => (
@@ -705,7 +735,8 @@ const CreateProduct = () => {
                   ))}
                 </div>
 
-                <div className="flex gap-2">
+                {/* Property input - make responsive */}
+                <div className="flex flex-col sm:flex-row gap-2">
                   <input
                     type="text"
                     value={currentVariantProperty.name}
@@ -715,7 +746,7 @@ const CreateProduct = () => {
                         name: e.target.value,
                       }))
                     }
-                    className="bg-[#333] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-Red transition-all w-1/3"
+                    className="bg-[#333] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-Red transition-all w-full sm:w-1/3"
                     placeholder="Property (e.g. size, color)"
                   />
                   <input
@@ -727,7 +758,7 @@ const CreateProduct = () => {
                         value: e.target.value,
                       }))
                     }
-                    className="bg-[#333] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-Red transition-all flex-1"
+                    className="bg-[#333] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-Red transition-all w-full sm:flex-1"
                     placeholder="Value (e.g. XL, red)"
                   />
                   <Button
@@ -744,6 +775,10 @@ const CreateProduct = () => {
                 </div>
               </div>
 
+              {/* Display error for empty variants */}
+              {errors.variants && (
+                <p className="text-Red text-sm">{errors.variants}</p>
+              )}
               {/* Display variants */}
               <AnimatePresence>
                 {variants.map((variant, variantIndex) => (
@@ -855,7 +890,9 @@ const CreateProduct = () => {
 
           {/* Logistics Providers */}
           <div>
-            <label className="block text-white mb-2">Logistics Providers</label>
+            <label className="block text-white mb-2">
+              Logistics Providers <span className="text-Red">*</span>
+            </label>
             <div className="bg-[#333] rounded-lg overflow-hidden">
               <div className="p-3 border-b border-[#444]">
                 <input
@@ -881,16 +918,16 @@ const CreateProduct = () => {
                       }`}
                       onClick={() => toggleLogisticsProvider(provider)}
                     >
-                      <div>
-                        <div className="text-white font-medium">
+                      <div className="flex-1 min-w-0 mr-2">
+                        <div className="text-white font-medium truncate">
                           {provider.name}
                         </div>
-                        <div className="text-gray-400 text-sm">
+                        <div className="text-gray-400 text-sm truncate">
                           {provider.location}
                         </div>
                       </div>
-                      <div className="flex items-center">
-                        <span className="text-gray-400 text-sm mr-3">
+                      <div className="flex items-center flex-shrink-0">
+                        <span className="text-gray-400 text-sm mr-3 whitespace-nowrap">
                           {provider.cost} USDT
                         </span>
                         <div
@@ -930,6 +967,7 @@ const CreateProduct = () => {
               </div>
             </div>
 
+            {/* Selected logistics */}
             {selectedLogistics.length > 0 && (
               <div className="mt-2">
                 <div className="text-gray-400 text-sm">
@@ -941,10 +979,12 @@ const CreateProduct = () => {
                       key={provider.address}
                       className="bg-[#3A3B3F] text-white text-sm px-3 py-1 rounded-full flex items-center"
                     >
-                      {provider.name}
+                      <span className="truncate max-w-[150px]">
+                        {provider.name}
+                      </span>
                       <button
                         type="button"
-                        className="ml-2 text-gray-400 hover:text-Red"
+                        className="ml-2 text-gray-400 hover:text-Red flex-shrink-0"
                         onClick={(e) => {
                           e.stopPropagation();
                           toggleLogisticsProvider(provider);
@@ -956,6 +996,11 @@ const CreateProduct = () => {
                   ))}
                 </div>
               </div>
+            )}
+
+            {/*  error for logistics */}
+            {errors.logistics && (
+              <p className="text-Red text-sm mt-1">{errors.logistics}</p>
             )}
           </div>
 
