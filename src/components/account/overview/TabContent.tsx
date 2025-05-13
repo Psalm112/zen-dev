@@ -234,9 +234,12 @@ const TabContent: React.FC<TabContentProps> = ({ activeTab, productImage }) => {
               {disputeOrders.map((order) => (
                 <DisputeItem
                   key={order._id}
-                  productImage={order.product?.images[0] || ""}
-                  productName={order.product.name || "Product Unavailable"}
-                  vendor={order.seller?.name || "Unknown Vendor"}
+                  productImage={
+                    order.product?.images[0] ??
+                    "https://placehold.co/300x300?text=No+Image"
+                  }
+                  productName={order.product.name ?? "Product Unavailable"}
+                  vendor={order.seller?.name ?? "Unknown Vendor"}
                   disputeDate={new Date(order.createdAt).toLocaleDateString(
                     "en-US",
                     { month: "short", day: "numeric", year: "numeric" }
