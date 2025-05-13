@@ -66,42 +66,6 @@ const logisticsProviders: LogisticsProvider[] = [
     location: "Kano",
     cost: 2,
   },
-  {
-    address: "0xF46F1B3Bea9cdd4102105EE9bAefc83db333354B",
-    name: "Fast Delivery Co.",
-    location: "Ikeja, Lagos, Nigeria",
-    cost: 1,
-  },
-  {
-    address: "0x3207D4728c32391405C7122E59CCb115A4af31eA",
-    name: "Global Logistics Ltd.",
-    location: "Maitama, Abuja, Nigeria",
-    cost: 1,
-  },
-  {
-    address: "0x7A1c3b09298C227D910E90CD55985300bd1032F3",
-    name: "Express Shipping Inc.",
-    location: "Kano",
-    cost: 2,
-  },
-  {
-    address: "0xF46F1B3Bea9cdd4102105EE9bAefc83db333354B",
-    name: "Fast Delivery Co.",
-    location: "Ikeja, Lagos, Nigeria",
-    cost: 1,
-  },
-  {
-    address: "0x3207D4728c32391405C7122E59CCb115A4af31eA",
-    name: "Global Logistics Ltd.",
-    location: "Maitama, Abuja, Nigeria",
-    cost: 1,
-  },
-  {
-    address: "0x7A1c3b09298C227D910E90CD55985300bd1032F3",
-    name: "Express Shipping Inc.",
-    location: "Kano",
-    cost: 2,
-  },
 ];
 
 const CreateProduct = () => {

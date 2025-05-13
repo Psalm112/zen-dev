@@ -73,7 +73,12 @@ const TabContent: React.FC<TabContentProps> = ({ activeTab, productImage }) => {
       fetchUserWatchlist(false, isInitialLoad);
       setIsInitialLoad(false);
     }
-    console.log(nonDisputeOrders.length, disputeOrders.length);
+    console.log(
+      nonDisputeOrders.length,
+      nonDisputeOrders,
+      disputeOrders.length,
+      disputeOrders
+    );
   }, [activeTab, fetchBuyerOrders, fetchUserWatchlist, isInitialLoad]);
 
   // Filter orders when they change
