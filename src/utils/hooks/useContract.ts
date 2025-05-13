@@ -194,8 +194,8 @@ export const useContractData = () => {
       try {
         const sanitizedTradeData = {
           ...tradeData,
-          productCost: tradeData.productCost,
-          logisticsCost: tradeData.logisticsCost,
+          productCost: Number(tradeData.productCost) * Math.pow(10, 18),
+          logisticsCost: Number(tradeData.logisticsCost) * Math.pow(10, 18),
         };
 
         const result = await dispatch(createTrade(sanitizedTradeData)).unwrap();

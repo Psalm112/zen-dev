@@ -114,7 +114,7 @@ export interface CreateTradeParams {
   seller: string;
   productCost: string | number;
   logisticsProvider: string;
-  logisticsCost: string;
+  logisticsCost: string | number;
   useUSDT: boolean;
   orderId: string;
 }
