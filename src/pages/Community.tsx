@@ -323,7 +323,7 @@ const Community = () => {
           >
             <div className="flex flex-col md:flex-row justify-between items-center mb-10">
               <div className="flex-1 mb-8 md:mb-0">
-                <h1 className="max-md:text-left text-4xl md:text-6xl font-bold text-white mb-4">
+                <h1 className="md:text-left text-4xl md:text-6xl font-bold text-white mb-4">
                   All Good Things
                   <br />
                   Come to Those
