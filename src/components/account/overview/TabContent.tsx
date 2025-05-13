@@ -49,12 +49,18 @@ const TabContent: React.FC<TabContentProps> = ({ activeTab, productImage }) => {
   // const [disputeOrders, setDisputeOrders] = useState<OrderProps[]>([]);
   // const [nonDisputeOrders, setNonDisputeOrders] = useState<OrderProps[]>([]);
   const disputeOrders = useMemo(
-    () => formattedOrders?.filter((order) => order.status === "disputed") || [],
+    () =>
+      formattedOrders?.filter(
+        (order) => order.status === "disputed" && order.product
+      ) || [],
     [formattedOrders]
   );
 
   const nonDisputeOrders = useMemo(
-    () => formattedOrders?.filter((order) => order.status !== "disputed") || [],
+    () =>
+      formattedOrders?.filter(
+        (order) => order.status !== "disputed" && order.product
+      ) || [],
     [formattedOrders]
   );
   const [isInitialLoad, setIsInitialLoad] = useState(true);
