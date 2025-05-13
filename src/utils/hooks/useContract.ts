@@ -192,26 +192,38 @@ export const useContractData = () => {
       showNotifications = true
     ): Promise<TradeResponse> => {
       try {
-        const sanitizedTradeData = {
-          ...tradeData,
-          productCost: Number(tradeData.productCost) * Math.pow(10, 18),
-          logisticsCost: Number(tradeData.logisticsCost) * Math.pow(10, 18),
-        };
+        // const sanitizedTradeData = {
+        //   ...tradeData,
+        //   logisticsProvider: [
+        //     "0xF46F1B3Bea9cdd4102105EE9bAefc83db333354B",
+        //     "0x3207D4728c32391405C7122E59CCb115A4af31eA",
+        //     "0x7A1c3b09298C227D910E90CD55985300bd1032F3",
+        //   ],
+        //   productCost: Number(tradeData.productCost) * Math.pow(10, 18),
+        //   // logisticsCost: Number(tradeData.logisticsCost) * Math.pow(10, 18),
+        //   logisticsCost: [
+        //     1 * Math.pow(10, 18),
+        //     1 * Math.pow(10, 18),
+        //     2 * Math.pow(10, 18),
+        //   ],
+        // };
 
-        const result = await dispatch(createTrade(sanitizedTradeData)).unwrap();
+        // const result = await dispatch(createTrade(sanitizedTradeData)).unwrap();
+
+        const result = await dispatch(createTrade(tradeData)).unwrap();
 
         if (showNotifications) {
           if (result.status === "success") {
             showSnackbar("Trade contract created successfully", "success");
 
-            if (result.data.contractAddress && result.data.amount) {
-              showSnackbar(
-                `Please confirm the transaction to deposit ${
-                  result.data.isUSDT ? "USDT" : "ETH"
-                }`,
-                "info"
-              );
-            }
+            // if (result.data.contractAddress && result.data.amount) {
+            //   showSnackbar(
+            //     `Please confirm the transaction to deposit ${
+            //       result.data.isUSDT ? "USDT" : "ETH"
+            //     }`,
+            //     "info"
+            //   );
+            // }
           } else {
             showSnackbar(result.message || "Trade creation failed", "error");
           }

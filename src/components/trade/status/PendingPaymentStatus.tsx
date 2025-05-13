@@ -97,7 +97,6 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     });
     try {
       const tradeResponse = await initiateTradeContract({
-        seller: "0xe42d9833970534ce655d361CA1C4C4A23A6Db997",
         // tradeDetails
         // ? tradeDetails.sellerId
         // : orderDetails?.seller._id || "",
@@ -105,10 +104,18 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
           tradeDetails && tradeDetails.amount
             ? tradeDetails.amount
             : orderDetails?.product.price || 200,
-        logisticsProvider: "0x57aEAAEb6081A394675642B5A7E70e94618641d9",
-        logisticsCost: "2000",
+        logisticsProvider: [
+          "0xF46F1B3Bea9cdd4102105EE9bAefc83db333354B",
+          "0x3207D4728c32391405C7122E59CCb115A4af31eA",
+          "0x7A1c3b09298C227D910E90CD55985300bd1032F3",
+        ],
+        logisticsCost: [
+          1 * Math.pow(10, 18),
+          1 * Math.pow(10, 18),
+          2 * Math.pow(10, 18),
+        ],
         useUSDT: true,
-        orderId: orderId || "",
+        totalQuantity: "44",
       });
       console.log(tradeResponse, orderDetails?.product.price);
       if (tradeResponse.status !== "success" || !tradeResponse.data) {

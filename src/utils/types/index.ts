@@ -110,13 +110,20 @@ export interface OrderStatusUpdate {
   updatedAt: string;
 }
 
-export interface CreateTradeParams {
+export interface BuyTradeParams {
   seller: string;
   productCost: string | number;
   logisticsProvider: string;
   logisticsCost: string | number;
   useUSDT: boolean;
   orderId: string;
+}
+export interface CreateTradeParams {
+  productCost: number;
+  logisticsProvider: string[];
+  logisticsCost: number[];
+  useUSDT: boolean;
+  totalQuantity: string;
 }
 
 export interface TradeResponse {

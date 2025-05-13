@@ -506,6 +506,7 @@ import { useProductData } from "../../../../utils/hooks/useProduct";
 import LoadingSpinner from "../../../common/LoadingSpinner";
 import Button from "../../../common/Button";
 import { useCurrencyConverter } from "../../../../utils/hooks/useCurrencyConverter";
+import { useContractData } from "../../../../utils/hooks/useContract";
 
 interface FormErrors {
   name?: string;
@@ -537,6 +538,7 @@ const MAX_FILES = 5;
 const CreateProduct = () => {
   const navigate = useNavigate();
   const { createProduct, loading } = useProductData();
+  const { initiateTradeContract } = useContractData();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { convertPrice, userCountry } = useCurrencyConverter();
 
@@ -830,7 +832,23 @@ const CreateProduct = () => {
 
     try {
       const result = await createProduct(formData);
-      if (result) {
+      const tradeResponse = await initiateTradeContract({
+        productCost: Number(priceInUSDT) * Math.pow(10, 18),
+        logisticsProvider: [
+          "0xF46F1B3Bea9cdd4102105EE9bAefc83db333354B",
+          "0x3207D4728c32391405C7122E59CCb115A4af31eA",
+          "0x7A1c3b09298C227D910E90CD55985300bd1032F3",
+        ],
+        logisticsCost: [
+          1 * Math.pow(10, 18),
+          1 * Math.pow(10, 18),
+          2 * Math.pow(10, 18),
+        ],
+        useUSDT: true,
+        totalQuantity: stock,
+      });
+      console.log(tradeResponse);
+      if (result && tradeResponse.status === "success" && tradeResponse.data) {
         navigate(`/product/${result._id}`);
       }
     } finally {
