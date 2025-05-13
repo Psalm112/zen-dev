@@ -226,6 +226,7 @@ import {
 } from "react-icons/fa";
 import { BsPeople } from "react-icons/bs";
 import { AiOutlineCalendar, AiOutlineMail } from "react-icons/ai";
+import { Rocket } from ".";
 
 const Community = () => {
   const [email, setEmail] = useState("");
@@ -322,7 +323,7 @@ const Community = () => {
           >
             <div className="flex flex-col md:flex-row justify-between items-center mb-10">
               <div className="flex-1 mb-8 md:mb-0">
-                <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
+                <h1 className="max-md:text-left text-4xl md:text-6xl font-bold text-white mb-4">
                   All Good Things
                   <br />
                   Come to Those
@@ -335,11 +336,10 @@ const Community = () => {
                   <div className="bg-[#1E3A56] rounded-full w-full h-full flex items-center justify-center">
                     <div className="rocket-icon">
                       <img
-                        src="/path-to-rocket-icon.svg"
+                        src={Rocket}
                         alt="Rocket"
                         className="w-36 h-36"
                         onError={(e) => {
-                          // Fallback if image doesn't load
                           e.currentTarget.style.display = "none";
                         }}
                       />
@@ -369,7 +369,7 @@ const Community = () => {
                   </div>
                   <Button
                     title="Subscribe"
-                    className="bg-Red text-white px-6 py-3 rounded-md hover:bg-opacity-90 transition-all"
+                    className="flex items-center justify-center bg-Red text-white px-6 py-3 rounded-md hover:bg-opacity-90 transition-all"
                     type="submit"
                   />
                 </div>
@@ -440,10 +440,10 @@ const Community = () => {
             <div className="flex justify-center space-x-6 mb-6">
               <SocialIcon icon={<FaFacebookF />} />
               <SocialIcon icon={<FaTwitter />} />
-              <SocialIcon icon={<FaSnapchatGhost />} />
+              {/* <SocialIcon icon={<FaSnapchatGhost />} /> */}
               <SocialIcon icon={<FaInstagram />} />
               <SocialIcon icon={<FaLinkedinIn />} />
-              <SocialIcon icon={<FaGithub />} />
+              {/* <SocialIcon icon={<FaGithub />} /> */}
             </div>
             <p className="text-[#C6C6C8] text-sm text-center">
               © Copyrights Dezenmart| All Rights Reserved
