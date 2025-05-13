@@ -340,38 +340,28 @@ const CreateProduct = () => {
   };
 
   // Format variants for backend as array of objects
-  const formatVariantsForBackend = (): Record<string, string | number> =>
-    // Array<
-    // Record<string, string | number>
-    // >
-    {
-      const validVariants = variants.filter(
-        (variant) => variant.properties.length > 0
-      );
+  const formatVariantsForBackend = (): Array<
+    Record<string, string | number>
+  > => {
+    const validVariants = variants.filter(
+      (variant) => variant.properties.length > 0
+    );
 
-      // if (validVariants.length === 0) return [];
+    if (validVariants.length === 0) return [];
+
+    return validVariants.map((variant) => {
       const variantObject: Record<string, string | number> = {};
 
-      validVariants[0].properties.forEach((prop) => {
+      variant.properties.forEach((prop) => {
         // Try to convert to number if it's a numeric value
         const numValue = Number(prop.value);
         variantObject[prop.name] =
           !isNaN(numValue) && prop.value.trim() !== "" ? numValue : prop.value;
       });
+
       return variantObject;
-      // return validVariants.map((variant) => {
-      //   const variantObject: Record<string, string | number> = {};
-
-      //   variant.properties.forEach((prop) => {
-      //     // Try to convert to number if it's a numeric value
-      //     const numValue = Number(prop.value);
-      //     variantObject[prop.name] =
-      //       !isNaN(numValue) && prop.value.trim() !== "" ? numValue : prop.value;
-      //   });
-
-      //   return variantObject;
-      // });
-    };
+    });
+  };
 
   // Memoize filtered logistics providers
   const filteredLogistics = useMemo(() => {
@@ -539,9 +529,9 @@ const CreateProduct = () => {
 
     // Add type (variants) if available using the new format
     const variantsArray = formatVariantsForBackend();
-    // if (variantsArray.length > 0) {
-    formData.append("type", JSON.stringify(variantsArray));
-    // }
+    if (variantsArray.length > 0) {
+      formData.append("type", JSON.stringify(variantsArray));
+    }
 
     // Add media files
     // mediaFiles.forEach((media) => {
