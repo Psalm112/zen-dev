@@ -138,9 +138,17 @@ const TabContent: React.FC<TabContentProps> = ({ activeTab, productImage }) => {
           {!orderLoading &&
             !orderError &&
             nonDisputeOrders.length > 0 &&
-            nonDisputeOrders.map((order, index) => (
-              <OrderHistoryItem key={order._id} {...order} index={index} />
-            ))}
+            nonDisputeOrders.map((order, index) =>
+              order.product ? (
+                <OrderHistoryItem key={order._id} {...order} index={index} />
+              ) : (
+                <EmptyState
+                  message="You haven't placed any orders yet."
+                  buttonText="Browse Products"
+                  buttonPath="/product"
+                />
+              )
+            )}
         </m.div>
       )}
 
@@ -231,22 +239,30 @@ const TabContent: React.FC<TabContentProps> = ({ activeTab, productImage }) => {
 
           {!orderLoading && !orderError && disputeOrders?.length > 0 && (
             <div className="mt-6 space-y-4">
-              {disputeOrders.map((order) => (
-                <DisputeItem
-                  key={order._id}
-                  productImage={
-                    order.product?.images[0] ??
-                    "https://placehold.co/300x300?text=No+Image"
-                  }
-                  productName={order.product.name ?? "Product Unavailable"}
-                  vendor={order.seller?.name ?? "Unknown Vendor"}
-                  disputeDate={new Date(order.createdAt).toLocaleDateString(
-                    "en-US",
-                    { month: "short", day: "numeric", year: "numeric" }
-                  )}
-                  disputeStatus="Under Review"
-                />
-              ))}
+              {disputeOrders.map((order) =>
+                order.product ? (
+                  <DisputeItem
+                    key={order._id}
+                    productImage={
+                      order.product?.images[0] ||
+                      "https://placehold.co/300x300?text=No+Image"
+                    }
+                    productName={order.product.name}
+                    vendor={order.seller?.name || "Unknown Vendor"}
+                    disputeDate={new Date(order.createdAt).toLocaleDateString(
+                      "en-US",
+                      { month: "short", day: "numeric", year: "numeric" }
+                    )}
+                    disputeStatus="Under Review"
+                  />
+                ) : (
+                  <EmptyState
+                    message="You haven't raised any disputes yet."
+                    buttonText="View Orders"
+                    buttonPath="/account"
+                  />
+                )
+              )}
             </div>
           )}
         </m.div>

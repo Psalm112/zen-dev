@@ -47,10 +47,10 @@ const OrderHistoryItem: React.FC<OrderHistoryItemProps> = (item) => {
       >
         <motion.img
           src={
-            item.product?.images[0] ??
+            item.product?.images[0] ||
             "https://placehold.co/300x300?text=No+Image"
           }
-          alt={item.product.name ?? "Product"}
+          alt={item.product.name || "Product"}
           className="w-[60%] md:w-full h-auto mx-auto md:mx-0 rounded-md lg:row-span-2 object-cover aspect-square"
           whileHover={{ scale: 1.05 }}
           transition={{ type: "spring", stiffness: 300 }}
@@ -63,13 +63,13 @@ const OrderHistoryItem: React.FC<OrderHistoryItemProps> = (item) => {
               {item.product.name}
             </h3>
             <span className="flex items-center gap-2 text-[12px] text-[#AEAEB2]">
-              By {item.seller?.name ?? "Unknown Vendor"}{" "}
+              By {item.seller?.name || "Unknown Vendor"}{" "}
               {/* {seller?.verified && ( */}
               <RiVerifiedBadgeFill className="text-[#4FA3FF] text-xs" />
               {/* )} */}
             </span>
             <h6 className="text-[#AEAEB2] text-[12px]">
-              {item.quantity ?? 2} {item.quantity === 1 ? "item" : "items"} @{" "}
+              {item.quantity || 2} {item.quantity === 1 ? "item" : "items"} @{" "}
               {item.product.price} cUSD
             </h6>
           </div>
