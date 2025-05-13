@@ -44,8 +44,8 @@ const OrderHistoryItem: React.FC<OrderHistoryItemProps> = (item) => {
       whileHover={{ scale: 1.01 }}
     >
       <motion.img
-        src={item.product.images[0]}
-        alt={item.product.name}
+        src={item.product.images[0] || ""}
+        alt={item.product.name || "Product"}
         className="w-[60%] md:w-full h-auto mx-auto md:mx-0 rounded-md lg:row-span-2 object-cover aspect-square"
         whileHover={{ scale: 1.05 }}
         transition={{ type: "spring", stiffness: 300 }}

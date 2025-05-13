@@ -225,7 +225,7 @@ const TabContent: React.FC<TabContentProps> = ({ activeTab, productImage }) => {
 
           {!orderLoading && !orderError && disputeOrders?.length > 0 && (
             <div className="mt-6 space-y-4">
-              {disputeOrders.map((order, index) => (
+              {disputeOrders.map((order) => (
                 <DisputeItem
                   key={order._id}
                   productImage={order.product.images[0] || ""}

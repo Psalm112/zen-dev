@@ -5,6 +5,7 @@ import {
   FormEvent,
   useCallback,
   useEffect,
+  useMemo,
 } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiImage, FiX, FiPlus, FiVideo, FiTag } from "react-icons/fi";
@@ -14,7 +15,8 @@ import LoadingSpinner from "../../../common/LoadingSpinner";
 import Button from "../../../common/Button";
 import { useCurrencyConverter } from "../../../../utils/hooks/useCurrencyConverter";
 import { useContractData } from "../../../../utils/hooks/useContract";
-import { toast } from "react-toastify";
+import { LogisticsProvider } from "../../../../utils/types";
+// import { toast } from "react-toastify";
 
 interface FormErrors {
   name?: string;
@@ -43,6 +45,27 @@ interface ProductVariant {
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
 const MAX_FILES = 5;
 
+const logisticsProviders: LogisticsProvider[] = [
+  {
+    address: "0xF46F1B3Bea9cdd4102105EE9bAefc83db333354B",
+    name: "Fast Delivery Co.",
+    location: "Ikeja, Lagos, Nigeria",
+    cost: 1,
+  },
+  {
+    address: "0x3207D4728c32391405C7122E59CCb115A4af31eA",
+    name: "Global Logistics Ltd.",
+    location: "Maitama, Abuja, Nigeria",
+    cost: 1,
+  },
+  {
+    address: "0x7A1c3b09298C227D910E90CD55985300bd1032F3",
+    name: "Express Shipping Inc.",
+    location: "Kano",
+    cost: 2,
+  },
+];
+
 const CreateProduct = () => {
   const navigate = useNavigate();
   const { createProduct, loading } = useProductData();
@@ -61,6 +84,10 @@ const CreateProduct = () => {
   const [inputFocus, setInputFocus] = useState<"USDT" | "FIAT" | null>(null);
   const [stock, setStock] = useState("");
   const [sellerWalletAddress, setSellerWalletAddress] = useState("");
+  const [selectedLogistics, setSelectedLogistics] = useState<
+    LogisticsProvider[]
+  >([]);
+  const [searchLogistics, setSearchLogistics] = useState("");
 
   // Product variants
   const [variants, setVariants] = useState<ProductVariant[]>([]);
@@ -68,6 +95,7 @@ const CreateProduct = () => {
     name: "",
     value: "",
   });
+  // filter logistics providers
 
   const categories = [
     "Electronics",
@@ -286,6 +314,23 @@ const CreateProduct = () => {
       .join(", ");
   };
 
+  const filteredLogistics = useMemo(() => {
+    return logisticsProviders.filter(
+      (provider) =>
+        provider.name.toLowerCase().includes(searchLogistics.toLowerCase()) ||
+        provider.location.toLowerCase().includes(searchLogistics.toLowerCase())
+    );
+  }, [searchLogistics]);
+  // handle logistics selection
+  const toggleLogisticsProvider = (provider: LogisticsProvider) => {
+    if (selectedLogistics.some((p) => p.address === provider.address)) {
+      setSelectedLogistics(
+        selectedLogistics.filter((p) => p.address !== provider.address)
+      );
+    } else {
+      setSelectedLogistics([...selectedLogistics, provider]);
+    }
+  };
   const validateForm = () => {
     const newErrors: FormErrors = {};
 
@@ -326,12 +371,34 @@ const CreateProduct = () => {
     formData.append("price", priceInUSDT);
     formData.append("stock", stock);
     formData.append("sellerWalletAddress", sellerWalletAddress);
+    // Add logistics provider addresses and costs
+    if (selectedLogistics.length > 0) {
+      const addresses = selectedLogistics.map((provider) => provider.address);
+      const costs = selectedLogistics.map(
+        (provider) => provider.cost * Math.pow(10, 18)
+      );
+      console.log({
+        logisticsProvider: JSON.stringify(addresses),
+        logisticsCost: JSON.stringify(costs),
+      });
+      formData.append("logisticsProvider", JSON.stringify(addresses));
+      formData.append("logisticsCost", JSON.stringify(costs));
+    }
 
     // Add type (variants) if available
     const variantsString = formatVariantsForBackend();
     if (variantsString) {
       formData.append("type", variantsString);
     }
+    console.log({
+      name: name,
+      description: description,
+      category: category,
+      price: priceInUSDT,
+      stock: stock,
+      sellerWalletAddress: sellerWalletAddress,
+      type: variantsString,
+    });
 
     // mediaFiles.forEach((media) => {
     //   formData.append("mediaFiles", media.file);
@@ -772,6 +839,112 @@ const CreateProduct = () => {
               Enter the price in either USDT or your local currency. The
               conversion will happen automatically.
             </p>
+          </div>
+
+          {/* Logistics Providers */}
+          <div>
+            <label className="block text-white mb-2">Logistics Providers</label>
+            <div className="bg-[#333] rounded-lg overflow-hidden">
+              <div className="p-3 border-b border-[#444]">
+                <input
+                  type="text"
+                  value={searchLogistics}
+                  onChange={(e) => setSearchLogistics(e.target.value)}
+                  className="w-full bg-[#222] text-white px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-Red transition-all"
+                  placeholder="Search by name or location..."
+                />
+              </div>
+
+              <div className="max-h-60 overflow-y-auto">
+                {filteredLogistics.length > 0 ? (
+                  filteredLogistics.map((provider) => (
+                    <div
+                      key={provider.address}
+                      className={`flex items-center justify-between p-3 hover:bg-[#3A3B3F] cursor-pointer ${
+                        selectedLogistics.some(
+                          (p) => p.address === provider.address
+                        )
+                          ? "bg-[#3A3B3F]"
+                          : ""
+                      }`}
+                      onClick={() => toggleLogisticsProvider(provider)}
+                    >
+                      <div>
+                        <div className="text-white font-medium">
+                          {provider.name}
+                        </div>
+                        <div className="text-gray-400 text-sm">
+                          {provider.location}
+                        </div>
+                      </div>
+                      <div className="flex items-center">
+                        <span className="text-gray-400 text-sm mr-3">
+                          {provider.cost} USDT
+                        </span>
+                        <div
+                          className={`w-5 h-5 rounded border ${
+                            selectedLogistics.some(
+                              (p) => p.address === provider.address
+                            )
+                              ? "bg-Red border-Red"
+                              : "border-gray-400"
+                          } flex items-center justify-center`}
+                        >
+                          {selectedLogistics.some(
+                            (p) => p.address === provider.address
+                          ) && (
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-3 w-3 text-white"
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-3 text-gray-400 text-center">
+                    No providers match your search
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {selectedLogistics.length > 0 && (
+              <div className="mt-2">
+                <div className="text-gray-400 text-sm">
+                  Selected providers: {selectedLogistics.length}
+                </div>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {selectedLogistics.map((provider) => (
+                    <div
+                      key={provider.address}
+                      className="bg-[#3A3B3F] text-white text-sm px-3 py-1 rounded-full flex items-center"
+                    >
+                      {provider.name}
+                      <button
+                        type="button"
+                        className="ml-2 text-gray-400 hover:text-Red"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleLogisticsProvider(provider);
+                        }}
+                      >
+                        <FiX size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Submit Button */}

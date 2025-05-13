@@ -131,6 +131,12 @@ export interface TradeResponse {
   message: string;
   data: any;
 }
+export interface LogisticsProvider {
+  address: string;
+  name: string;
+  location: string;
+  cost: number; // in USDT
+}
 
 // export type NotificationType = "update" | "funds" | "buyer" | "system";
 
