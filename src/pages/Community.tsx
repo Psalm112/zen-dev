@@ -338,7 +338,7 @@ const Community = () => {
                       <img
                         src={Rocket}
                         alt="Rocket"
-                        className="w-60 h-60 absolute top-1/2 left-1/2 -translate-x-4/10 -translate-y-45/100"
+                        className="w-60 h-60 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
                         onError={(e) => {
                           e.currentTarget.style.display = "none";
                         }}
