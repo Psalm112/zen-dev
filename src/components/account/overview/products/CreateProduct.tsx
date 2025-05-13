@@ -363,15 +363,15 @@ const CreateProduct = () => {
         provider.name.toLowerCase().includes(searchTerm) ||
         provider.location.toLowerCase().includes(searchTerm)
     );
-  }, [debouncedSearchTerm, logisticsProviders]);
-  const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
-    try {
-      setSearchLogistics(e.target.value);
-    } catch (error) {
-      console.error("Error in search:", error);
-      setSearchLogistics("");
-    }
-  };
+  }, [debouncedSearchTerm]);
+  // const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
+  //   try {
+  //     setSearchLogistics(e.target.value);
+  //   } catch (error) {
+  //     console.error("Error in search:", error);
+  //     setSearchLogistics("");
+  //   }
+  // };
 
   // handle logistics selection
   const toggleLogisticsProvider = (provider: LogisticsProvider) => {
@@ -959,7 +959,7 @@ const CreateProduct = () => {
                 <input
                   type="text"
                   value={searchLogistics}
-                  onChange={handleSearchChange}
+                  onChange={(e) => setSearchLogistics(e.target.value)}
                   className="w-full bg-[#222] text-white px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-Red transition-all"
                   placeholder="Search by name or location..."
                   aria-label="Search logistics providers"

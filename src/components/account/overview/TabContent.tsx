@@ -73,6 +73,7 @@ const TabContent: React.FC<TabContentProps> = ({ activeTab, productImage }) => {
       fetchUserWatchlist(false, isInitialLoad);
       setIsInitialLoad(false);
     }
+    console.log(nonDisputeOrders.length, disputeOrders.length);
   }, [activeTab, fetchBuyerOrders, fetchUserWatchlist, isInitialLoad]);
 
   // Filter orders when they change
@@ -131,7 +132,7 @@ const TabContent: React.FC<TabContentProps> = ({ activeTab, productImage }) => {
 
           {!orderLoading &&
             !orderError &&
-            nonDisputeOrders?.length > 0 &&
+            nonDisputeOrders.length > 0 &&
             nonDisputeOrders.map((order, index) => (
               <OrderHistoryItem key={order._id} {...order} index={index} />
             ))}
