@@ -90,8 +90,11 @@ const CreateProduct = () => {
   const [searchLogistics, setSearchLogistics] = useState("");
 
   // Product variants
-  const [variants, setVariants] = useState<ProductVariant[]>([]);
+  const [variants, setVariants] = useState<ProductVariant[]>([
+    { id: `variant-${Date.now()}`, properties: [] },
+  ]);
   const [currentVariantProperty, setCurrentVariantProperty] = useState({
+    variantIndex: 0,
     name: "",
     value: "",
   });
@@ -236,67 +239,53 @@ const CreateProduct = () => {
   const addVariantProperty = () => {
     if (!currentVariantProperty.name || !currentVariantProperty.value) return;
 
-    // Create new variant if no variants exist or if last one has properties
-    if (
-      variants.length === 0 ||
-      variants[variants.length - 1].properties.length > 0
-    ) {
-      const newVariant: ProductVariant = {
-        id: `variant-${Date.now()}`,
-        properties: [{ ...currentVariantProperty }],
-      };
-      setVariants([...variants, newVariant]);
-    } else {
-      // Add to the last variant if it exists but has no properties
-      const updatedVariants = [...variants];
-      const lastVariant = updatedVariants[updatedVariants.length - 1];
-      lastVariant.properties.push({ ...currentVariantProperty });
-      setVariants(updatedVariants);
-    }
+    const newVariants = [...variants];
+    newVariants[currentVariantProperty.variantIndex].properties.push({
+      name: currentVariantProperty.name,
+      value: currentVariantProperty.value,
+    });
 
-    // Reset current property input
-    setCurrentVariantProperty({ name: "", value: "" });
+    setVariants(newVariants);
+    setCurrentVariantProperty({
+      ...currentVariantProperty,
+      name: "",
+      value: "",
+    });
   };
 
   // Add new variant
   const addNewVariant = () => {
-    if (currentVariantProperty.name && currentVariantProperty.value) {
-      // First add the current property
-      addVariantProperty();
-    } else {
-      setVariants([
-        ...variants,
-        { id: `variant-${Date.now()}`, properties: [] },
-      ]);
-    }
+    setVariants([...variants, { id: `variant-${Date.now()}`, properties: [] }]);
+    // Set active variant to the newly added one
+    setCurrentVariantProperty({
+      variantIndex: variants.length,
+      name: "",
+      value: "",
+    });
   };
 
   // Remove a variant
-  const removeVariant = (variantId: string) => {
-    setVariants(variants.filter((variant) => variant.id !== variantId));
+  const removeVariant = (index: number) => {
+    if (variants.length <= 1) return; // Keep at least one variant
+
+    const newVariants = variants.filter((_, i) => i !== index);
+    setVariants(newVariants);
+
+    // Update current variant index if needed
+    if (currentVariantProperty.variantIndex >= newVariants.length) {
+      setCurrentVariantProperty({
+        ...currentVariantProperty,
+        variantIndex: Math.max(newVariants.length - 1, 0),
+      });
+    }
   };
 
   // Remove a property from a variant
-  const removeProperty = (variantId: string, propertyIndex: number) => {
-    const updatedVariants = variants
-      .map((variant) => {
-        if (variant.id === variantId) {
-          const updatedProperties = variant.properties.filter(
-            (_, idx) => idx !== propertyIndex
-          );
-          return { ...variant, properties: updatedProperties };
-        }
-        return variant;
-      })
-      .filter(
-        (variant) =>
-          variant.properties.length > 0 ||
-          variant.id === variants[variants.length - 1].id
-      );
-
-    setVariants(updatedVariants);
+  const removeProperty = (variantIndex: number, propertyIndex: number) => {
+    const newVariants = [...variants];
+    newVariants[variantIndex].properties.splice(propertyIndex, 1);
+    setVariants(newVariants);
   };
-
   // Format variants to string for backend
   const formatVariantsForBackend = (): string => {
     const validVariants = variants.filter(
@@ -681,21 +670,54 @@ const CreateProduct = () => {
             </div>
 
             <div className="space-y-4">
-              {/* Variant property inputs */}
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={currentVariantProperty.name}
-                  onChange={(e) =>
-                    setCurrentVariantProperty((prev) => ({
-                      ...prev,
-                      name: e.target.value,
-                    }))
-                  }
-                  className="bg-[#333] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-Red transition-all w-1/2"
-                  placeholder="Property (e.g. size, color)"
-                />
-                <div className="flex flex-1 gap-2">
+              {/* Variant selector and property inputs */}
+              <div className="space-y-3">
+                <div className="flex flex-wrap gap-2">
+                  {variants.map((variant, idx) => (
+                    <button
+                      key={variant.id}
+                      type="button"
+                      className={`px-3 py-1 rounded text-sm transition-colors ${
+                        currentVariantProperty.variantIndex === idx
+                          ? "bg-Red text-white"
+                          : "bg-[#333] text-gray-300 hover:bg-[#444]"
+                      }`}
+                      onClick={() =>
+                        setCurrentVariantProperty({
+                          ...currentVariantProperty,
+                          variantIndex: idx,
+                        })
+                      }
+                    >
+                      Variant {idx + 1}
+                      {idx > 0 && (
+                        <span
+                          className="ml-2 text-xs"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeVariant(idx);
+                          }}
+                        >
+                          ×
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={currentVariantProperty.name}
+                    onChange={(e) =>
+                      setCurrentVariantProperty((prev) => ({
+                        ...prev,
+                        name: e.target.value,
+                      }))
+                    }
+                    className="bg-[#333] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-Red transition-all w-1/3"
+                    placeholder="Property (e.g. size, color)"
+                  />
                   <input
                     type="text"
                     value={currentVariantProperty.value}
@@ -727,7 +749,11 @@ const CreateProduct = () => {
                 {variants.map((variant, variantIndex) => (
                   <motion.div
                     key={variant.id}
-                    className="bg-[#333] rounded-lg p-3 space-y-2"
+                    className={`bg-[#333] rounded-lg p-3 space-y-2 ${
+                      currentVariantProperty.variantIndex === variantIndex
+                        ? "ring-2 ring-Red"
+                        : ""
+                    }`}
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
@@ -737,13 +763,6 @@ const CreateProduct = () => {
                       <h4 className="text-white text-sm font-medium">
                         Variant {variantIndex + 1}
                       </h4>
-                      <button
-                        type="button"
-                        onClick={() => removeVariant(variant.id)}
-                        className="text-gray-400 hover:text-Red transition-colors"
-                      >
-                        <FiX size={16} />
-                      </button>
                     </div>
 
                     {variant.properties.length > 0 ? (
@@ -762,7 +781,7 @@ const CreateProduct = () => {
                             <button
                               type="button"
                               onClick={() =>
-                                removeProperty(variant.id, propIndex)
+                                removeProperty(variantIndex, propIndex)
                               }
                               className="text-gray-400 hover:text-Red transition-colors"
                             >
@@ -779,13 +798,6 @@ const CreateProduct = () => {
                   </motion.div>
                 ))}
               </AnimatePresence>
-
-              {variants.length > 0 && (
-                <p className="text-gray-400 text-xs">
-                  Added variants will be formatted as: "
-                  {formatVariantsForBackend()}"
-                </p>
-              )}
             </div>
           </div>
 
