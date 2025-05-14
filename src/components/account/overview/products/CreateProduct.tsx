@@ -574,18 +574,19 @@ const CreateProduct = () => {
       >
         <div className="space-y-6">
           {/* Product Media Files */}
-          <div>
-            <label className="block text-white mb-2">
+          <section aria-labelledby="media-section">
+            <h3 id="media-section" className="block text-white mb-2">
               Product Media (Images & Videos)
-            </label>
+            </h3>
             <div className="grid grid-cols-3 md:grid-cols-5 gap-4 mb-2">
-              <AnimatePresence>
+              <AnimatePresence mode="popLayout">
                 {mediaFiles.map((media, index) => (
                   <motion.div
-                    key={index}
+                    key={`media-${index}-${media.file.name}`}
                     className="relative aspect-square rounded-lg overflow-hidden bg-[#333]"
                     {...fadeInAnimation}
                     whileHover={{ scale: 1.05 }}
+                    layout
                   >
                     {media.type === "image" ? (
                       <img
@@ -593,6 +594,10 @@ const CreateProduct = () => {
                         alt={`Product preview ${index + 1}`}
                         className="w-full h-full object-cover"
                         loading="lazy"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src =
+                            "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzMzMyIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIiBmaWxsPSIjNjY2Ij5JbWFnZSBFcnJvcjwvdGV4dD48L3N2Zz4=";
+                        }}
                       />
                     ) : (
                       <div className="relative w-full h-full">
@@ -601,16 +606,20 @@ const CreateProduct = () => {
                           className="w-full h-full object-cover"
                           muted
                           preload="metadata"
-                          onMouseOver={(e) =>
-                            (e.target as HTMLVideoElement).play()
-                          }
+                          playsInline
+                          onMouseOver={(e) => {
+                            const video = e.target as HTMLVideoElement;
+                            if (video.paused) video.play().catch(() => {});
+                          }}
                           onMouseOut={(e) => {
                             const video = e.target as HTMLVideoElement;
-                            video.pause();
-                            video.currentTime = 0;
+                            if (!video.paused) {
+                              video.pause();
+                              video.currentTime = 0;
+                            }
                           }}
                         />
-                        <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                           <FiVideo className="text-white text-2xl opacity-80" />
                         </div>
                       </div>
@@ -627,34 +636,37 @@ const CreateProduct = () => {
                     </motion.button>
                   </motion.div>
                 ))}
-              </AnimatePresence>
 
-              {mediaFiles.length < MAX_FILES && (
-                <motion.button
-                  type="button"
-                  className="aspect-square rounded-lg border-2 border-dashed border-gray-600 flex flex-col items-center justify-center text-gray-400 hover:border-Red hover:text-Red transition-colors"
-                  onClick={() => fileInputRef.current?.click()}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  aria-label="Add media"
-                >
-                  <div className="flex gap-2">
-                    <FiImage size={20} />
-                    <FiVideo size={20} />
-                  </div>
-                  <span className="text-xs mt-2">Add Media</span>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    multiple
-                    accept="image/*,video/*"
-                    onChange={handleMediaChange}
-                    className="hidden"
-                    aria-hidden="true"
-                  />
-                </motion.button>
-              )}
+                {mediaFiles.length < MAX_FILES && (
+                  <motion.button
+                    type="button"
+                    className="aspect-square rounded-lg border-2 border-dashed border-gray-600 flex flex-col items-center justify-center text-gray-400 hover:border-Red hover:text-Red transition-colors"
+                    onClick={() => fileInputRef.current?.click()}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    aria-label="Add media"
+                    layout
+                  >
+                    <div className="flex gap-2">
+                      <FiImage size={20} aria-hidden="true" />
+                      <FiVideo size={20} aria-hidden="true" />
+                    </div>
+                    <span className="text-xs mt-2">Add Media</span>
+                  </motion.button>
+                )}
+              </AnimatePresence>
             </div>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept="image/*,video/*"
+              onChange={handleMediaChange}
+              className="hidden"
+              aria-hidden="true"
+            />
+
             {errors.media && (
               <p className="text-Red text-sm mt-1" role="alert">
                 {errors.media}
@@ -664,11 +676,15 @@ const CreateProduct = () => {
               Upload up to 5 images or videos (max 5MB each). First file will be
               the main product preview.
             </p>
-          </div>
+          </section>
 
           {/* Product Name */}
-          <div>
-            <label htmlFor="name" className="block text-white mb-2">
+          <section aria-labelledby="name-section">
+            <label
+              id="name-section"
+              htmlFor="name"
+              className="block text-white mb-2"
+            >
               Product Name
             </label>
             <input
@@ -689,11 +705,15 @@ const CreateProduct = () => {
                 {errors.name}
               </p>
             )}
-          </div>
+          </section>
 
           {/* Description */}
-          <div>
-            <label htmlFor="description" className="block text-white mb-2">
+          <section aria-labelledby="description-section">
+            <label
+              id="description-section"
+              htmlFor="description"
+              className="block text-white mb-2"
+            >
               Description
             </label>
             <textarea
@@ -719,11 +739,15 @@ const CreateProduct = () => {
                 {errors.description}
               </p>
             )}
-          </div>
+          </section>
 
           {/* Category */}
-          <div>
-            <label htmlFor="category" className="block text-white mb-2">
+          <section aria-labelledby="category-section">
+            <label
+              id="category-section"
+              htmlFor="category"
+              className="block text-white mb-2"
+            >
               Category
             </label>
             <div className="relative">
@@ -773,17 +797,22 @@ const CreateProduct = () => {
                 {errors.category}
               </p>
             )}
-          </div>
+          </section>
 
           {/* Product Stock/Quantity */}
-          <div>
-            <label htmlFor="stock" className="block text-white mb-2">
+          <section aria-labelledby="stock-section">
+            <label
+              id="stock-section"
+              htmlFor="stock"
+              className="block text-white mb-2"
+            >
               Stock Quantity
             </label>
             <input
               id="stock"
               type="number"
               min="1"
+              inputMode="numeric"
               value={formState.stock}
               onChange={(e) => updateFormField("stock", e.target.value)}
               className={`w-full bg-[#333] text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-Red transition-all ${
@@ -802,11 +831,12 @@ const CreateProduct = () => {
                 {errors.stock}
               </p>
             )}
-          </div>
+          </section>
 
           {/* Seller Wallet Address */}
-          <div>
+          <section aria-labelledby="wallet-section">
             <label
+              id="wallet-section"
               htmlFor="sellerWalletAddress"
               className="block text-white mb-2"
             >
@@ -838,18 +868,20 @@ const CreateProduct = () => {
                 {errors.sellerWalletAddress}
               </p>
             )}
-          </div>
+          </section>
 
           {/* Product Variants/Types */}
-          <div>
+          <section aria-labelledby="variants-section">
             <div className="flex justify-between items-center mb-2">
-              <label className="block text-white">Product Variants</label>
+              <h3 id="variants-section" className="block text-white">
+                Product Variants
+              </h3>
               <Button
                 title="Add Variant"
                 type="button"
                 className="bg-[#333] hover:bg-[#444] border-0 rounded-md px-3 py-1.5 text-white text-sm"
                 onClick={addNewVariant}
-                icon={<FiPlus size={14} />}
+                icon={<FiPlus size={14} aria-hidden="true" />}
                 iconPosition="start"
                 aria-label="Add new variant"
               />
@@ -867,12 +899,16 @@ const CreateProduct = () => {
                   <div>• Color: Red, Blue, Black</div>
                   <div>• Material: Cotton, Silk</div>
                   <div>• Style: Classic, Modern</div>
+                  <div>
+                    • Remember to add quantity for each variant e.g., Quantity:
+                    30
+                  </div>
                 </div>
               </div>
             )}
 
             <div className="space-y-4">
-              {/* Variant selector tabs - make responsive */}
+              {/* Variant selector tabs */}
               <div className="space-y-3">
                 <div className="flex flex-wrap gap-2">
                   {variants.map((variant, idx) => (
@@ -896,10 +932,15 @@ const CreateProduct = () => {
                       {idx > 0 && (
                         <span
                           className="ml-2 text-xs"
+                          role="button"
+                          tabIndex={0}
                           onClick={(e) => {
                             e.stopPropagation();
                             removeVariant(idx);
                           }}
+                          onKeyDown={(e) =>
+                            handleKeyPress(e, () => removeVariant(idx))
+                          }
                         >
                           ×
                         </span>
@@ -908,7 +949,7 @@ const CreateProduct = () => {
                   ))}
                 </div>
 
-                {/* Property input - make responsive */}
+                {/* Property input  */}
                 <div className="flex flex-col sm:flex-row gap-2">
                   <input
                     type="text"
@@ -921,6 +962,7 @@ const CreateProduct = () => {
                     }
                     className="bg-[#333] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-Red transition-all w-full sm:w-1/3"
                     placeholder="Property (e.g. size, color)"
+                    aria-label="Variant property name"
                   />
                   <input
                     type="text"
@@ -933,6 +975,7 @@ const CreateProduct = () => {
                     }
                     className="bg-[#333] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-Red transition-all w-full sm:flex-1"
                     placeholder="Value (e.g. XL, red)"
+                    aria-label="Variant property value"
                   />
                   <Button
                     title="Add"
@@ -943,17 +986,20 @@ const CreateProduct = () => {
                       !currentVariantProperty.name ||
                       !currentVariantProperty.value
                     }
-                    icon={<FiPlus size={16} />}
+                    icon={<FiPlus size={16} aria-hidden="true" />}
                   />
                 </div>
               </div>
 
               {/* Display error for empty variants */}
               {errors.variants && (
-                <p className="text-Red text-sm">{errors.variants}</p>
+                <p className="text-Red text-sm" role="alert">
+                  {errors.variants}
+                </p>
               )}
+
               {/* Display variants */}
-              <AnimatePresence>
+              <AnimatePresence mode="popLayout">
                 {variants.map((variant, variantIndex) => (
                   <motion.div
                     key={variant.id}
@@ -966,6 +1012,7 @@ const CreateProduct = () => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ duration: 0.2 }}
+                    layout
                   >
                     <div className="flex justify-between items-center">
                       <h4 className="text-white text-sm font-medium">
@@ -992,8 +1039,9 @@ const CreateProduct = () => {
                                 removeProperty(variantIndex, propIndex)
                               }
                               className="text-gray-400 hover:text-Red transition-colors"
+                              aria-label={`Remove ${prop.name} property`}
                             >
-                              <FiX size={14} />
+                              <FiX size={14} aria-hidden="true" />
                             </button>
                           </div>
                         ))}
@@ -1007,17 +1055,20 @@ const CreateProduct = () => {
                 ))}
               </AnimatePresence>
             </div>
-          </div>
+          </section>
 
           {/* Price - Dual Currency Input */}
-          <div>
-            <label className="block text-white mb-2">Price</label>
+          <section aria-labelledby="price-section">
+            <h3 id="price-section" className="block text-white mb-2">
+              Price
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* USDT Price */}
               <div className="relative">
                 <input
                   id="priceUSDT"
                   type="text"
+                  inputMode="decimal"
                   value={formState.priceInUSDT}
                   onChange={(e) => handleUSDTChange(e.target.value)}
                   onFocus={() => setInputFocus("USDT")}
@@ -1026,6 +1077,9 @@ const CreateProduct = () => {
                     errors.price ? "border border-Red" : ""
                   } ${inputFocus === "USDT" ? "ring-2 ring-Red" : ""}`}
                   placeholder="0.00"
+                  aria-label="Price in USDT"
+                  aria-invalid={!!errors.price}
+                  aria-describedby={errors.price ? "price-error" : undefined}
                 />
                 <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
                   USDT
@@ -1037,6 +1091,7 @@ const CreateProduct = () => {
                 <input
                   id="priceFiat"
                   type="text"
+                  inputMode="decimal"
                   value={formState.priceInFiat}
                   onChange={(e) => handleFiatChange(e.target.value)}
                   onFocus={() => setInputFocus("FIAT")}
@@ -1045,6 +1100,7 @@ const CreateProduct = () => {
                     inputFocus === "FIAT" ? "ring-2 ring-Red" : ""
                   }`}
                   placeholder="0.00"
+                  aria-label={`Price in ${userCountry}`}
                 />
                 <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
                   {userCountry}
@@ -1053,97 +1109,103 @@ const CreateProduct = () => {
             </div>
 
             {errors.price && (
-              <p className="text-Red text-sm mt-1">{errors.price}</p>
+              <p
+                id="price-error"
+                className="text-Red text-sm mt-1"
+                role="alert"
+              >
+                {errors.price}
+              </p>
             )}
             <p className="text-gray-400 text-xs mt-2">
               Enter the price in either USDT or your local currency. The
               conversion will happen automatically.
             </p>
-          </div>
+          </section>
 
           {/* Logistics Providers */}
-          <div>
-            <label className="block text-white mb-2">
+          <section aria-labelledby="logistics-section">
+            <h3 id="logistics-section" className="block text-white mb-2">
               Logistics Providers <span className="text-Red">*</span>
-            </label>
+            </h3>
             <div className="bg-[#333] rounded-lg overflow-hidden">
               <div className="p-3 border-b border-[#444]">
                 <input
                   type="text"
                   value={searchLogistics}
-                  onChange={(e) => setSearchLogistics(e.target.value)}
+                  onChange={handleSearchChange}
                   className="w-full bg-[#222] text-white px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-Red transition-all"
                   placeholder="Search by name or location..."
                   aria-label="Search logistics providers"
                 />
               </div>
 
-              <div className="max-h-60 overflow-y-auto">
+              <div
+                className="max-h-60 overflow-y-auto"
+                role="listbox"
+                aria-multiselectable="true"
+                aria-label="Available logistics providers"
+              >
                 {filteredLogistics.length > 0 ? (
-                  filteredLogistics.map((provider) => (
-                    <div
-                      key={provider.address}
-                      className={`flex items-center justify-between p-3 hover:bg-[#3A3B3F] cursor-pointer ${
-                        selectedLogistics.some(
-                          (p) => p.address === provider.address
-                        )
-                          ? "bg-[#3A3B3F]"
-                          : ""
-                      }`}
-                      onClick={() => toggleLogisticsProvider(provider)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          toggleLogisticsProvider(provider);
+                  filteredLogistics.map((provider) => {
+                    const isSelected = selectedLogistics.some(
+                      (p) => p.address === provider.address
+                    );
+                    return (
+                      <div
+                        key={provider.address}
+                        className={`flex items-center justify-between p-3 hover:bg-[#3A3B3F] cursor-pointer ${
+                          isSelected ? "bg-[#3A3B3F]" : ""
+                        }`}
+                        onClick={() => toggleLogisticsProvider(provider)}
+                        onKeyDown={(e) =>
+                          handleKeyPress(e, () =>
+                            toggleLogisticsProvider(provider)
+                          )
                         }
-                      }}
-                      role="checkbox"
-                      aria-checked={selectedLogistics.some(
-                        (p) => p.address === provider.address
-                      )}
-                      tabIndex={0}
-                    >
-                      <div className="flex-1 min-w-0 mr-2">
-                        <div className="text-white font-medium truncate">
-                          {provider.name}
+                        role="option"
+                        aria-selected={isSelected}
+                        tabIndex={0}
+                      >
+                        <div className="flex-1 min-w-0 mr-2">
+                          <div className="text-white font-medium truncate">
+                            {provider.name}
+                          </div>
+                          <div className="text-gray-400 text-sm truncate">
+                            {provider.location}
+                          </div>
                         </div>
-                        <div className="text-gray-400 text-sm truncate">
-                          {provider.location}
-                        </div>
-                      </div>
-                      <div className="flex items-center flex-shrink-0">
-                        <span className="text-gray-400 text-sm mr-3 whitespace-nowrap">
-                          {provider.cost} USDT
-                        </span>
-                        <div
-                          className={`w-5 h-5 rounded border ${
-                            selectedLogistics.some(
-                              (p) => p.address === provider.address
-                            )
-                              ? "bg-Red border-Red"
-                              : "border-gray-400"
-                          } flex items-center justify-center`}
-                        >
-                          {selectedLogistics.some(
-                            (p) => p.address === provider.address
-                          ) && (
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-3 w-3 text-white"
-                              viewBox="0 0 20 20"
-                              fill="currentColor"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                          )}
+                        <div className="flex items-center flex-shrink-0">
+                          <span className="text-gray-400 text-sm mr-3 whitespace-nowrap">
+                            {provider.cost} USDT
+                          </span>
+                          <div
+                            className={`w-5 h-5 rounded border ${
+                              isSelected
+                                ? "bg-Red border-Red"
+                                : "border-gray-400"
+                            } flex items-center justify-center`}
+                            aria-hidden="true"
+                          >
+                            {isSelected && (
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-3 w-3 text-white"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 ) : (
                   <div className="p-3 text-gray-400 text-center">
                     No providers match your search
@@ -1170,12 +1232,10 @@ const CreateProduct = () => {
                       <button
                         type="button"
                         className="ml-2 text-gray-400 hover:text-Red flex-shrink-0"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleLogisticsProvider(provider);
-                        }}
+                        onClick={() => toggleLogisticsProvider(provider)}
+                        aria-label={`Remove ${provider.name}`}
                       >
-                        <FiX size={14} />
+                        <FiX size={14} aria-hidden="true" />
                       </button>
                     </div>
                   ))}
@@ -1183,33 +1243,52 @@ const CreateProduct = () => {
               </div>
             )}
 
-            {/*  error for logistics */}
+            {/* Error for logistics */}
             {errors.logistics && (
-              <p className="text-Red text-sm mt-1">{errors.logistics}</p>
+              <p className="text-Red text-sm mt-1" role="alert">
+                {errors.logistics}
+              </p>
             )}
-          </div>
+          </section>
 
           {/* Submit Button */}
-          <motion.div
-            className="pt-4"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <Button
-              title={isSubmitting ? "Creating Product..." : "Create Product"}
-              className="w-full bg-Red border-0 rounded text-white py-3 transition-colors hover:bg-[#e02d37] flex items-center justify-center items-center gap-2"
-              type="submit"
-              disabled={isSubmitting || loading}
-              iconPosition="start"
-              icon={
-                isSubmitting ? (
-                  <LoadingSpinner size="sm" color="white" />
-                ) : (
-                  <FiPlus />
-                )
-              }
-            />
-          </motion.div>
+          <div className="pt-4">
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button
+                title={isSubmitting ? "Creating Product..." : "Create Product"}
+                className="w-full bg-Red border-0 rounded text-white py-3 transition-colors hover:bg-[#e02d37] flex items-center justify-center gap-2"
+                type="submit"
+                disabled={isSubmitting || loading}
+                iconPosition="start"
+                icon={
+                  isSubmitting ? (
+                    <Suspense fallback={<div className="w-5 h-5" />}>
+                      <LoadingSpinner size="sm" color="white" />
+                    </Suspense>
+                  ) : (
+                    <FiPlus aria-hidden="true" />
+                  )
+                }
+              />
+            </motion.div>
+
+            {successMessage && (
+              <motion.p
+                className="text-green-400 text-center mt-4"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                role="status"
+              >
+                {successMessage}
+              </motion.p>
+            )}
+
+            {errors.submit && (
+              <p className="text-Red text-center mt-4" role="alert">
+                {errors.submit}
+              </p>
+            )}
+          </div>
         </div>
       </motion.form>
     </motion.div>
