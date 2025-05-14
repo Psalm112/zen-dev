@@ -205,6 +205,7 @@ export const api = {
   createProduct: async (productData: FormData) => {
     return fetchWithAuth("/products", {
       method: "POST",
+      headers: { "Content-Type": "multipart/form-data" },
       body: productData,
     });
   },
