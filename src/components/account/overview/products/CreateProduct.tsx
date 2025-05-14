@@ -330,6 +330,21 @@ const CreateProduct = () => {
   const addVariantProperty = () => {
     if (!currentVariantProperty.name || !currentVariantProperty.value) return;
 
+    const propertyNameLower = currentVariantProperty.name.toLowerCase();
+
+    // Check if property already exists for this variant
+    const isDuplicate = variants[
+      currentVariantProperty.variantIndex
+    ].properties.some((prop) => prop.name.toLowerCase() === propertyNameLower);
+
+    if (isDuplicate) {
+      setErrors((prev) => ({
+        ...prev,
+        variants: `Property "${currentVariantProperty.name}" already exists for this variant`,
+      }));
+      return;
+    }
+
     setVariants((prev) => {
       const newVariants = [...prev];
       newVariants[currentVariantProperty.variantIndex].properties.push({
@@ -339,6 +354,7 @@ const CreateProduct = () => {
       return newVariants;
     });
 
+    setErrors((prev) => ({ ...prev, variants: undefined }));
     setCurrentVariantProperty({
       ...currentVariantProperty,
       name: "",
@@ -398,15 +414,37 @@ const CreateProduct = () => {
       };
 
       variant.properties.forEach((prop) => {
-        // Try to convert to number if it's a numeric value
+        // Convert property name to lowercase for backend
+        const propNameLower = prop.name.toLowerCase();
         const numValue = Number(prop.value);
-        variantObject[prop.name] =
+        variantObject[propNameLower] =
           !isNaN(numValue) && prop.value.trim() !== "" ? numValue : prop.value;
       });
 
       return variantObject;
     });
   }, [variants]);
+
+  // reorder variants when active variant changes
+  const handleVariantSelection = (idx: number) => {
+    // Don't reorder if selecting the same variant
+    if (currentVariantProperty.variantIndex === idx) return;
+
+    setVariants((prev) => {
+      const newVariants = [...prev];
+      // Move selected variant to the top
+      const [selectedVariant] = newVariants.splice(idx, 1);
+      newVariants.unshift(selectedVariant);
+
+      // Update the index in currentVariantProperty
+      setCurrentVariantProperty({
+        ...currentVariantProperty,
+        variantIndex: 0,
+      });
+
+      return newVariants;
+    });
+  };
 
   // Logistics providers management
   const toggleLogisticsProvider = useCallback((provider: LogisticsProvider) => {
@@ -516,7 +554,13 @@ const CreateProduct = () => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      setErrors((prev) => ({
+        ...prev,
+        submit: "Please fix the highlighted errors before submitting.",
+      }));
+      return;
+    }
 
     setIsSubmitting(true);
     setErrors({});
@@ -947,22 +991,17 @@ const CreateProduct = () => {
             <div className="space-y-4">
               {/* Variant selector tabs */}
               <div className="space-y-3">
-                <div className="flex flex-wrap gap-2">
+                <div className="flex overflow-x-auto pb-2 hide-scrollbar gap-2">
                   {variants.map((variant, idx) => (
                     <button
                       key={variant.id}
                       type="button"
-                      className={`px-3 py-1 rounded text-sm transition-colors ${
+                      className={`px-3 py-1 rounded text-sm transition-colors flex-shrink-0 ${
                         currentVariantProperty.variantIndex === idx
                           ? "bg-Red text-white"
                           : "bg-[#333] text-gray-300 hover:bg-[#444]"
                       }`}
-                      onClick={() =>
-                        setCurrentVariantProperty({
-                          ...currentVariantProperty,
-                          variantIndex: idx,
-                        })
-                      }
+                      onClick={() => handleVariantSelection(idx)}
                       aria-pressed={currentVariantProperty.variantIndex === idx}
                     >
                       Variant {idx + 1}
@@ -1028,7 +1067,7 @@ const CreateProduct = () => {
                 </div>
               </div>
 
-              {/* Display error for empty variants */}
+              {/* Display error for duplicate properties or empty variants */}
               {errors.variants && (
                 <p className="text-Red text-sm" role="alert">
                   {errors.variants}
@@ -1036,82 +1075,84 @@ const CreateProduct = () => {
               )}
 
               {/* Display variants */}
-              <AnimatePresence mode="popLayout">
-                {variants.map((variant, variantIndex) => (
-                  <motion.div
-                    key={variant.id}
-                    className={`bg-[#333] rounded-lg p-3 space-y-2 ${
-                      currentVariantProperty.variantIndex === variantIndex
-                        ? "ring-2 ring-Red"
-                        : ""
-                    }`}
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 0.2 }}
-                    layout
-                  >
-                    <div className="flex justify-between items-center">
-                      <h4 className="text-white text-sm font-medium">
-                        Variant {variantIndex + 1}
-                      </h4>
-                    </div>
-
-                    {/* Variant quantity input */}
-                    <div className="flex items-center gap-2 mt-2">
-                      <label
-                        htmlFor={`variant-${variantIndex}-quantity`}
-                        className="text-gray-400 text-sm whitespace-nowrap"
-                      >
-                        Quantity:
-                      </label>
-                      <input
-                        id={`variant-${variantIndex}-quantity`}
-                        type="number"
-                        min="0"
-                        value={variant.quantity || ""}
-                        onChange={(e) =>
-                          updateVariantQuantity(variantIndex, e.target.value)
-                        }
-                        className="bg-[#242529] text-white px-3 py-1.5 rounded focus:outline-none focus:ring-1 focus:ring-Red transition-all w-20"
-                        aria-label={`Variant ${variantIndex + 1} quantity`}
-                      />
-                    </div>
-
-                    {variant.properties.length > 0 ? (
-                      <div className="space-y-2">
-                        {variant.properties.map((prop, propIndex) => (
-                          <div
-                            key={`${variant.id}-${propIndex}`}
-                            className="flex items-center justify-between bg-[#242529] rounded px-3 py-2"
-                          >
-                            <div className="text-white text-sm">
-                              <span className="text-gray-400">
-                                {prop.name}:
-                              </span>{" "}
-                              {prop.value}
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                removeProperty(variantIndex, propIndex)
-                              }
-                              className="text-gray-400 hover:text-Red transition-colors"
-                              aria-label={`Remove ${prop.name} property`}
-                            >
-                              <FiX size={14} aria-hidden="true" />
-                            </button>
-                          </div>
-                        ))}
+              <div className="max-h-80 overflow-y-auto pr-1">
+                <AnimatePresence mode="popLayout">
+                  {variants.map((variant, variantIndex) => (
+                    <motion.div
+                      key={variant.id}
+                      className={`bg-[#333] rounded-lg p-3 space-y-2 mb-3 ${
+                        currentVariantProperty.variantIndex === variantIndex
+                          ? "ring-2 ring-Red"
+                          : ""
+                      }`}
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
+                      layout
+                    >
+                      <div className="flex justify-between items-center">
+                        <h4 className="text-white text-sm font-medium">
+                          Variant {variantIndex + 1}
+                        </h4>
                       </div>
-                    ) : (
-                      <p className="text-gray-400 text-sm italic">
-                        No properties added yet
-                      </p>
-                    )}
-                  </motion.div>
-                ))}
-              </AnimatePresence>
+
+                      {/* Variant quantity input */}
+                      <div className="flex items-center gap-2 mt-2">
+                        <label
+                          htmlFor={`variant-${variantIndex}-quantity`}
+                          className="text-gray-400 text-sm whitespace-nowrap"
+                        >
+                          Quantity:
+                        </label>
+                        <input
+                          id={`variant-${variantIndex}-quantity`}
+                          type="number"
+                          min="0"
+                          value={variant.quantity || ""}
+                          onChange={(e) =>
+                            updateVariantQuantity(variantIndex, e.target.value)
+                          }
+                          className="bg-[#242529] text-white px-3 py-1.5 rounded focus:outline-none focus:ring-1 focus:ring-Red transition-all w-20"
+                          aria-label={`Variant ${variantIndex + 1} quantity`}
+                        />
+                      </div>
+
+                      {variant.properties.length > 0 ? (
+                        <div className="space-y-2">
+                          {variant.properties.map((prop, propIndex) => (
+                            <div
+                              key={`${variant.id}-${propIndex}`}
+                              className="flex items-center justify-between bg-[#242529] rounded px-3 py-2"
+                            >
+                              <div className="text-white text-sm">
+                                <span className="text-gray-400">
+                                  {prop.name}:
+                                </span>{" "}
+                                {prop.value}
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  removeProperty(variantIndex, propIndex)
+                                }
+                                className="text-gray-400 hover:text-Red transition-colors"
+                                aria-label={`Remove ${prop.name} property`}
+                              >
+                                <FiX size={14} aria-hidden="true" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-gray-400 text-sm italic">
+                          No properties added yet
+                        </p>
+                      )}
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
               {/* Display variant quantity summary if variants exist */}
               {variants.some((v) => v.properties.length > 0) && (
                 <div className="mt-2 bg-[#2A2C31] p-3 rounded-lg border border-[#444] text-sm">
@@ -1355,21 +1396,21 @@ const CreateProduct = () => {
               />
             </motion.div>
 
+            {errors.submit && (
+              <p className="text-Red text-sm mt-2 text-center" role="alert">
+                {errors.submit}
+              </p>
+            )}
+
             {successMessage && (
               <motion.p
-                className="text-green-400 text-center mt-4"
+                className="text-green-400 text-center mt-2"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 role="status"
               >
                 {successMessage}
               </motion.p>
-            )}
-
-            {errors.submit && (
-              <p className="text-Red text-center mt-4" role="alert">
-                {errors.submit}
-              </p>
             )}
           </div>
         </div>
