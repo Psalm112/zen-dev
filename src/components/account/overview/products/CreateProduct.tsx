@@ -47,6 +47,7 @@ interface ProductVariant {
     name: string;
     value: string;
   }[];
+  quantity: number;
 }
 
 // Constants - moved outside component for better performance
@@ -127,13 +128,34 @@ const CreateProduct = () => {
 
   // Variant management
   const [variants, setVariants] = useState<ProductVariant[]>([
-    { id: `variant-${Date.now()}`, properties: [] },
+    { id: `variant-${Date.now()}`, properties: [], quantity: 0 },
   ]);
   const [currentVariantProperty, setCurrentVariantProperty] = useState({
     variantIndex: 0,
     name: "",
     value: "",
   });
+
+  // updateVariantQuantity
+  const updateVariantQuantity = (index: number, quantity: string) => {
+    const numericValue = parseInt(quantity, 10);
+
+    setVariants((prev) => {
+      const updated = [...prev];
+      updated[index].quantity = isNaN(numericValue) ? 0 : numericValue;
+      return updated;
+    });
+
+    // Clear variant error when quantity changes
+    if (errors.variants) {
+      setErrors((prev) => ({ ...prev, variants: undefined }));
+    }
+  };
+
+  // getTotalVariantQuantity function
+  const getTotalVariantQuantity = useCallback(() => {
+    return variants.reduce((sum, variant) => sum + (variant.quantity || 0), 0);
+  }, [variants]);
 
   // Form field handlers
   const updateFormField = (field: string, value: string) => {
@@ -327,7 +349,7 @@ const CreateProduct = () => {
   const addNewVariant = () => {
     setVariants((prev) => [
       ...prev,
-      { id: `variant-${Date.now()}`, properties: [] },
+      { id: `variant-${Date.now()}`, properties: [], quantity: 0 },
     ]);
     // Set active variant to the newly added one
     setCurrentVariantProperty({
@@ -371,7 +393,9 @@ const CreateProduct = () => {
     if (validVariants.length === 0) return [];
 
     return validVariants.map((variant) => {
-      const variantObject: Record<string, string | number> = {};
+      const variantObject: Record<string, string | number> = {
+        quantity: variant.quantity || 0,
+      };
 
       variant.properties.forEach((prop) => {
         // Try to convert to number if it's a numeric value
@@ -468,6 +492,20 @@ const CreateProduct = () => {
     const nonEmptyVariants = variants.filter((v) => v.properties.length > 0);
     if (variants.length > 1 && nonEmptyVariants.length < variants.length) {
       newErrors.variants = "Please fill all variants or remove empty ones";
+    }
+
+    // Check if any variant is missing quantity
+    const missingQuantity = nonEmptyVariants.some((v) => !v.quantity);
+    if (missingQuantity) {
+      newErrors.variants = "Please specify quantity for all variants";
+    }
+
+    // Check if total variant quantity exceeds product stock
+    const totalVariantQuantity = getTotalVariantQuantity();
+    const stockQuantity = parseInt(formState.stock, 10) || 0;
+
+    if (nonEmptyVariants.length > 0 && totalVariantQuantity > stockQuantity) {
+      newErrors.variants = `Total variant quantity (${totalVariantQuantity}) exceeds available stock (${stockQuantity})`;
     }
 
     setErrors(newErrors);
@@ -900,8 +938,7 @@ const CreateProduct = () => {
                   <div>• Material: Cotton, Silk</div>
                   <div>• Style: Classic, Modern</div>
                   <div>
-                    • Remember to add quantity for each variant e.g., Quantity:
-                    30
+                    • Each variant requires quantity (must total ≤ stock)
                   </div>
                 </div>
               </div>
@@ -1020,6 +1057,27 @@ const CreateProduct = () => {
                       </h4>
                     </div>
 
+                    {/* Variant quantity input */}
+                    <div className="flex items-center gap-2 mt-2">
+                      <label
+                        htmlFor={`variant-${variantIndex}-quantity`}
+                        className="text-gray-400 text-sm whitespace-nowrap"
+                      >
+                        Quantity:
+                      </label>
+                      <input
+                        id={`variant-${variantIndex}-quantity`}
+                        type="number"
+                        min="0"
+                        value={variant.quantity || ""}
+                        onChange={(e) =>
+                          updateVariantQuantity(variantIndex, e.target.value)
+                        }
+                        className="bg-[#242529] text-white px-3 py-1.5 rounded focus:outline-none focus:ring-1 focus:ring-Red transition-all w-20"
+                        aria-label={`Variant ${variantIndex + 1} quantity`}
+                      />
+                    </div>
+
                     {variant.properties.length > 0 ? (
                       <div className="space-y-2">
                         {variant.properties.map((prop, propIndex) => (
@@ -1054,6 +1112,31 @@ const CreateProduct = () => {
                   </motion.div>
                 ))}
               </AnimatePresence>
+              {/* Display variant quantity summary if variants exist */}
+              {variants.some((v) => v.properties.length > 0) && (
+                <div className="mt-2 bg-[#2A2C31] p-3 rounded-lg border border-[#444] text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-300">
+                      Total variant quantity:
+                    </span>
+                    <span className="text-white font-medium">
+                      {getTotalVariantQuantity()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between mt-1">
+                    <span className="text-gray-300">Product stock:</span>
+                    <span className="text-white font-medium">
+                      {formState.stock || 0}
+                    </span>
+                  </div>
+                  {getTotalVariantQuantity() >
+                    parseInt(formState.stock || "0", 10) && (
+                    <p className="text-Red text-sm mt-2">
+                      Total variant quantity exceeds available stock
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </section>
 
