@@ -890,7 +890,7 @@ const CreateProduct = () => {
               className={`w-full bg-[#333] text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-Red transition-all ${
                 errors.sellerWalletAddress ? "border border-Red" : ""
               }`}
-              placeholder="Enter blockchain wallet address"
+              placeholder="Enter a valid celo/EVM wallet address"
               aria-invalid={!!errors.sellerWalletAddress}
               aria-describedby={
                 errors.sellerWalletAddress ? "wallet-error" : undefined
