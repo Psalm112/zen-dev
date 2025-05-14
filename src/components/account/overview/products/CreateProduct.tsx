@@ -516,6 +516,7 @@ const CreateProduct = () => {
     formData.append("price", priceInUSDT);
     formData.append("stock", stock);
     formData.append("sellerWalletAddress", sellerWalletAddress);
+    formData.append("useUSDT", "true");
 
     // Add logistics provider addresses and costs
     if (selectedLogistics.length > 0) {
@@ -523,8 +524,8 @@ const CreateProduct = () => {
       const costs = selectedLogistics.map(
         (provider) => provider.cost * Math.pow(10, 18)
       );
-      formData.append("logisticsProvider", JSON.stringify(addresses));
-      formData.append("logisticsCost", JSON.stringify(costs));
+      formData.append("logisticsProviders", JSON.stringify(addresses));
+      formData.append("logisticsCosts", JSON.stringify(costs));
     }
 
     // Add type (variants) if available using the new format
