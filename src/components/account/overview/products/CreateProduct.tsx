@@ -7,6 +7,7 @@ import {
   useEffect,
   useMemo,
   lazy,
+  Suspense,
 } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiImage, FiX, FiPlus, FiVideo, FiTag } from "react-icons/fi";
@@ -16,9 +17,9 @@ import Button from "../../../common/Button";
 import { useCurrencyConverter } from "../../../../utils/hooks/useCurrencyConverter";
 import { useContractData } from "../../../../utils/hooks/useContract";
 import { LogisticsProvider } from "../../../../utils/types";
-// import { toast } from "react-toastify";
+import { useSnackbar } from "../../../../context/SnackbarContext";
 
-// Lazy load the LoadingSpinner component
+// Lazy load the LoadingSpinner component with a fallback
 const LoadingSpinner = lazy(() => import("../../../common/LoadingSpinner"));
 
 interface FormErrors {
@@ -48,8 +49,19 @@ interface ProductVariant {
   }[];
 }
 
+// Constants - moved outside component for better performance
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
 const MAX_FILES = 5;
+const CATEGORIES = [
+  "Electronics",
+  "Clothing",
+  "Home & Garden",
+  "Beauty & Personal Care",
+  "Sports & Outdoors",
+  "Art Work",
+  "Accessories",
+  "Other",
+];
 
 const logisticsProviders: LogisticsProvider[] = [
   {
@@ -72,33 +84,48 @@ const logisticsProviders: LogisticsProvider[] = [
   },
 ];
 
+// Animation variants - defined outside for better performance
+const fadeInAnimation = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, scale: 0.8 },
+  transition: { duration: 0.3 },
+};
+
 const CreateProduct = () => {
   const navigate = useNavigate();
   const { createProduct, loading } = useProductData();
   const { initiateTradeContract } = useContractData();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const nameInputRef = useRef<HTMLInputElement>(null);
+  const { showSnackbar } = useSnackbar();
   const { convertPrice, userCountry } = useCurrencyConverter();
 
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("");
+  // Refs
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // State management
+  const [formState, setFormState] = useState({
+    name: "",
+    description: "",
+    category: "",
+    stock: "",
+    sellerWalletAddress: "",
+    priceInUSDT: "",
+    priceInFiat: "",
+  });
   const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [priceInUSDT, setPriceInUSDT] = useState("");
-  const [priceInFiat, setPriceInFiat] = useState("");
   const [inputFocus, setInputFocus] = useState<"USDT" | "FIAT" | null>(null);
-  const [stock, setStock] = useState("");
-  const [sellerWalletAddress, setSellerWalletAddress] = useState("");
   const [selectedLogistics, setSelectedLogistics] = useState<
     LogisticsProvider[]
   >([]);
   const [searchLogistics, setSearchLogistics] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
 
-  // Product variants
+  // Variant management
   const [variants, setVariants] = useState<ProductVariant[]>([
     { id: `variant-${Date.now()}`, properties: [] },
   ]);
@@ -108,12 +135,25 @@ const CreateProduct = () => {
     value: "",
   });
 
+  // Form field handlers
+  const updateFormField = (field: string, value: string) => {
+    setFormState((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+
+    // Clear error when field is updated
+    if (errors[field as keyof FormErrors]) {
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
+    }
+  };
+
   // Focus the name input when component mounts
   useEffect(() => {
     nameInputRef.current?.focus();
   }, []);
 
-  // Debounce search term
+  // Debounce search term for logistics providers
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearchTerm(searchLogistics);
@@ -124,31 +164,20 @@ const CreateProduct = () => {
     };
   }, [searchLogistics]);
 
-  const categories = [
-    "Electronics",
-    "Clothing",
-    "Home & Garden",
-    "Beauty & Personal Care",
-    "Sports & Outdoors",
-    "Art Work",
-    "Accessories",
-    "Other",
-  ];
-
   // Handle conversion between USDT and local currency
   const handleUSDTChange = useCallback(
     (value: string) => {
-      setPriceInUSDT(value);
+      updateFormField("priceInUSDT", value);
 
       if (value.trim() === "") {
-        setPriceInFiat("");
+        updateFormField("priceInFiat", "");
         return;
       }
 
       const numValue = parseFloat(value);
       if (!isNaN(numValue)) {
         const fiatValue = convertPrice(numValue, "USDT", "FIAT");
-        setPriceInFiat(fiatValue.toFixed(2));
+        updateFormField("priceInFiat", fiatValue.toFixed(2));
       }
     },
     [convertPrice]
@@ -156,42 +185,21 @@ const CreateProduct = () => {
 
   const handleFiatChange = useCallback(
     (value: string) => {
-      setPriceInFiat(value);
+      updateFormField("priceInFiat", value);
 
       if (value.trim() === "") {
-        setPriceInUSDT("");
+        updateFormField("priceInUSDT", "");
         return;
       }
 
       const numValue = parseFloat(value);
       if (!isNaN(numValue)) {
         const usdtValue = convertPrice(numValue, "FIAT", "USDT");
-        setPriceInUSDT(usdtValue.toFixed(2));
+        updateFormField("priceInUSDT", usdtValue.toFixed(2));
       }
     },
     [convertPrice]
   );
-
-  // Clear price error when either price field changes
-  useEffect(() => {
-    if (priceInUSDT || priceInFiat) {
-      setErrors((prev) => ({ ...prev, price: undefined }));
-    }
-  }, [priceInUSDT, priceInFiat]);
-
-  // Clear stock error when stock changes
-  useEffect(() => {
-    if (stock) {
-      setErrors((prev) => ({ ...prev, stock: undefined }));
-    }
-  }, [stock]);
-
-  // Clear wallet address error when it changes
-  useEffect(() => {
-    if (sellerWalletAddress) {
-      setErrors((prev) => ({ ...prev, sellerWalletAddress: undefined }));
-    }
-  }, [sellerWalletAddress]);
 
   // Handle search change with error handling
   const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -203,14 +211,7 @@ const CreateProduct = () => {
     }
   };
 
-  // Handle keyboard events for accessibility
-  const handleKeyPress = (e: React.KeyboardEvent, callback: () => void) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      callback();
-    }
-  };
-
+  // Media handling functions with optimizations
   const handleMediaChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
 
@@ -225,12 +226,34 @@ const CreateProduct = () => {
       return;
     }
 
-    // Filter out files that are too large and process valid ones
+    // Process files with improved error handling
+    const result = processMediaFiles(newFiles);
+
+    if (result.errorMessage) {
+      setErrors((prev) => ({ ...prev, media: result.errorMessage }));
+      if (result.validFiles.length === 0) return;
+    } else {
+      setErrors((prev) => ({ ...prev, media: undefined }));
+    }
+
+    // Update media files with new ones
+    setMediaFiles((prev) =>
+      [...prev, ...result.validFiles].slice(0, MAX_FILES)
+    );
+  };
+
+  // Optimized media processing function
+  const processMediaFiles = (
+    files: File[]
+  ): {
+    validFiles: MediaFile[];
+    errorMessage: string;
+  } => {
     const validFiles: MediaFile[] = [];
     const oversizedFiles: string[] = [];
     const invalidTypeFiles: string[] = [];
 
-    newFiles.forEach((file) => {
+    files.forEach((file) => {
       if (file.size > MAX_FILE_SIZE) {
         oversizedFiles.push(file.name);
         return;
@@ -264,18 +287,12 @@ const CreateProduct = () => {
       )}. `;
     }
 
-    if (errorMessage) {
-      setErrors((prev) => ({ ...prev, media: errorMessage.trim() }));
-      if (validFiles.length === 0) return;
-    } else {
-      setErrors((prev) => ({ ...prev, media: undefined }));
-    }
-
-    // Combine existing and new media files
-    setMediaFiles((prev) => [...prev, ...validFiles].slice(0, MAX_FILES));
+    return { validFiles, errorMessage: errorMessage.trim() };
   };
 
   const removeMedia = (index: number) => {
+    // Release object URL before removing
+    URL.revokeObjectURL(mediaFiles[index].preview);
     setMediaFiles(mediaFiles.filter((_, i) => i !== index));
     setErrors((prev) => ({ ...prev, media: undefined }));
   };
@@ -285,19 +302,21 @@ const CreateProduct = () => {
     return () => {
       mediaFiles.forEach((media) => URL.revokeObjectURL(media.preview));
     };
-  }, [mediaFiles]);
+  }, []);
 
-  // Add new variant property pair
+  // Variant management functions
   const addVariantProperty = () => {
     if (!currentVariantProperty.name || !currentVariantProperty.value) return;
 
-    const newVariants = [...variants];
-    newVariants[currentVariantProperty.variantIndex].properties.push({
-      name: currentVariantProperty.name,
-      value: currentVariantProperty.value,
+    setVariants((prev) => {
+      const newVariants = [...prev];
+      newVariants[currentVariantProperty.variantIndex].properties.push({
+        name: currentVariantProperty.name,
+        value: currentVariantProperty.value,
+      });
+      return newVariants;
     });
 
-    setVariants(newVariants);
     setCurrentVariantProperty({
       ...currentVariantProperty,
       name: "",
@@ -305,9 +324,11 @@ const CreateProduct = () => {
     });
   };
 
-  // Add new variant
   const addNewVariant = () => {
-    setVariants([...variants, { id: `variant-${Date.now()}`, properties: [] }]);
+    setVariants((prev) => [
+      ...prev,
+      { id: `variant-${Date.now()}`, properties: [] },
+    ]);
     // Set active variant to the newly added one
     setCurrentVariantProperty({
       variantIndex: variants.length,
@@ -316,31 +337,31 @@ const CreateProduct = () => {
     });
   };
 
-  // Remove a variant
   const removeVariant = (index: number) => {
     if (variants.length <= 1) return; // Keep at least one variant
 
-    const newVariants = variants.filter((_, i) => i !== index);
-    setVariants(newVariants);
+    setVariants((prev) => prev.filter((_, i) => i !== index));
 
     // Update current variant index if needed
-    if (currentVariantProperty.variantIndex >= newVariants.length) {
-      setCurrentVariantProperty({
-        ...currentVariantProperty,
-        variantIndex: Math.max(newVariants.length - 1, 0),
-      });
-    }
+    setCurrentVariantProperty((prev) => ({
+      ...prev,
+      variantIndex:
+        prev.variantIndex >= index
+          ? Math.max(prev.variantIndex - 1, 0)
+          : prev.variantIndex,
+    }));
   };
 
-  // Remove a property from a variant
   const removeProperty = (variantIndex: number, propertyIndex: number) => {
-    const newVariants = [...variants];
-    newVariants[variantIndex].properties.splice(propertyIndex, 1);
-    setVariants(newVariants);
+    setVariants((prev) => {
+      const newVariants = [...prev];
+      newVariants[variantIndex].properties.splice(propertyIndex, 1);
+      return newVariants;
+    });
   };
 
   // Format variants for backend as array of objects
-  const formatVariantsForBackend = (): Array<
+  const formatVariantsForBackend = useCallback((): Array<
     Record<string, string | number>
   > => {
     const validVariants = variants.filter(
@@ -361,7 +382,22 @@ const CreateProduct = () => {
 
       return variantObject;
     });
-  };
+  }, [variants]);
+
+  // Logistics providers management
+  const toggleLogisticsProvider = useCallback((provider: LogisticsProvider) => {
+    setSelectedLogistics((prev) => {
+      const isSelected = prev.some((p) => p.address === provider.address);
+      if (isSelected) {
+        return prev.filter((p) => p.address !== provider.address);
+      } else {
+        return [...prev, provider];
+      }
+    });
+
+    // Clear logistics error when selection changes
+    setErrors((prev) => ({ ...prev, logistics: undefined }));
+  }, []);
 
   // Memoize filtered logistics providers
   const filteredLogistics = useMemo(() => {
@@ -377,80 +413,17 @@ const CreateProduct = () => {
     );
   }, [debouncedSearchTerm]);
 
-  // Handle logistics selection
-  const toggleLogisticsProvider = useCallback((provider: LogisticsProvider) => {
-    setSelectedLogistics((prev) => {
-      if (prev.some((p) => p.address === provider.address)) {
-        return prev.filter((p) => p.address === provider.address);
-      } else {
-        return [...prev, provider];
-      }
-    });
-  }, []);
-
-  // Memoize rendered logistics providers to avoid unnecessary re-renders
-  const renderedLogisticsProviders = useMemo(() => {
-    return filteredLogistics.map((provider) => (
-      <div
-        key={provider.address}
-        className={`flex items-center justify-between p-3 hover:bg-[#3A3B3F] cursor-pointer ${
-          selectedLogistics.some((p) => p.address === provider.address)
-            ? "bg-[#3A3B3F]"
-            : ""
-        }`}
-        onClick={() => toggleLogisticsProvider(provider)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            toggleLogisticsProvider(provider);
-          }
-        }}
-        role="checkbox"
-        aria-checked={selectedLogistics.some(
-          (p) => p.address === provider.address
-        )}
-        tabIndex={0}
-      >
-        <div className="flex-1 min-w-0 mr-2">
-          <div className="text-white font-medium truncate">{provider.name}</div>
-          <div className="text-gray-400 text-sm truncate">
-            {provider.location}
-          </div>
-        </div>
-        <div className="flex items-center flex-shrink-0">
-          <span className="text-gray-400 text-sm mr-3 whitespace-nowrap">
-            {provider.cost} USDT
-          </span>
-          <div
-            className={`w-5 h-5 rounded border ${
-              selectedLogistics.some((p) => p.address === provider.address)
-                ? "bg-Red border-Red"
-                : "border-gray-400"
-            } flex items-center justify-center`}
-          >
-            {selectedLogistics.some((p) => p.address === provider.address) && (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-3 w-3 text-white"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            )}
-          </div>
-        </div>
-      </div>
-    ));
-  }, [filteredLogistics, selectedLogistics, toggleLogisticsProvider]);
-
-  // Enhanced form validation
-  const validateForm = () => {
+  // Form validation
+  const validateForm = useCallback(() => {
     const newErrors: FormErrors = {};
+    const {
+      name,
+      description,
+      category,
+      priceInUSDT,
+      stock,
+      sellerWalletAddress,
+    } = formState;
 
     // Basic validation
     if (!name.trim()) newErrors.name = "Product name is required";
@@ -499,8 +472,9 @@ const CreateProduct = () => {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
+  }, [formState, selectedLogistics, variants]);
 
+  // Handle form submission
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
@@ -509,41 +483,55 @@ const CreateProduct = () => {
     setIsSubmitting(true);
     setErrors({});
 
-    const formData = new FormData();
-    formData.append("name", name);
-    formData.append("description", description);
-    formData.append("category", category);
-    formData.append("price", priceInUSDT);
-    formData.append("stock", stock);
-    formData.append("sellerWalletAddress", sellerWalletAddress);
-    formData.append("useUSDT", "true");
-
-    // Add logistics provider addresses and costs
-    if (selectedLogistics.length > 0) {
-      const addresses = selectedLogistics.map((provider) => provider.address);
-      const costs = selectedLogistics.map(
-        (provider) => provider.cost * Math.pow(10, 18)
-      );
-      formData.append("logisticsProviders", JSON.stringify(addresses));
-      formData.append("logisticsCosts", JSON.stringify(costs));
-    }
-
-    // Add type (variants) if available using the new format
-    const variantsArray = formatVariantsForBackend();
-    if (variantsArray.length > 0) {
-      formData.append("type", JSON.stringify(variantsArray));
-    }
-
-    // Add media files
-    // mediaFiles.forEach((media) => {
-    //   formData.append("mediaFiles", media.file);
-    //   formData.append("mediaTypes", media.type);
-    // });
-
     try {
+      const formData = new FormData();
+      const {
+        name,
+        description,
+        category,
+        priceInUSDT,
+        stock,
+        sellerWalletAddress,
+      } = formState;
+
+      // Add basic product information
+      formData.append("name", name);
+      formData.append("description", description);
+      formData.append("category", category);
+      formData.append("price", priceInUSDT);
+      formData.append("stock", stock);
+      formData.append("sellerWalletAddress", sellerWalletAddress);
+      formData.append("useUSDT", "true");
+
+      // Add logistics provider addresses and costs
+      if (selectedLogistics.length > 0) {
+        const addresses = selectedLogistics.map((provider) => provider.address);
+        const costs = selectedLogistics.map(
+          (provider) => provider.cost
+          // * Math.pow(10, 18)
+        );
+        formData.append("logisticsProviders", JSON.stringify(addresses));
+        formData.append("logisticsCosts", JSON.stringify(costs));
+      }
+
+      // Add variants if available
+      const variantsArray = formatVariantsForBackend();
+      if (variantsArray.length > 0) {
+        formData.append("type", JSON.stringify(variantsArray));
+      }
+
+      // Add media files
+      // mediaFiles.forEach((media, index) => {
+      //   formData.append(`mediaFiles`, media.file);
+      //   formData.append(`mediaTypes`, media.type);
+      // });
+
       const result = await createProduct(formData);
+
       if (result) {
         setSuccessMessage("Product created successfully! Redirecting...");
+        showSnackbar("Product created successfully!", "success");
+
         // Delay navigation to show success message
         setTimeout(() => {
           navigate(`/product/${result._id}`);
@@ -555,10 +543,20 @@ const CreateProduct = () => {
         ...prev,
         submit: "Failed to create product. Please try again.",
       }));
+      showSnackbar("Failed to create product. Please try again.", "error");
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  // Handle keyboard events for accessibility
+  const handleKeyPress = (e: React.KeyboardEvent, callback: () => void) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      callback();
+    }
+  };
+
   return (
     <motion.div
       className="w-full mx-auto py-4"
@@ -567,6 +565,7 @@ const CreateProduct = () => {
       transition={{ duration: 0.5 }}
     >
       <motion.form
+        ref={formRef}
         onSubmit={handleSubmit}
         className="bg-[#292B30] rounded-lg p-4 md:p-8 w-full"
         initial={{ opacity: 0, y: 20 }}
@@ -585,10 +584,7 @@ const CreateProduct = () => {
                   <motion.div
                     key={index}
                     className="relative aspect-square rounded-lg overflow-hidden bg-[#333]"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    transition={{ duration: 0.3 }}
+                    {...fadeInAnimation}
                     whileHover={{ scale: 1.05 }}
                   >
                     {media.type === "image" ? (
@@ -625,6 +621,7 @@ const CreateProduct = () => {
                       onClick={() => removeMedia(index)}
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
+                      aria-label={`Remove media ${index + 1}`}
                     >
                       <FiX size={16} />
                     </motion.button>
@@ -639,6 +636,7 @@ const CreateProduct = () => {
                   onClick={() => fileInputRef.current?.click()}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  aria-label="Add media"
                 >
                   <div className="flex gap-2">
                     <FiImage size={20} />
@@ -652,12 +650,15 @@ const CreateProduct = () => {
                     accept="image/*,video/*"
                     onChange={handleMediaChange}
                     className="hidden"
+                    aria-hidden="true"
                   />
                 </motion.button>
               )}
             </div>
             {errors.media && (
-              <p className="text-Red text-sm mt-1">{errors.media}</p>
+              <p className="text-Red text-sm mt-1" role="alert">
+                {errors.media}
+              </p>
             )}
             <p className="text-gray-400 text-xs mt-1">
               Upload up to 5 images or videos (max 5MB each). First file will be
@@ -672,19 +673,21 @@ const CreateProduct = () => {
             </label>
             <input
               id="name"
+              ref={nameInputRef}
               type="text"
-              value={name}
-              onChange={(e) => {
-                setName(e.target.value);
-                setErrors((prev) => ({ ...prev, name: undefined }));
-              }}
+              value={formState.name}
+              onChange={(e) => updateFormField("name", e.target.value)}
               className={`w-full bg-[#333] text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-Red transition-all ${
                 errors.name ? "border border-Red" : ""
               }`}
               placeholder="Enter product name"
+              aria-invalid={!!errors.name}
+              aria-describedby={errors.name ? "name-error" : undefined}
             />
             {errors.name && (
-              <p className="text-Red text-sm mt-1">{errors.name}</p>
+              <p id="name-error" className="text-Red text-sm mt-1" role="alert">
+                {errors.name}
+              </p>
             )}
           </div>
 
@@ -695,19 +698,26 @@ const CreateProduct = () => {
             </label>
             <textarea
               id="description"
-              value={description}
-              onChange={(e) => {
-                setDescription(e.target.value);
-                setErrors((prev) => ({ ...prev, description: undefined }));
-              }}
+              value={formState.description}
+              onChange={(e) => updateFormField("description", e.target.value)}
               rows={4}
               className={`w-full bg-[#333] text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-Red transition-all ${
                 errors.description ? "border border-Red" : ""
               }`}
               placeholder="Describe your product"
+              aria-invalid={!!errors.description}
+              aria-describedby={
+                errors.description ? "description-error" : undefined
+              }
             />
             {errors.description && (
-              <p className="text-Red text-sm mt-1">{errors.description}</p>
+              <p
+                id="description-error"
+                className="text-Red text-sm mt-1"
+                role="alert"
+              >
+                {errors.description}
+              </p>
             )}
           </div>
 
@@ -719,19 +729,20 @@ const CreateProduct = () => {
             <div className="relative">
               <select
                 id="category"
-                value={category}
-                onChange={(e) => {
-                  setCategory(e.target.value);
-                  setErrors((prev) => ({ ...prev, category: undefined }));
-                }}
+                value={formState.category}
+                onChange={(e) => updateFormField("category", e.target.value)}
                 className={`w-full bg-[#333] text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-Red transition-all appearance-none ${
                   errors.category ? "border border-Red" : ""
                 }`}
+                aria-invalid={!!errors.category}
+                aria-describedby={
+                  errors.category ? "category-error" : undefined
+                }
               >
                 <option value="" disabled>
                   Select a category
                 </option>
-                {categories.map((cat) => (
+                {CATEGORIES.map((cat) => (
                   <option key={cat} value={cat}>
                     {cat}
                   </option>
@@ -744,6 +755,7 @@ const CreateProduct = () => {
                   height="16"
                   fill="currentColor"
                   viewBox="0 0 16 16"
+                  aria-hidden="true"
                 >
                   <path
                     fillRule="evenodd"
@@ -753,7 +765,13 @@ const CreateProduct = () => {
               </div>
             </div>
             {errors.category && (
-              <p className="text-Red text-sm mt-1">{errors.category}</p>
+              <p
+                id="category-error"
+                className="text-Red text-sm mt-1"
+                role="alert"
+              >
+                {errors.category}
+              </p>
             )}
           </div>
 
@@ -766,18 +784,23 @@ const CreateProduct = () => {
               id="stock"
               type="number"
               min="1"
-              value={stock}
-              onChange={(e) => {
-                setStock(e.target.value);
-                setErrors((prev) => ({ ...prev, stock: undefined }));
-              }}
+              value={formState.stock}
+              onChange={(e) => updateFormField("stock", e.target.value)}
               className={`w-full bg-[#333] text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-Red transition-all ${
                 errors.stock ? "border border-Red" : ""
               }`}
               placeholder="Enter available quantity"
+              aria-invalid={!!errors.stock}
+              aria-describedby={errors.stock ? "stock-error" : undefined}
             />
             {errors.stock && (
-              <p className="text-Red text-sm mt-1">{errors.stock}</p>
+              <p
+                id="stock-error"
+                className="text-Red text-sm mt-1"
+                role="alert"
+              >
+                {errors.stock}
+              </p>
             )}
           </div>
 
@@ -792,21 +815,26 @@ const CreateProduct = () => {
             <input
               id="sellerWalletAddress"
               type="text"
-              value={sellerWalletAddress}
-              onChange={(e) => {
-                setSellerWalletAddress(e.target.value);
-                setErrors((prev) => ({
-                  ...prev,
-                  sellerWalletAddress: undefined,
-                }));
-              }}
+              value={formState.sellerWalletAddress}
+              onChange={(e) =>
+                updateFormField("sellerWalletAddress", e.target.value)
+              }
               className={`w-full bg-[#333] text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-Red transition-all ${
                 errors.sellerWalletAddress ? "border border-Red" : ""
               }`}
               placeholder="Enter blockchain wallet address"
+              aria-invalid={!!errors.sellerWalletAddress}
+              aria-describedby={
+                errors.sellerWalletAddress ? "wallet-error" : undefined
+              }
+              pattern="^0x[a-fA-F0-9]{40}$"
             />
             {errors.sellerWalletAddress && (
-              <p className="text-Red text-sm mt-1">
+              <p
+                id="wallet-error"
+                className="text-Red text-sm mt-1"
+                role="alert"
+              >
                 {errors.sellerWalletAddress}
               </p>
             )}
@@ -823,6 +851,7 @@ const CreateProduct = () => {
                 onClick={addNewVariant}
                 icon={<FiPlus size={14} />}
                 iconPosition="start"
+                aria-label="Add new variant"
               />
             </div>
 
@@ -861,6 +890,7 @@ const CreateProduct = () => {
                           variantIndex: idx,
                         })
                       }
+                      aria-pressed={currentVariantProperty.variantIndex === idx}
                     >
                       Variant {idx + 1}
                       {idx > 0 && (
@@ -988,7 +1018,7 @@ const CreateProduct = () => {
                 <input
                   id="priceUSDT"
                   type="text"
-                  value={priceInUSDT}
+                  value={formState.priceInUSDT}
                   onChange={(e) => handleUSDTChange(e.target.value)}
                   onFocus={() => setInputFocus("USDT")}
                   onBlur={() => setInputFocus(null)}
@@ -1007,7 +1037,7 @@ const CreateProduct = () => {
                 <input
                   id="priceFiat"
                   type="text"
-                  value={priceInFiat}
+                  value={formState.priceInFiat}
                   onChange={(e) => handleFiatChange(e.target.value)}
                   onFocus={() => setInputFocus("FIAT")}
                   onBlur={() => setInputFocus(null)}
