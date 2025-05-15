@@ -35,6 +35,8 @@ const SellCheckout = () => {
           isActive: true,
           createdAt: "2025-04-23T00:08:26.519Z",
           updatedAt: "2025-04-23T00:08:26.519Z",
+          type: [],
+          stock: 100,
         };
 
         setProduct(productData);

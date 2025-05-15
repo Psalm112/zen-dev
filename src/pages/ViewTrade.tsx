@@ -36,6 +36,8 @@ const ViewTrade = () => {
       isActive: true,
       createdAt: "2025-04-23T00:08:26.519Z",
       updatedAt: "2025-04-23T00:08:26.519Z",
+      type: [],
+      stock: 100,
     },
   ];
 
@@ -53,6 +55,8 @@ const ViewTrade = () => {
       isActive: true,
       createdAt: "2025-04-22T23:54:38.445Z",
       updatedAt: "2025-04-22T23:54:38.445Z",
+      type: [],
+      stock: 100,
     },
   ];
 
