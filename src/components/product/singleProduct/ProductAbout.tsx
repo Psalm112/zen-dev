@@ -6,36 +6,6 @@ import { useNavigate } from "react-router";
 
 const ProductAbout = ({ product }: { product: Product }) => {
   const navigate = useNavigate();
-  // const [loading, setLoading] = useState(true);
-  // const [product, setProduct] = useState<any>(null);
-
-  // useEffect(() => {
-  //   // future: API call
-  //   const timer = setTimeout(() => {
-  //     setProduct({
-  //       name: "Vaseline Lotion",
-  //       seller: "DanBike",
-  //       verified: true,
-  //       price: "0.0002 ETH",
-  //       category: "Health & Beauty",
-  //       sold: 125,
-  //       inStock: true,
-  //       storeUrl: "#",
-  //     });
-  //     setLoading(false);
-  //   }, 300);
-
-  //   return () => clearTimeout(timer);
-  // }, []);
-
-  // if (loading) {
-  //   return (
-  //     <div className="space-y-3">
-  //       <div className="h-8 sm:h-10 w-full bg-gray-700/30 animate-pulse rounded"></div>
-  //       <div className="h-5 sm:h-6 w-2/3 bg-gray-700/30 animate-pulse rounded"></div>
-  //     </div>
-  //   );
-  // }
 
   return (
     <div className="space-y-4 sm:space-y-5">
