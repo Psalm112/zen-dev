@@ -25,6 +25,9 @@ export interface UserProfile {
 }
 
 //product
+export interface types extends Record<string, string | number> {
+  quantity: number;
+}
 export interface Product {
   _id: string;
   name: string;
@@ -37,6 +40,8 @@ export interface Product {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  stock: number | string;
+  type: types[];
 }
 //review
 export interface Review {

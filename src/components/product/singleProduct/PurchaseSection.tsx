@@ -1,9 +1,11 @@
-// import { useState } from "react";
+// import { useCallback, useMemo, useState } from "react";
 // import { FaWallet, FaSpinner } from "react-icons/fa";
 // import { Product } from "../../../utils/types";
 // import { useWallet } from "../../../context/WalletContext";
-// import { useOrderData } from "../../../utils/hooks/useOrderData";
+// import { useOrderData } from "../../../utils/hooks/useOrder";
 // import { useNavigate } from "react-router-dom";
+// import QuantitySelector from "./QuantitySelector";
+// import { useCurrency } from "../../../context/CurrencyContext";
 
 // interface PurchaseSectionProps {
 //   product?: Product;
@@ -14,7 +16,16 @@
 //   const { placeOrder } = useOrderData();
 //   const [isProcessing, setIsProcessing] = useState(false);
 //   const [error, setError] = useState<string | null>(null);
-//   const { isConnected, connectMetaMask, balance, account } = useWallet();
+//   const [quantity, setQuantity] = useState(1);
+//   const { secondaryCurrency } = useCurrency();
+//   const {
+//     isConnected,
+//     connectMetaMask,
+//     account,
+//     formattedBalance,
+//     balanceInCELO,
+//     setDisplayCurrency,
+//   } = useWallet();
 
 //   const handleConnectWallet = async () => {
 //     setIsProcessing(true);
@@ -29,6 +40,7 @@
 //       setIsProcessing(false);
 //     }
 //   };
+
 //   const handlePurchase = async () => {
 //     if (!product) return;
 
@@ -38,8 +50,12 @@
 //     try {
 //       const order = await placeOrder({
 //         product: product._id,
-//         seller: product.seller,
-//         amount: product.price,
+//         seller:
+//           typeof product.seller === "object"
+//             ? product.seller._id
+//             : product.seller,
+//         amount: product.price * quantity,
+//         // quantity: quantity,
 //       });
 
 //       if (order && order._id) {
@@ -54,6 +70,15 @@
 //     }
 //   };
 
+//   const handleQuantityChange = (newQuantity: number) => {
+//     setQuantity(newQuantity);
+//   };
+
+//   const balance = useMemo(() => {
+//     setDisplayCurrency(secondaryCurrency);
+//     return formattedBalance;
+//   }, [secondaryCurrency]);
+
 //   return (
 //     <div className="bg-[#212428] p-4 md:p-6 space-y-4">
 //       {error && (
@@ -61,6 +86,17 @@
 //           {error}
 //         </div>
 //       )}
+
+//       {/* Quantity Selector */}
+//       <div className="flex justify-between items-center">
+//         <QuantitySelector min={1} max={99} onChange={handleQuantityChange} />
+
+//         {/* {product?.stock && product.stock < 10 && (
+//           <span className="text-xs text-yellow-500">
+//             Only {product.stock} left in stock
+//           </span>
+//         )} */}
+//       </div>
 
 //       <div className="flex gap-3 w-full">
 //         <button
@@ -84,7 +120,10 @@
 
 //       {isConnected && (
 //         <div className="text-center text-xs text-gray-400">
-//           {balance ? `Balance: ${balance}` : "Checking balance..."} ·{" "}
+//           {formattedBalance && balanceInCELO
+//             ? `Balance: ${balanceInCELO}  ·  ${balance}`
+//             : "Checking balance..."}
+//           <br />
 //           {account
 //             ? `${account.substring(0, 6)}...${account.substring(
 //                 account.length - 4
@@ -98,7 +137,7 @@
 
 // export default PurchaseSection;
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useEffect } from "react";
 import { FaWallet, FaSpinner } from "react-icons/fa";
 import { Product } from "../../../utils/types";
 import { useWallet } from "../../../context/WalletContext";
@@ -109,9 +148,13 @@ import { useCurrency } from "../../../context/CurrencyContext";
 
 interface PurchaseSectionProps {
   product?: Product;
+  selectedVariant?: any;
 }
 
-const PurchaseSection = ({ product }: PurchaseSectionProps) => {
+const PurchaseSection = ({
+  product,
+  selectedVariant,
+}: PurchaseSectionProps) => {
   const navigate = useNavigate();
   const { placeOrder } = useOrderData();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -126,6 +169,11 @@ const PurchaseSection = ({ product }: PurchaseSectionProps) => {
     balanceInCELO,
     setDisplayCurrency,
   } = useWallet();
+
+  // Reset quantity when variant changes
+  useEffect(() => {
+    setQuantity(1);
+  }, [selectedVariant]);
 
   const handleConnectWallet = async () => {
     setIsProcessing(true);
@@ -148,6 +196,17 @@ const PurchaseSection = ({ product }: PurchaseSectionProps) => {
     setError(null);
 
     try {
+      const variantInfo = selectedVariant
+        ? {
+            variantId: selectedVariant.id,
+            variantProperties: Object.fromEntries(
+              Object.entries(selectedVariant).filter(
+                ([key]) => key !== "quantity"
+              )
+            ),
+          }
+        : undefined;
+
       const order = await placeOrder({
         product: product._id,
         seller:
@@ -156,6 +215,7 @@ const PurchaseSection = ({ product }: PurchaseSectionProps) => {
             : product.seller,
         amount: product.price * quantity,
         // quantity: quantity,
+        // variantInfo,
       });
 
       if (order && order._id) {
@@ -177,7 +237,12 @@ const PurchaseSection = ({ product }: PurchaseSectionProps) => {
   const balance = useMemo(() => {
     setDisplayCurrency(secondaryCurrency);
     return formattedBalance;
-  }, [secondaryCurrency]);
+  }, [secondaryCurrency, formattedBalance, setDisplayCurrency]);
+
+  const isOutOfStock = selectedVariant && selectedVariant.quantity <= 0;
+  const availableQuantity = selectedVariant
+    ? selectedVariant.quantity
+    : product?.stock || 99;
 
   return (
     <div className="bg-[#212428] p-4 md:p-6 space-y-4">
@@ -189,20 +254,27 @@ const PurchaseSection = ({ product }: PurchaseSectionProps) => {
 
       {/* Quantity Selector */}
       <div className="flex justify-between items-center">
-        <QuantitySelector min={1} max={99} onChange={handleQuantityChange} />
+        <QuantitySelector
+          min={1}
+          max={99}
+          onChange={handleQuantityChange}
+          availableQuantity={availableQuantity}
+        />
 
-        {/* {product?.stock && product.stock < 10 && (
+        {isOutOfStock ? (
+          <span className="text-xs text-red-500">Out of stock</span>
+        ) : availableQuantity < 10 ? (
           <span className="text-xs text-yellow-500">
-            Only {product.stock} left in stock
+            Only {availableQuantity} left in stock
           </span>
-        )} */}
+        ) : null}
       </div>
 
       <div className="flex gap-3 w-full">
         <button
           className="bg-Red text-white py-3 px-6 md:px-10 font-bold flex-1 rounded-md transition-all hover:bg-[#d52a33] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:bg-Red flex items-center justify-center gap-2"
           onClick={isConnected ? handlePurchase : handleConnectWallet}
-          disabled={isProcessing || !product}
+          disabled={isProcessing || !product || isOutOfStock}
         >
           {isProcessing ? (
             <span className="flex items-center justify-center gap-2">
@@ -212,7 +284,13 @@ const PurchaseSection = ({ product }: PurchaseSectionProps) => {
           ) : (
             <>
               <FaWallet className="text-lg" />
-              <span>{isConnected ? "Buy Now" : "Connect wallet to buy"}</span>
+              <span>
+                {isOutOfStock
+                  ? "Out of Stock"
+                  : isConnected
+                  ? "Buy Now"
+                  : "Connect wallet to buy"}
+              </span>
             </>
           )}
         </button>
