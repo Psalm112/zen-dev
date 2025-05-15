@@ -587,13 +587,19 @@ const CreateProduct = () => {
 
       // Add logistics provider addresses and costs
       if (selectedLogistics.length > 0) {
-        const addresses = selectedLogistics.map((provider) => provider.address);
-        const costs = selectedLogistics.map(
-          (provider) => provider.cost
-          // * Math.pow(10, 18)
+        // const addresses = selectedLogistics.map((provider) => provider.address);
+        // const costs = selectedLogistics.map(
+        //   (provider) => provider.cost
+        //   // * Math.pow(10, 18)
+        // );
+        selectedLogistics.map((provider) =>
+          formData.append("logisticsProviders", provider.address)
         );
-        formData.append("logisticsProviders", JSON.stringify(addresses));
-        formData.append("logisticsCosts", JSON.stringify(costs));
+        selectedLogistics.map((provider) => {
+          formData.append("logisticsCosts", provider.cost.toString());
+        });
+        // formData.append("logisticsProviders", JSON.stringify(addresses));
+        // formData.append("logisticsCosts", JSON.stringify(costs));
       }
 
       // Add variants if available
