@@ -381,6 +381,73 @@ export const api = {
       method: "POST",
     });
   },
+  registerLogisticsProvider: async (providerAddress: string) => {
+    return fetchWithAuth("/contracts/admin/register-logistics", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ providerAddress }),
+    });
+  },
+
+  getTradeById: async (tradeId: string) => {
+    const key = cacheKey(`/contracts/trades/${tradeId}`);
+    if (abortControllers.has(key)) {
+      abortControllers.get(key).abort();
+    }
+    const controller = new AbortController();
+    abortControllers.set(key, controller);
+    return fetchWithAuth(`/contracts/trades/${tradeId}`, {
+      signal: controller.signal,
+    });
+  },
+
+  getTradesBySeller: async () => {
+    const key = cacheKey("/contracts/trades/seller/list");
+    if (abortControllers.has(key)) {
+      abortControllers.get(key).abort();
+    }
+    const controller = new AbortController();
+    abortControllers.set(key, controller);
+    return fetchWithAuth("/contracts/trades/seller/list", {
+      signal: controller.signal,
+    });
+  },
+
+  getTradesByBuyer: async () => {
+    const key = cacheKey("/contracts/trades/buyer/list");
+    if (abortControllers.has(key)) {
+      abortControllers.get(key).abort();
+    }
+    const controller = new AbortController();
+    abortControllers.set(key, controller);
+    return fetchWithAuth("/contracts/trades/buyer/list", {
+      signal: controller.signal,
+    });
+  },
+
+  buyTrade: async (
+    tradeId: string,
+    data: { quantity: number; logisterProvider: string }
+  ) => {
+    return fetchWithAuth(`/contracts/trades/${tradeId}/buy`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+  },
+
+  getLogisticsProviders: async () => {
+    const key = cacheKey("/contracts/logistics");
+    if (abortControllers.has(key)) {
+      abortControllers.get(key).abort();
+    }
+    const controller = new AbortController();
+    abortControllers.set(key, controller);
+    return fetchWithAuth("/contracts/logistics", {
+      signal: controller.signal,
+    });
+  },
+
   raiseDispute: async (orderId: string, reason: string) => {
     // Clear cache on update
     requestCache.delete(cacheKey("/orders?type=buyer"));

@@ -15,7 +15,6 @@ import { useNavigate } from "react-router-dom";
 import { useProductData } from "../../../../utils/hooks/useProduct";
 import Button from "../../../common/Button";
 import { useCurrencyConverter } from "../../../../utils/hooks/useCurrencyConverter";
-import { useContractData } from "../../../../utils/hooks/useContract";
 import { LogisticsProvider } from "../../../../utils/types";
 import { useSnackbar } from "../../../../context/SnackbarContext";
 
@@ -96,7 +95,6 @@ const fadeInAnimation = {
 const CreateProduct = () => {
   const navigate = useNavigate();
   const { createProduct, loading } = useProductData();
-  const { initiateTradeContract } = useContractData();
   const { showSnackbar } = useSnackbar();
   const { convertPrice, userCountry } = useCurrencyConverter();
 

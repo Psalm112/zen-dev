@@ -1,311 +1,284 @@
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { useAppDispatch, useAppSelector } from "./redux";
 import {
   createTrade,
+  confirmDelivery,
+  registerLogisticsProvider,
+  getTradeById,
+  getTradesBySeller,
+  getTradesByBuyer,
+  getLogisticsProviders,
+  buyTrade,
   clearTradeResponse,
   setTransactionPending,
-  confirmDelivery,
   clearDeliveryConfirmError,
 } from "../../store/slices/contractSlice";
 import {
-  selectTradeResponse,
-  selectIsContractPending,
-  selectIsContractError,
-  selectIsContractSuccess,
+  selectContractLoading,
   selectContractError,
+  selectTradeResponse,
   selectTransactionPending,
   selectDeliveryConfirmLoading,
   selectDeliveryConfirmError,
+  selectIsContractPending,
+  selectIsContractSuccess,
+  selectIsContractError,
+  selectCurrentTrade,
+  selectSellerTrades,
+  selectBuyerTrades,
+  selectLogisticsProviders,
+  selectLogisticsProviderLoading,
+  selectLogisticsProviderError,
+  selectRegisterLogisticsLoading,
+  selectRegisterLogisticsError,
+  selectRegisterLogisticsHash,
 } from "../../store/selectors/contractSelectors";
 import { useSnackbar } from "../../context/SnackbarContext";
-import { CreateTradeParams, TradeResponse } from "../types";
-// import { useWallet } from "./useWallet";
-import { ethers } from "ethers";
-import { raiseOrderDispute } from "../../store/slices/orderSlice";
-import { useWallet } from "../../context/WalletContext";
+import { CreateTradeParams } from "../types";
 
-export const useContractData = () => {
+export const useContract = () => {
   const dispatch = useAppDispatch();
   const { showSnackbar } = useSnackbar();
-  const { signer, account } = useWallet();
-  const [transactionHash, setTransactionHash] = useState<string | null>(null);
 
+  // Selectors
+  const contractLoading = useAppSelector(selectContractLoading);
+  const contractError = useAppSelector(selectContractError);
   const tradeResponse = useAppSelector(selectTradeResponse);
-  const isLoading = useAppSelector(selectIsContractPending);
-  const isError = useAppSelector(selectIsContractError);
-  const isSuccess = useAppSelector(selectIsContractSuccess);
-  const error = useAppSelector(selectContractError);
-  const isTransactionPending = useAppSelector(selectTransactionPending);
-  const isDeliveryConfirmLoading = useAppSelector(selectDeliveryConfirmLoading);
+  const transactionPending = useAppSelector(selectTransactionPending);
+  const deliveryConfirmLoading = useAppSelector(selectDeliveryConfirmLoading);
   const deliveryConfirmError = useAppSelector(selectDeliveryConfirmError);
-
-  // Helper to sanitize amount strings
-  // const sanitizeAmount = (amount: string): string => {
-  //   if (!amount) return "0";
-
-  //   // Remove any non-numeric characters except for a single decimal point
-  //   let sanitized = amount.replace(/[^\d.]/g, "");
-
-  //   // Ensure only one decimal point
-  //   const parts = sanitized.split(".");
-  //   if (parts.length > 1) {
-  //     sanitized = parts[0] + "." + parts.slice(1).join("");
-  //   }
-
-  //   // If the result is empty or just a decimal point, return "0"
-  //   if (sanitized === "" || sanitized === ".") return "0";
-
-  //   return sanitized;
-  // };
-
-  const approveUSDT = useCallback(
-    async (
-      usdtAddress: string,
-      spenderAddress: string,
-      amount: string
-    ): Promise<boolean> => {
-      if (!signer || !account) {
-        showSnackbar("Wallet not connected", "error");
-        return false;
-      }
-
-      try {
-        // Sanitize amount
-        // const sanitizedAmount = sanitizeAmount(amount);
-
-        let amountInMicroUSDT;
-        try {
-          // USDT typically has 6 decimal places
-          amountInMicroUSDT = ethers.parseUnits(amount, 6);
-        } catch (error) {
-          console.error("Error parsing USDT amount:", error);
-          showSnackbar("Invalid amount format", "error");
-          return false;
-        }
-
-        // Create USDT contract instance
-        const usdtContract = new ethers.Contract(
-          usdtAddress,
-          [
-            "function approve(address spender, uint256 value) returns (bool)",
-            "function allowance(address owner, address spender) view returns (uint256)",
-          ],
-          signer
-        );
-
-        // Check current allowance
-        const currentAllowance = await usdtContract.allowance(
-          account,
-          spenderAddress
-        );
-
-        if (currentAllowance < amountInMicroUSDT) {
-          showSnackbar("Approving USDT tokens...", "info");
-          const tx = await usdtContract.approve(
-            spenderAddress,
-            amountInMicroUSDT
-          );
-          await tx.wait();
-          showSnackbar("USDT approval successful", "success");
-        }
-
-        return true;
-      } catch (err: any) {
-        console.error("USDT approval error:", err);
-        showSnackbar(err.message || "Failed to approve USDT", "error");
-        return false;
-      }
-    },
-    [signer, account, showSnackbar]
+  const isContractPending = useAppSelector(selectIsContractPending);
+  const isContractSuccess = useAppSelector(selectIsContractSuccess);
+  const isContractError = useAppSelector(selectIsContractError);
+  const currentTrade = useAppSelector(selectCurrentTrade);
+  const sellerTrades = useAppSelector(selectSellerTrades);
+  const buyerTrades = useAppSelector(selectBuyerTrades);
+  const logisticsProviders = useAppSelector(selectLogisticsProviders);
+  const logisticsProviderLoading = useAppSelector(
+    selectLogisticsProviderLoading
   );
-
-  const sendFundsToEscrow = useCallback(
-    async (
-      contractAddress: string,
-      amount: string,
-      isUSDT: boolean = false,
-      usdtAddress?: string
-    ) => {
-      if (!signer) {
-        showSnackbar("Wallet not connected", "error");
-        return { success: false, hash: null };
-      }
-
-      try {
-        dispatch(setTransactionPending(true));
-
-        // Sanitize the amount first
-        // const sanitizedAmount = sanitizeAmount(amount);
-
-        if (isUSDT && usdtAddress) {
-          // Handle USDT payment
-          const approvalSuccess = await approveUSDT(
-            usdtAddress,
-            contractAddress,
-            // sanitizedAmount
-            amount
-          );
-          if (!approvalSuccess) {
-            return { success: false, hash: null };
-          }
-
-          showSnackbar("Creating trade with USDT...", "info");
-
-          return { success: true, hash: "usdt-transaction" };
-        } else {
-          // Handle ETH payment - convert to wei
-          let amountInWei;
-          try {
-            amountInWei = ethers.parseEther(amount);
-          } catch (error) {
-            console.error("Error parsing ETH amount:", error);
-            showSnackbar("Invalid amount format", "error");
-            return { success: false, hash: null };
-          }
-
-          showSnackbar("Sending ETH to escrow...", "info");
-          const tx = await signer.sendTransaction({
-            to: contractAddress,
-            value: amountInWei,
-          });
-
-          setTransactionHash(tx.hash);
-          await tx.wait();
-
-          showSnackbar("Funds successfully sent to escrow", "success");
-          return { success: true, hash: tx.hash };
-        }
-      } catch (err: any) {
-        console.error("Transaction error:", err);
-        showSnackbar(err.message || "Transaction failed", "error");
-        return { success: false, hash: null };
-      } finally {
-        dispatch(setTransactionPending(false));
-      }
-    },
-    [signer, dispatch, showSnackbar, approveUSDT]
+  const logisticsProviderError = useAppSelector(selectLogisticsProviderError);
+  const registerLogisticsLoading = useAppSelector(
+    selectRegisterLogisticsLoading
   );
+  const registerLogisticsError = useAppSelector(selectRegisterLogisticsError);
+  const registerLogisticsHash = useAppSelector(selectRegisterLogisticsHash);
 
-  const initiateTradeContract = useCallback(
-    async (
-      tradeData: CreateTradeParams,
-      showNotifications = true
-    ): Promise<TradeResponse> => {
+  // Actions
+  const handleCreateTrade = useCallback(
+    async (tradeData: CreateTradeParams, showNotifications = true) => {
       try {
-        // const sanitizedTradeData = {
-        //   ...tradeData,
-        //   logisticsProvider: [
-        //     "0xF46F1B3Bea9cdd4102105EE9bAefc83db333354B",
-        //     "0x3207D4728c32391405C7122E59CCb115A4af31eA",
-        //     "0x7A1c3b09298C227D910E90CD55985300bd1032F3",
-        //   ],
-        //   productCost: Number(tradeData.productCost) * Math.pow(10, 18),
-        //   // logisticsCost: Number(tradeData.logisticsCost) * Math.pow(10, 18),
-        //   logisticsCost: [
-        //     1 * Math.pow(10, 18),
-        //     1 * Math.pow(10, 18),
-        //     2 * Math.pow(10, 18),
-        //   ],
-        // };
-
-        // const result = await dispatch(createTrade(sanitizedTradeData)).unwrap();
-
-        const result = await dispatch(createTrade(tradeData)).unwrap();
-
+        await dispatch(createTrade(tradeData)).unwrap();
         if (showNotifications) {
-          if (result.status === "success") {
-            showSnackbar("Trade contract created successfully", "success");
-
-            // if (result.data.contractAddress && result.data.amount) {
-            //   showSnackbar(
-            //     `Please confirm the transaction to deposit ${
-            //       result.data.isUSDT ? "USDT" : "ETH"
-            //     }`,
-            //     "info"
-            //   );
-            // }
-          } else {
-            showSnackbar(result.message || "Trade creation failed", "error");
-          }
+          showSnackbar("Trade created successfully", "success");
         }
+        return true;
+      } catch (err) {
+        if (showNotifications) {
+          showSnackbar((err as string) || "Failed to create trade", "error");
+        }
+        return false;
+      }
+    },
+    [dispatch, showSnackbar]
+  );
 
-        return result;
+  const handleConfirmDelivery = useCallback(
+    async (tradeId: string, showNotifications = true) => {
+      try {
+        await dispatch(confirmDelivery(tradeId)).unwrap();
+        if (showNotifications) {
+          showSnackbar("Delivery confirmed successfully", "success");
+        }
+        return true;
       } catch (err) {
         if (showNotifications) {
           showSnackbar(
-            (err as string) || "Failed to create trade contract",
+            (err as string) || "Failed to confirm delivery",
             "error"
           );
         }
-        return {
-          status: "error",
-          message: (err as string) || "Failed to create trade contract",
-          data: null,
-        };
+        return false;
       }
     },
     [dispatch, showSnackbar]
   );
 
-  const confirmTradeDelivery = useCallback(
-    async (tradeId: string) => {
+  const handleRegisterLogisticsProvider = useCallback(
+    async (providerAddress: string, showNotifications = true) => {
       try {
-        const result = await dispatch(confirmDelivery(tradeId)).unwrap();
-        showSnackbar(
-          "Delivery confirmed successfully. Funds released to seller.",
-          "success"
-        );
-        return { success: true, message: result.message };
+        const result = await dispatch(
+          registerLogisticsProvider(providerAddress)
+        ).unwrap();
+        if (showNotifications) {
+          showSnackbar("Logistics provider registered successfully", "success");
+        }
+        return result.transactionHash;
       } catch (err) {
-        showSnackbar((err as string) || "Failed to confirm delivery", "error");
-        return { success: false, message: err as string };
+        if (showNotifications) {
+          showSnackbar(
+            (err as string) || "Failed to register logistics provider",
+            "error"
+          );
+        }
+        return null;
       }
     },
     [dispatch, showSnackbar]
   );
 
-  const raiseTradeDispute = useCallback(
-    async (orderId: string, reason: string) => {
+  const handleGetTradeById = useCallback(
+    async (tradeId: string, showNotifications = false) => {
       try {
-        // const result =
-        await dispatch(raiseOrderDispute({ orderId, reason })).unwrap();
-        showSnackbar(
-          "Dispute raised successfully. Admin will review the case.",
-          "success"
-        );
-        return { success: true, message: "Your dispute is sent" };
+        await dispatch(getTradeById(tradeId)).unwrap();
+        if (showNotifications) {
+          showSnackbar("Trade details loaded successfully", "success");
+        }
+        return true;
       } catch (err) {
-        showSnackbar((err as string) || "Failed to raise dispute", "error");
-        return { success: false, message: err as string };
+        if (showNotifications) {
+          showSnackbar(
+            (err as string) || "Failed to load trade details",
+            "error"
+          );
+        }
+        return false;
       }
     },
     [dispatch, showSnackbar]
   );
 
-  const resetTradeResponse = useCallback(() => {
+  const handleGetTradesBySeller = useCallback(
+    async (showNotifications = false) => {
+      try {
+        await dispatch(getTradesBySeller()).unwrap();
+        if (showNotifications) {
+          showSnackbar("Seller trades loaded successfully", "success");
+        }
+        return true;
+      } catch (err) {
+        if (showNotifications) {
+          showSnackbar(
+            (err as string) || "Failed to load seller trades",
+            "error"
+          );
+        }
+        return false;
+      }
+    },
+    [dispatch, showSnackbar]
+  );
+
+  const handleGetTradesByBuyer = useCallback(
+    async (showNotifications = false) => {
+      try {
+        await dispatch(getTradesByBuyer()).unwrap();
+        if (showNotifications) {
+          showSnackbar("Buyer trades loaded successfully", "success");
+        }
+        return true;
+      } catch (err) {
+        if (showNotifications) {
+          showSnackbar(
+            (err as string) || "Failed to load buyer trades",
+            "error"
+          );
+        }
+        return false;
+      }
+    },
+    [dispatch, showSnackbar]
+  );
+
+  const handleGetLogisticsProviders = useCallback(
+    async (showNotifications = false) => {
+      try {
+        await dispatch(getLogisticsProviders()).unwrap();
+        if (showNotifications) {
+          showSnackbar("Logistics providers loaded successfully", "success");
+        }
+        return true;
+      } catch (err) {
+        if (showNotifications) {
+          showSnackbar(
+            (err as string) || "Failed to load logistics providers",
+            "error"
+          );
+        }
+        return false;
+      }
+    },
+    [dispatch, showSnackbar]
+  );
+
+  const handleBuyTrade = useCallback(
+    async (
+      params: { tradeId: string; quantity: number; logisterProvider: string },
+      showNotifications = true
+    ) => {
+      try {
+        await dispatch(buyTrade(params)).unwrap();
+        if (showNotifications) {
+          showSnackbar("Trade purchase successful", "success");
+        }
+        return true;
+      } catch (err) {
+        if (showNotifications) {
+          showSnackbar((err as string) || "Failed to purchase trade", "error");
+        }
+        return false;
+      }
+    },
+    [dispatch, showSnackbar]
+  );
+
+  const handleClearTradeResponse = useCallback(() => {
     dispatch(clearTradeResponse());
   }, [dispatch]);
 
-  const clearDeliveryError = useCallback(() => {
+  const handleSetTransactionPending = useCallback(
+    (isPending: boolean) => {
+      dispatch(setTransactionPending(isPending));
+    },
+    [dispatch]
+  );
+
+  const handleClearDeliveryConfirmError = useCallback(() => {
     dispatch(clearDeliveryConfirmError());
   }, [dispatch]);
 
   return {
+    // State
+    contractLoading,
+    contractError,
     tradeResponse,
-    isLoading,
-    isError,
-    isSuccess,
-    error,
-    isTransactionPending,
-    transactionHash,
-    isDeliveryConfirmLoading,
+    transactionPending,
+    deliveryConfirmLoading,
     deliveryConfirmError,
-    initiateTradeContract,
-    sendFundsToEscrow,
-    approveUSDT,
-    confirmTradeDelivery,
-    raiseTradeDispute,
-    resetTradeResponse,
-    clearDeliveryError,
+    isContractPending,
+    isContractSuccess,
+    isContractError,
+    currentTrade,
+    sellerTrades,
+    buyerTrades,
+    logisticsProviders,
+    logisticsProviderLoading,
+    logisticsProviderError,
+    registerLogisticsLoading,
+    registerLogisticsError,
+    registerLogisticsHash,
+
+    // Actions
+    createTrade: handleCreateTrade,
+    confirmDelivery: handleConfirmDelivery,
+    registerLogisticsProvider: handleRegisterLogisticsProvider,
+    getTradeById: handleGetTradeById,
+    getTradesBySeller: handleGetTradesBySeller,
+    getTradesByBuyer: handleGetTradesByBuyer,
+    getLogisticsProviders: handleGetLogisticsProviders,
+    buyTrade: handleBuyTrade,
+    clearTradeResponse: handleClearTradeResponse,
+    setTransactionPending: handleSetTransactionPending,
+    clearDeliveryConfirmError: handleClearDeliveryConfirmError,
   };
 };
