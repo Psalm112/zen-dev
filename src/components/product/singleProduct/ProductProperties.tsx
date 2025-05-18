@@ -1,3 +1,271 @@
+// import { useState, useEffect, useMemo } from "react";
+// import { MdCheck } from "react-icons/md";
+// import { Product } from "../../../utils/types";
+
+// interface ProductVariant {
+//   quantity: number;
+//   [key: string]: any;
+// }
+
+// interface PropertyOption {
+//   id: string;
+//   name: string;
+//   value: string;
+//   hex?: string;
+// }
+
+// interface VariantProperties {
+//   [key: string]: PropertyOption[];
+// }
+
+// interface ProductPropertiesProps {
+//   product: Product;
+//   onVariantSelect?: (variant: ProductVariant) => void;
+//   selectedVariant?: ProductVariant;
+// }
+
+// // Helper function to get hex code for colors
+// const getColorHex = (color: string): string => {
+//   const colorMap: Record<string, string> = {
+//     // Basic colors
+//     red: "#ff343f",
+//     blue: "#3e66fb",
+//     yellow: "#ffb800",
+//     green: "#4caf50",
+//     purple: "#9c27b0",
+//     black: "#000000",
+//     white: "#ffffff",
+//     brown: "#795548",
+//     pink: "#e91e63",
+//     orange: "#ff9800",
+//     tan: "#d2b48c",
+//     gray: "#9e9e9e",
+//     silver: "#c0c0c0",
+//     gold: "#ffd700",
+//     // Additional colors
+//     terracotta: "#e2725b",
+//     "rose gold": "#b76e79",
+//     natural: "#e6d2b5",
+//     mixed: "#7986cb",
+//     cherry: "#8b4513",
+//     oak: "#deb887",
+//     walnut: "#5c4033",
+//     light: "#f5f5f5",
+//     dark: "#333333",
+//   };
+
+//   return colorMap[color.toLowerCase()] || "#cccccc";
+// };
+
+// const ProductProperties = ({
+//   product,
+//   onVariantSelect,
+//   selectedVariant,
+// }: ProductPropertiesProps) => {
+//   // Extract unique properties from product variants
+//   const variantProperties = useMemo<VariantProperties>(() => {
+//     if (
+//       !product?.type ||
+//       !Array.isArray(product.type) ||
+//       product.type.length === 0
+//     ) {
+//       return {};
+//     }
+
+//     // Extract all unique property keys except "quantity"
+//     const propertyKeys = Array.from(
+//       new Set(
+//         product.type.flatMap((variant) =>
+//           Object.keys(variant).filter((key) => key !== "quantity")
+//         )
+//       )
+//     );
+
+//     // For each property key, extract all possible values
+//     const properties: VariantProperties = {};
+
+//     propertyKeys.forEach((key) => {
+//       const values = Array.from(
+//         new Set(
+//           product.type
+//             .filter((variant) => variant[key] !== undefined)
+//             .map((variant) => variant[key])
+//         )
+//       );
+
+//       properties[key] = values.map((value) => ({
+//         id: String(value),
+//         name: String(value),
+//         value: String(value),
+//         hex:
+//           key.toLowerCase() === "color" ||
+//           key.toLowerCase().includes("material") ||
+//           key.toLowerCase() === "wood" ||
+//           key.toLowerCase() === "wash"
+//             ? getColorHex(String(value))
+//             : undefined,
+//       }));
+//     });
+
+//     return properties;
+//   }, [product?.type]);
+
+//   // Track selected options and available variants
+//   const [selectedOptions, setSelectedOptions] = useState<
+//     Record<string, string>
+//   >({});
+
+//   // Initialize with first available option for each property
+//   useEffect(() => {
+//     const initialSelection: Record<string, string> = {};
+//     Object.entries(variantProperties).forEach(([key, options]) => {
+//       if (options.length > 0) {
+//         initialSelection[key] = options[0].id;
+//       }
+//     });
+//     setSelectedOptions(initialSelection);
+//   }, [variantProperties]);
+
+//   // Update selected options when variant changes externally
+//   useEffect(() => {
+//     if (selectedVariant) {
+//       const newSelection: Record<string, string> = {};
+//       Object.entries(selectedVariant).forEach(([key, value]) => {
+//         if (key !== "quantity") {
+//           newSelection[key] = String(value);
+//         }
+//       });
+//       setSelectedOptions(newSelection);
+//     }
+//   }, [selectedVariant]);
+
+//   // Find and notify parent of variant changes
+//   useEffect(() => {
+//     if (onVariantSelect && product?.type) {
+//       const matchingVariant = product.type.find((variant) => {
+//         return Object.entries(selectedOptions).every(
+//           ([key, value]) => String(variant[key]) === value
+//         );
+//       });
+
+//       if (matchingVariant) {
+//         onVariantSelect(matchingVariant);
+//       }
+//     }
+//   }, [selectedOptions, product?.type, onVariantSelect]);
+
+//   const handleOptionSelect = (propertyId: string, optionId: string) => {
+//     setSelectedOptions((prev) => ({
+//       ...prev,
+//       [propertyId]: optionId,
+//     }));
+//   };
+
+//   if (
+//     !product?.type ||
+//     !Array.isArray(product.type) ||
+//     product.type.length === 0
+//   ) {
+//     return <div className="text-gray-400">No product variants available.</div>;
+//   }
+
+//   return (
+//     <div className="space-y-5 sm:space-y-6">
+//       {Object.entries(variantProperties).map(([propertyId, options]) => (
+//         <div key={propertyId} className="space-y-2">
+//           <p className="text-white text-sm sm:text-base mb-2">{propertyId}</p>
+
+//           {options[0]?.hex ? (
+//             // Color/Material selection
+//             <div className="flex gap-2 sm:gap-3">
+//               {options.map((option: PropertyOption) => {
+//                 const isAvailable = product.type.some(
+//                   (variant) =>
+//                     String(variant[propertyId]) === option.id &&
+//                     variant.quantity > 0
+//                 );
+
+//                 return (
+//                   <button
+//                     key={option.id}
+//                     onClick={() => handleOptionSelect(propertyId, option.id)}
+//                     className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full relative transition-all ${
+//                       !isAvailable
+//                         ? "opacity-40 cursor-not-allowed"
+//                         : "hover:scale-110"
+//                     } ${
+//                       selectedOptions[propertyId] === option.id
+//                         ? "ring-2 ring-white ring-offset-1 ring-offset-[#212428]"
+//                         : ""
+//                     }`}
+//                     style={{ backgroundColor: option.hex }}
+//                     aria-label={`${option.name}`}
+//                     disabled={!isAvailable}
+//                   >
+//                     {selectedOptions[propertyId] === option.id && (
+//                       <span className="absolute inset-0 flex items-center justify-center text-white">
+//                         <MdCheck size={14} />
+//                       </span>
+//                     )}
+//                   </button>
+//                 );
+//               })}
+//             </div>
+//           ) : (
+//             // Text-based selection
+//             <div className="flex flex-wrap gap-2 sm:gap-3">
+//               {options.map((option: PropertyOption) => {
+//                 const isAvailable = product.type.some(
+//                   (variant) =>
+//                     String(variant[propertyId]) === option.id &&
+//                     variant.quantity > 0
+//                 );
+
+//                 return (
+//                   <button
+//                     key={option.id}
+//                     onClick={() => handleOptionSelect(propertyId, option.id)}
+//                     disabled={!isAvailable}
+//                     className={`px-3 py-1.5 text-sm rounded-md transition-all ${
+//                       selectedOptions[propertyId] === option.id
+//                         ? "bg-Red text-white"
+//                         : "text-white/70 hover:bg-gray-700/50"
+//                     } ${!isAvailable ? "opacity-40 cursor-not-allowed" : ""}`}
+//                   >
+//                     {option.name}
+//                   </button>
+//                 );
+//               })}
+//             </div>
+//           )}
+//         </div>
+//       ))}
+
+//       {selectedVariant && (
+//         <div className="mt-4 pt-4 border-t border-gray-700/50">
+//           <p className="text-sm text-gray-400">
+//             {selectedVariant.quantity > 0 ? (
+//               selectedVariant.quantity < 10 ? (
+//                 <span className="text-yellow-500">
+//                   Only {selectedVariant.quantity} left for this variant
+//                 </span>
+//               ) : (
+//                 <span className="text-green-500">
+//                   In stock ({selectedVariant.quantity} available)
+//                 </span>
+//               )
+//             ) : (
+//               <span className="text-red-500">Out of stock</span>
+//             )}
+//           </p>
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
+
+// export default ProductProperties;
+
 import { useState, useEffect, useMemo } from "react";
 import { MdCheck } from "react-icons/md";
 import { Product } from "../../../utils/types";
@@ -12,6 +280,7 @@ interface PropertyOption {
   name: string;
   value: string;
   hex?: string;
+  isAvailable: boolean;
 }
 
 interface VariantProperties {
@@ -24,10 +293,8 @@ interface ProductPropertiesProps {
   selectedVariant?: ProductVariant;
 }
 
-// Helper function to get hex code for colors
 const getColorHex = (color: string): string => {
   const colorMap: Record<string, string> = {
-    // Basic colors
     red: "#ff343f",
     blue: "#3e66fb",
     yellow: "#ffb800",
@@ -42,10 +309,9 @@ const getColorHex = (color: string): string => {
     gray: "#9e9e9e",
     silver: "#c0c0c0",
     gold: "#ffd700",
-    // Additional colors
     terracotta: "#e2725b",
-    "rose gold": "#b76e79",
     natural: "#e6d2b5",
+    "rose gold": "#b76e79",
     mixed: "#7986cb",
     cherry: "#8b4513",
     oak: "#deb887",
@@ -57,55 +323,24 @@ const getColorHex = (color: string): string => {
   return colorMap[color.toLowerCase()] || "#cccccc";
 };
 
-// Define property display order
-const propertyDisplayOrder: string[] = [
-  "size",
-  "color",
-  "style",
-  "material",
-  "beadMaterial",
-  "bandMaterial",
-  "wood",
-  "thickness",
-  "weight",
-  "formula",
-  "scent",
-  "ingredients",
-  "wash",
-  "burnTime",
-  "batteryLife",
-  "gripSize",
-  "height",
-  "design",
-];
-
-// Helper to format property name for display
-const formatPropertyName = (name: string): string => {
-  // Handle special cases
-  const specialCases: Record<string, string> = {
-    beadMaterial: "Bead Material",
-    bandMaterial: "Band Material",
-    burnTime: "Burn Time",
-    batteryLife: "Battery Life",
-    gripSize: "Grip Size",
-  };
-
-  if (specialCases[name]) {
-    return specialCases[name];
-  }
-
-  // Capitalize first letter and handle camelCase
-  return name
-    .replace(/([A-Z])/g, " $1")
-    .replace(/^./, (str) => str.toUpperCase());
-};
-
 const ProductProperties = ({
   product,
   onVariantSelect,
   selectedVariant,
 }: ProductPropertiesProps) => {
-  // Extract unique properties from product variants
+  const [selectedOptions, setSelectedOptions] = useState<
+    Record<string, string>
+  >({});
+
+  // Normalize property keys for consistent display (color/colour)
+  const normalizeKey = (key: string): string => {
+    const keyMap: Record<string, string> = {
+      colour: "color",
+    };
+    return keyMap[key.toLowerCase()] || key;
+  };
+
+  // Extract and process variant properties
   const variantProperties = useMemo<VariantProperties>(() => {
     if (
       !product?.type ||
@@ -115,7 +350,7 @@ const ProductProperties = ({
       return {};
     }
 
-    // Extract all unique property keys except "quantity"
+    const properties: VariantProperties = {};
     const propertyKeys = Array.from(
       new Set(
         product.type.flatMap((variant) =>
@@ -124,20 +359,8 @@ const ProductProperties = ({
       )
     );
 
-    // Sort property keys according to display order
-    propertyKeys.sort((a, b) => {
-      const indexA = propertyDisplayOrder.indexOf(a);
-      const indexB = propertyDisplayOrder.indexOf(b);
-      if (indexA === -1 && indexB === -1) return a.localeCompare(b);
-      if (indexA === -1) return 1;
-      if (indexB === -1) return -1;
-      return indexA - indexB;
-    });
-
-    // For each property key, extract all possible values
-    const properties: VariantProperties = {};
-
     propertyKeys.forEach((key) => {
+      const normalizedKey = normalizeKey(key);
       const values = Array.from(
         new Set(
           product.type
@@ -146,38 +369,78 @@ const ProductProperties = ({
         )
       );
 
-      properties[key] = values.map((value) => ({
-        id: String(value),
-        name: String(value),
-        value: String(value),
-        hex:
-          key.toLowerCase() === "color" ||
-          key.toLowerCase().includes("material") ||
-          key.toLowerCase() === "wood" ||
-          key.toLowerCase() === "wash"
+      properties[normalizedKey] = values.map((value) => {
+        const isAvailable = product.type.some(
+          (variant) =>
+            String(variant[key]) === String(value) && variant.quantity > 0
+        );
+
+        return {
+          id: String(value),
+          name: String(value),
+          value: String(value),
+          isAvailable,
+          hex: isColorOrMaterialKey(normalizedKey)
             ? getColorHex(String(value))
             : undefined,
-      }));
+        };
+      });
     });
 
     return properties;
   }, [product?.type]);
 
-  // Track selected options and available variants
-  const [selectedOptions, setSelectedOptions] = useState<
-    Record<string, string>
-  >({});
+  const isColorOrMaterialKey = (key: string): boolean => {
+    return (
+      key.toLowerCase() === "color" ||
+      key.toLowerCase().includes("material") ||
+      key.toLowerCase() === "wood" ||
+      key.toLowerCase() === "wash"
+    );
+  };
 
-  // Initialize with first available option for each property
-  useEffect(() => {
-    const initialSelection: Record<string, string> = {};
-    Object.entries(variantProperties).forEach(([key, options]) => {
-      if (options.length > 0) {
-        initialSelection[key] = options[0].id;
-      }
+  // Find a matching variant based on selected options
+  const findMatchingVariant = (): ProductVariant | undefined => {
+    if (!product?.type) return undefined;
+
+    return product.type.find((variant) => {
+      return Object.entries(selectedOptions).every(([key, value]) => {
+        const variantKey =
+          key === "color" && variant["colour"] !== undefined ? "colour" : key;
+        return String(variant[variantKey]) === value;
+      });
     });
-    setSelectedOptions(initialSelection);
-  }, [variantProperties]);
+  };
+
+  // Initialize with first available variant
+  useEffect(() => {
+    if (Object.keys(variantProperties).length === 0) return;
+
+    const initialOptions: Record<string, string> = {};
+
+    // Try to find first available variant
+    const availableVariant = product?.type?.find(
+      (variant) => variant.quantity > 0
+    );
+
+    if (availableVariant) {
+      Object.entries(availableVariant).forEach(([key, value]) => {
+        if (key !== "quantity") {
+          const normalizedKey = normalizeKey(key);
+          initialOptions[normalizedKey] = String(value);
+        }
+      });
+    } else {
+      // Fallback to first option of each property
+      Object.entries(variantProperties).forEach(([key, options]) => {
+        if (options.length > 0) {
+          initialOptions[key] = options[0].id;
+        }
+      });
+    }
+
+    setSelectedOptions(initialOptions);
+  }, [variantProperties, product?.type]);
 
   // Update selected options when variant changes externally
   useEffect(() => {
@@ -185,27 +448,24 @@ const ProductProperties = ({
       const newSelection: Record<string, string> = {};
       Object.entries(selectedVariant).forEach(([key, value]) => {
         if (key !== "quantity") {
-          newSelection[key] = String(value);
+          const normalizedKey = normalizeKey(key);
+          newSelection[normalizedKey] = String(value);
         }
       });
       setSelectedOptions(newSelection);
     }
   }, [selectedVariant]);
 
-  // Find and notify parent of variant changes
+  // Notify parent when selection changes
   useEffect(() => {
-    if (onVariantSelect && product?.type) {
-      const matchingVariant = product.type.find((variant) => {
-        return Object.entries(selectedOptions).every(
-          ([key, value]) => String(variant[key]) === value
-        );
-      });
-
+    if (onVariantSelect && Object.keys(selectedOptions).length > 0) {
+      const matchingVariant = findMatchingVariant();
       if (matchingVariant) {
+        console.log("matchingVariant", matchingVariant);
         onVariantSelect(matchingVariant);
       }
     }
-  }, [selectedOptions, product?.type, onVariantSelect]);
+  }, [selectedOptions, onVariantSelect]);
 
   const handleOptionSelect = (propertyId: string, optionId: string) => {
     setSelectedOptions((prev) => ({
@@ -222,91 +482,80 @@ const ProductProperties = ({
     return <div className="text-gray-400">No product variants available.</div>;
   }
 
+  // Current selected variant
+  const currentVariant = findMatchingVariant();
+
   return (
     <div className="space-y-5 sm:space-y-6">
       {Object.entries(variantProperties).map(([propertyId, options]) => (
         <div key={propertyId} className="space-y-2">
-          <p className="text-white text-sm sm:text-base mb-2">
-            {formatPropertyName(propertyId)}
+          <p className="text-white text-sm sm:text-base mb-2 capitalize">
+            {propertyId}
           </p>
 
           {options[0]?.hex ? (
             // Color/Material selection
             <div className="flex gap-2 sm:gap-3">
-              {options.map((option: PropertyOption) => {
-                const isAvailable = product.type.some(
-                  (variant) =>
-                    String(variant[propertyId]) === option.id &&
-                    variant.quantity > 0
-                );
-
-                return (
-                  <button
-                    key={option.id}
-                    onClick={() => handleOptionSelect(propertyId, option.id)}
-                    className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full relative transition-all ${
-                      !isAvailable
-                        ? "opacity-40 cursor-not-allowed"
-                        : "hover:scale-110"
-                    } ${
-                      selectedOptions[propertyId] === option.id
-                        ? "ring-2 ring-white ring-offset-1 ring-offset-[#212428]"
-                        : ""
-                    }`}
-                    style={{ backgroundColor: option.hex }}
-                    aria-label={`${option.name}`}
-                    disabled={!isAvailable}
-                  >
-                    {selectedOptions[propertyId] === option.id && (
-                      <span className="absolute inset-0 flex items-center justify-center text-white">
-                        <MdCheck size={14} />
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
+              {options.map((option) => (
+                <button
+                  key={option.id}
+                  onClick={() => handleOptionSelect(propertyId, option.id)}
+                  className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full relative transition-all ${
+                    !option.isAvailable
+                      ? "opacity-40 cursor-not-allowed"
+                      : "hover:scale-110"
+                  } ${
+                    selectedOptions[propertyId] === option.id
+                      ? "ring-2 ring-white ring-offset-1 ring-offset-[#212428]"
+                      : ""
+                  }`}
+                  style={{ backgroundColor: option.hex }}
+                  aria-label={`${option.name}`}
+                  disabled={!option.isAvailable}
+                >
+                  {selectedOptions[propertyId] === option.id && (
+                    <span className="absolute inset-0 flex items-center justify-center text-white">
+                      <MdCheck size={14} />
+                    </span>
+                  )}
+                </button>
+              ))}
             </div>
           ) : (
             // Text-based selection
             <div className="flex flex-wrap gap-2 sm:gap-3">
-              {options.map((option: PropertyOption) => {
-                const isAvailable = product.type.some(
-                  (variant) =>
-                    String(variant[propertyId]) === option.id &&
-                    variant.quantity > 0
-                );
-
-                return (
-                  <button
-                    key={option.id}
-                    onClick={() => handleOptionSelect(propertyId, option.id)}
-                    disabled={!isAvailable}
-                    className={`px-3 py-1.5 text-sm rounded-md transition-all ${
-                      selectedOptions[propertyId] === option.id
-                        ? "bg-Red text-white"
-                        : "text-white/70 hover:bg-gray-700/50"
-                    } ${!isAvailable ? "opacity-40 cursor-not-allowed" : ""}`}
-                  >
-                    {option.name}
-                  </button>
-                );
-              })}
+              {options.map((option) => (
+                <button
+                  key={option.id}
+                  onClick={() => handleOptionSelect(propertyId, option.id)}
+                  disabled={!option.isAvailable}
+                  className={`px-3 py-1.5 text-sm rounded-md transition-all ${
+                    selectedOptions[propertyId] === option.id
+                      ? "bg-Red text-white"
+                      : "text-white/70 hover:bg-gray-700/50"
+                  } ${
+                    !option.isAvailable ? "opacity-40 cursor-not-allowed" : ""
+                  }`}
+                >
+                  {option.name}
+                </button>
+              ))}
             </div>
           )}
         </div>
       ))}
 
-      {selectedVariant && (
+      {currentVariant && (
         <div className="mt-4 pt-4 border-t border-gray-700/50">
-          <p className="text-sm text-gray-400">
-            {selectedVariant.quantity > 0 ? (
-              selectedVariant.quantity < 10 ? (
+          <p className="text-sm">
+            {currentVariant.quantity > 0 ? (
+              currentVariant.quantity < 10 ? (
                 <span className="text-yellow-500">
-                  Only {selectedVariant.quantity} left for this variant
+                  Only {currentVariant.quantity} left for this variant
                 </span>
               ) : (
                 <span className="text-green-500">
-                  In stock ({selectedVariant.quantity} available)
+                  In stock ({currentVariant.quantity} available)
                 </span>
               )
             ) : (
