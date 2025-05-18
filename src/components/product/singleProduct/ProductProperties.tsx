@@ -212,6 +212,7 @@ const ProductProperties = ({
 
       const matchingVariant = findMatchingVariant();
       if (matchingVariant) {
+        console.log("matchingVariant", matchingVariant);
         onVariantSelect(matchingVariant);
       }
     }
@@ -271,7 +272,6 @@ const ProductProperties = ({
               ))}
             </div>
           ) : (
-            // Text-based selection
             <div className="flex flex-wrap gap-2 sm:gap-3">
               {options.map((option) => (
                 <button
