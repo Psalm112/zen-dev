@@ -9,13 +9,13 @@ const ProductAbout = ({ product }: { product: Product }) => {
 
   return (
     <div className="space-y-4 sm:space-y-5">
-      <div className="flex items-center justify-between">
+      <div className="w-full">
         <h2 className="text-base sm:text-xl text-white font-medium">
           {product.name}
         </h2>
-        <span className="text-base sm:text-xl text-white font-medium">
+        {/* <span className="text-base sm:text-xl text-white font-medium">
           {product.price}
-        </span>
+        </span> */}
       </div>
 
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
@@ -46,8 +46,15 @@ const ProductAbout = ({ product }: { product: Product }) => {
           </div>
 
           <div className="text-xs sm:text-sm">
-            {/* <span className={product.inStock ? "text-green-500" : "text-Red"}> */}
-            <span className="text-green-500">"In Stock"</span>
+            <span
+              className={
+                product.stock && product.stock !== 0
+                  ? "text-green-500"
+                  : "text-Red"
+              }
+            >
+              {`"${product.stock} In Stock"`}
+            </span>
           </div>
         </div>
       </div>
