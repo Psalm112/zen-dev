@@ -1,16 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { IoIosArrowDown } from "react-icons/io";
-import { Product } from "../../../utils/types";
+import { Product, ProductVariant } from "../../../utils/types";
 import ProductAbout from "./ProductAbout";
 import ProductProperties from "./ProductProperties";
 import ProductDescription from "./ProductDescription";
 
 type SectionType = "About this product" | "Properties" | "Description";
-
-interface ProductVariant {
-  quantity: number;
-  [key: string]: any;
-}
 
 interface ProductDetailsProps {
   product?: Product;

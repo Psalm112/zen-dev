@@ -50,7 +50,7 @@ interface ProductVariant {
   quantity: number;
 }
 
-// Constants - moved outside component for better performance
+// Constants
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
 const MAX_FILES = 5;
 const CATEGORIES = [
@@ -85,7 +85,7 @@ const logisticsProviders: LogisticsProvider[] = [
   },
 ];
 
-// Animation variants - defined outside for better performance
+// Animation variants
 const fadeInAnimation = {
   initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
@@ -105,7 +105,6 @@ const CreateProduct = () => {
   const nameInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
-  // State management
   const [formState, setFormState] = useState({
     name: "",
     description: "",

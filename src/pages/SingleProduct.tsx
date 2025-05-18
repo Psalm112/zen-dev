@@ -15,13 +15,9 @@ import ProductLoadingSkeleton from "../components/product/singleProduct/LoadingS
 import ProductCard from "../components/product/ProductCard";
 import { useProductData } from "../utils/hooks/useProduct";
 import { useCurrency } from "../context/CurrencyContext";
+import { ProductVariant } from "../utils/types";
 
 type TabType = "details" | "reviews";
-
-interface ProductVariant {
-  quantity: number;
-  [key: string]: any;
-}
 
 const SingleProduct = () => {
   const { productId } = useParams();
@@ -245,7 +241,7 @@ const SingleProduct = () => {
 
               <PurchaseSection
                 product={formattedProduct}
-                selectedVariant={selectedVariant}
+                selectedVariant={selectedVariant as ProductVariant}
               />
             </div>
           </div>

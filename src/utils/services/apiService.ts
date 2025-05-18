@@ -302,7 +302,7 @@ export const api = {
   createOrder: async (orderData: {
     product: string;
     seller: string;
-    amount: number;
+    amount: string;
   }) => {
     return fetchWithAuth("/orders", {
       method: "POST",

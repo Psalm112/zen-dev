@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState, useEffect } from "react";
 import { FaWallet, FaSpinner } from "react-icons/fa";
-import { Product } from "../../../utils/types";
+import { Product, ProductVariant } from "../../../utils/types";
 import { useWallet } from "../../../context/WalletContext";
 import { useOrderData } from "../../../utils/hooks/useOrder";
 import { useNavigate } from "react-router-dom";
@@ -9,7 +9,7 @@ import { useCurrency } from "../../../context/CurrencyContext";
 
 interface PurchaseSectionProps {
   product?: Product;
-  selectedVariant?: any;
+  selectedVariant?: ProductVariant;
 }
 
 const PurchaseSection = ({
@@ -74,7 +74,8 @@ const PurchaseSection = ({
           typeof product.seller === "object"
             ? product.seller._id
             : product.seller,
-        amount: product.price * quantity,
+        amount: (product.price * quantity).toString(),
+        // type: selectedVariant,
         // quantity: quantity,
         // variantInfo,
       });
@@ -119,12 +120,12 @@ const PurchaseSection = ({
           min={1}
           max={99}
           onChange={handleQuantityChange}
-          availableQuantity={availableQuantity}
+          availableQuantity={availableQuantity as number}
         />
 
         {isOutOfStock ? (
           <span className="text-xs text-red-500">Out of stock</span>
-        ) : availableQuantity < 10 ? (
+        ) : availableQuantity && Number(availableQuantity) < 10 ? (
           <span className="text-xs text-yellow-500">
             Only {availableQuantity} left in stock
           </span>

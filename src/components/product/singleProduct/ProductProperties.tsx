@@ -1,11 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { MdCheck } from "react-icons/md";
-import { Product } from "../../../utils/types";
-
-interface ProductVariant {
-  quantity: number;
-  [key: string]: any;
-}
+import { Product, ProductVariant } from "../../../utils/types";
 
 interface PropertyOption {
   id: string;

@@ -25,8 +25,9 @@ export interface UserProfile {
 }
 
 //product
-export interface types extends Record<string, string | number> {
+export interface ProductVariant {
   quantity: number;
+  [key: string]: any;
 }
 export interface Product {
   _id: string;
@@ -41,7 +42,7 @@ export interface Product {
   createdAt: string;
   updatedAt: string;
   stock: number | string;
-  type: types[];
+  type: ProductVariant[];
 }
 //review
 export interface Review {

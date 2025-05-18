@@ -45,7 +45,7 @@ export const useOrderData = () => {
       orderData: {
         product: string;
         seller: string;
-        amount: number;
+        amount: string;
       },
       showNotification = true
     ) => {
