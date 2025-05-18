@@ -44,8 +44,10 @@ export const useOrderData = () => {
     async (
       orderData: {
         product: string;
-        seller: string;
-        amount: string;
+        quantity: number;
+        logisticsProviderWalletAddress: string;
+        // seller: string;
+        // amount: string;
       },
       showNotification = true
     ) => {

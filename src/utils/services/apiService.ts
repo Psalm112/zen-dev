@@ -301,8 +301,10 @@ export const api = {
   // Orders API endpoints
   createOrder: async (orderData: {
     product: string;
-    seller: string;
-    amount: string;
+    quantity: number;
+    logisticsProviderWalletAddress: string;
+    // seller: string;
+    // amount: string;
   }) => {
     return fetchWithAuth("/orders", {
       method: "POST",

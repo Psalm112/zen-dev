@@ -22,8 +22,10 @@ export const createOrder = createAsyncThunk<
   Order,
   {
     product: string;
-    seller: string;
-    amount: string;
+    quantity: number;
+    logisticsProviderWalletAddress: string;
+    // seller: string;
+    // amount: string;
   },
   { rejectValue: string }
 >("orders/create", async (orderData, { rejectWithValue }) => {

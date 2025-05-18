@@ -70,11 +70,13 @@ const PurchaseSection = ({
 
       const order = await placeOrder({
         product: product._id,
-        seller:
-          typeof product.seller === "object"
-            ? product.seller._id
-            : product.seller,
-        amount: (product.price * quantity).toString(),
+        quantity: quantity,
+        logisticsProviderWalletAddress: "",
+        // seller:
+        //   typeof product.seller === "object"
+        //     ? product.seller._id
+        //     : product.seller,
+        // amount: (product.price * quantity).toString(),
         // type: selectedVariant,
         // quantity: quantity,
         // variantInfo,
