@@ -1,22 +1,29 @@
 import { useState, useEffect, useCallback } from "react";
 import { IoIosArrowDown } from "react-icons/io";
+import { Product } from "../../../utils/types";
 import ProductAbout from "./ProductAbout";
 import ProductProperties from "./ProductProperties";
 import ProductDescription from "./ProductDescription";
-import { Product } from "../../../utils/types";
 
-type SectionType = "About this product" | "Properties" | "Description" | null;
+type SectionType = "About this product" | "Properties" | "Description";
+
+interface ProductVariant {
+  quantity: number;
+  [key: string]: any;
+}
 
 interface ProductDetailsProps {
   product?: Product;
-  onVariantSelect?: (variant: any) => void;
+  onVariantSelect?: (variant: ProductVariant) => void;
 }
 
 const ProductDetails = ({ product, onVariantSelect }: ProductDetailsProps) => {
   const [openSection, setOpenSection] =
     useState<SectionType>("About this product");
   const [animating, setAnimating] = useState<SectionType | null>(null);
-  const [selectedVariant, setSelectedVariant] = useState<any>(null);
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
+    null
+  );
 
   useEffect(() => {
     if (animating) {
@@ -34,9 +41,10 @@ const ProductDetails = ({ product, onVariantSelect }: ProductDetailsProps) => {
     ) {
       // Find first variant with quantity > 0
       const firstAvailableVariant =
-        product.type.find((variant) => variant.quantity > 0) || product.type[0];
-      setSelectedVariant(firstAvailableVariant);
+        product.type.find((variant: ProductVariant) => variant.quantity > 0) ||
+        product.type[0];
 
+      setSelectedVariant(firstAvailableVariant);
       if (onVariantSelect) {
         onVariantSelect(firstAvailableVariant);
       }
@@ -46,7 +54,12 @@ const ProductDetails = ({ product, onVariantSelect }: ProductDetailsProps) => {
   }, [product?.type, onVariantSelect]);
 
   const handleVariantChange = useCallback(
-    (variant: any) => {
+    (variant: ProductVariant) => {
+      if (!variant || typeof variant.quantity !== "number") {
+        console.warn("Invalid variant selected");
+        return;
+      }
+
       setSelectedVariant(variant);
       if (onVariantSelect) {
         onVariantSelect(variant);
@@ -60,9 +73,11 @@ const ProductDetails = ({ product, onVariantSelect }: ProductDetailsProps) => {
       if (animating) return;
 
       setAnimating(section);
-      setOpenSection(openSection === section ? null : section);
+      setOpenSection((currentSection) =>
+        currentSection === section ? "About this product" : section
+      );
     },
-    [animating, openSection]
+    [animating]
   );
 
   const renderSection = (

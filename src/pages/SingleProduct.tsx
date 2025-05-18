@@ -18,6 +18,11 @@ import { useCurrency } from "../context/CurrencyContext";
 
 type TabType = "details" | "reviews";
 
+interface ProductVariant {
+  quantity: number;
+  [key: string]: any;
+}
+
 const SingleProduct = () => {
   const { productId } = useParams();
   const navigate = useNavigate();
@@ -33,7 +38,9 @@ const SingleProduct = () => {
   const [reviewCount, setReviewCount] = useState(0);
   const { isProductInWatchlist, toggleWatchlist, checkProductWatchlist } =
     useWatchlist();
-  const [selectedVariant, setSelectedVariant] = useState<any>(null);
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
+    null
+  );
   const isFavorite = productId ? isProductInWatchlist(productId) : false;
 
   const handleGoBack = () => navigate(-1);
@@ -44,7 +51,14 @@ const SingleProduct = () => {
     }
   };
 
-  const handleVariantSelect = (variant: any) => {
+  const handleVariantSelect = (variant: ProductVariant) => {
+    if (!variant) return;
+
+    // if (typeof variant.quantity !== "number") {
+    //   console.warn("Invalid variant selected: missing quantity");
+    //   return;
+    // }
+
     setSelectedVariant(variant);
   };
 
@@ -94,9 +108,11 @@ const SingleProduct = () => {
     ) {
       // Find first variant with quantity > 0
       const firstAvailableVariant =
-        formattedProduct.type.find((variant) => variant.quantity > 0) ||
-        formattedProduct.type[0];
-      setSelectedVariant(firstAvailableVariant);
+        formattedProduct.type.find(
+          (variant: ProductVariant) => variant.quantity > 0
+        ) || formattedProduct.type[0];
+
+      handleVariantSelect(firstAvailableVariant);
     } else {
       setSelectedVariant(null);
     }
