@@ -27,6 +27,7 @@ const SingleProduct = () => {
     error,
     fetchProductById,
     relatedProducts,
+    // clearProduct,
   } = useProductData();
   const { secondaryCurrency } = useCurrency();
   const [activeTab, setActiveTab] = useState<TabType>("details");
@@ -69,16 +70,21 @@ const SingleProduct = () => {
   };
 
   useEffect(() => {
-    if (productId) {
-      fetchProductById(productId);
-      checkProductWatchlist(productId);
-      setActiveTab("details");
-    }
+    const loadProduct = async () => {
+      if (productId) {
+        await fetchProductById(productId);
+        await checkProductWatchlist(productId);
+        setActiveTab("details");
+      }
+    };
 
+    loadProduct();
     window.scrollTo(0, 0);
 
     // Cleanup
-    return () => {};
+    return () => {
+      // clearProduct();
+    };
   }, [productId, fetchProductById, checkProductWatchlist]);
 
   // Initialize with first available variant when product loads
