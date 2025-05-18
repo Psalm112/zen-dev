@@ -5,8 +5,6 @@ import { FaRegHeart, FaHeart } from "react-icons/fa";
 import { IoShareSocialOutline } from "react-icons/io5";
 import { motion } from "framer-motion";
 import { useWatchlist } from "../utils/hooks/useWatchlist";
-import { useDispatch } from "react-redux";
-import { clearCurrentProduct } from "../store/slices/productSlice";
 
 import ProductImage from "../components/product/singleProduct/ProductImage";
 import ProductTabs from "../components/product/singleProduct/ProductTabs";
@@ -29,7 +27,6 @@ const SingleProduct = () => {
     error,
     fetchProductById,
     relatedProducts,
-    clearProduct,
   } = useProductData();
   const { secondaryCurrency } = useCurrency();
   const [activeTab, setActiveTab] = useState<TabType>("details");
@@ -79,19 +76,18 @@ const SingleProduct = () => {
         setActiveTab("details");
       }
     };
-
     loadProduct();
+
     window.scrollTo(0, 0);
 
     // Cleanup
-    return () => {
-      clearProduct();
-    };
-  }, [productId, fetchProductById, checkProductWatchlist, clearProduct]);
+    return () => {};
+  }, [productId, fetchProductById, checkProductWatchlist]);
 
   // Initialize with first available variant when product loads
   useEffect(() => {
     if (
+      !loading &&
       formattedProduct?.type &&
       Array.isArray(formattedProduct.type) &&
       formattedProduct.type.length > 0
@@ -104,7 +100,7 @@ const SingleProduct = () => {
     } else {
       setSelectedVariant(null);
     }
-  }, [formattedProduct]);
+  }, [formattedProduct, loading]);
 
   if (loading || !formattedProduct) {
     return <ProductLoadingSkeleton />;
