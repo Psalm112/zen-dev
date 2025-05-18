@@ -80,7 +80,7 @@ export const useProductData = () => {
   const formattedProduct = useMemo(() => {
     if (!product) return null;
     return formatProductWithCurrencies(product);
-  }, [products, formatProductWithCurrencies]);
+  }, [product, formatProductWithCurrencies]);
   const formattedProducts = useMemo(() => {
     return products.map(formatProductWithCurrencies);
   }, [products, formatProductWithCurrencies]);

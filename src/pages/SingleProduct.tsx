@@ -22,7 +22,7 @@ const SingleProduct = () => {
   const { productId } = useParams();
   const navigate = useNavigate();
   const {
-    product: formattedProduct,
+    formattedProduct,
     loading,
     error,
     fetchProductById,
@@ -193,14 +193,13 @@ const SingleProduct = () => {
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-2">
                       <span className="text-2xl font-bold">
-                        {/* {formattedProduct.formattedCeloPrice} */}22
+                        {formattedProduct.formattedCeloPrice}
                       </span>
                     </div>
                     <span className="text-sm text-gray-400 justify-self-start sm:justify-self-end">
-                      {/* {secondaryCurrency === "USDT"
+                      {secondaryCurrency === "USDT"
                         ? formattedProduct.formattedUsdtPrice
-                        : formattedProduct.formattedFiatPrice} */}
-                      22
+                        : formattedProduct.formattedFiatPrice}
                     </span>
                   </div>
                 </div>
