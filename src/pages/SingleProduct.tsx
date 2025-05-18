@@ -5,6 +5,8 @@ import { FaRegHeart, FaHeart } from "react-icons/fa";
 import { IoShareSocialOutline } from "react-icons/io5";
 import { motion } from "framer-motion";
 import { useWatchlist } from "../utils/hooks/useWatchlist";
+import { useDispatch } from "react-redux";
+import { clearCurrentProduct } from "../store/slices/productSlice";
 
 import ProductImage from "../components/product/singleProduct/ProductImage";
 import ProductTabs from "../components/product/singleProduct/ProductTabs";
@@ -27,7 +29,7 @@ const SingleProduct = () => {
     error,
     fetchProductById,
     relatedProducts,
-    // clearProduct,
+    clearProduct,
   } = useProductData();
   const { secondaryCurrency } = useCurrency();
   const [activeTab, setActiveTab] = useState<TabType>("details");
@@ -83,9 +85,9 @@ const SingleProduct = () => {
 
     // Cleanup
     return () => {
-      // clearProduct();
+      clearProduct();
     };
-  }, [productId, fetchProductById, checkProductWatchlist]);
+  }, [productId, fetchProductById, checkProductWatchlist, clearProduct]);
 
   // Initialize with first available variant when product loads
   useEffect(() => {
