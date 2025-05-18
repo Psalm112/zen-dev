@@ -27,7 +27,7 @@ const SingleProduct = () => {
     error,
     fetchProductById,
     relatedProducts,
-    // clearProduct,
+    clearProduct,
   } = useProductData();
   const { secondaryCurrency } = useCurrency();
   const [activeTab, setActiveTab] = useState<TabType>("details");
@@ -83,9 +83,9 @@ const SingleProduct = () => {
 
     // Cleanup
     return () => {
-      // clearProduct();
+      clearProduct();
     };
-  }, [productId, fetchProductById, checkProductWatchlist]);
+  }, [productId, fetchProductById, checkProductWatchlist, clearProduct]);
 
   // Initialize with first available variant when product loads
   useEffect(() => {
