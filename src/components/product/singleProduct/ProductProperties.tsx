@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { MdCheck } from "react-icons/md";
 import { Product } from "../../../utils/types";
 
@@ -25,6 +25,7 @@ interface ProductPropertiesProps {
   selectedVariant?: ProductVariant;
 }
 
+// Performance optimization: memoize color hex function
 const getColorHex = (color: string): string => {
   const colorMap: Record<string, string> = {
     red: "#ff343f",
@@ -60,27 +61,32 @@ const ProductProperties = ({
   onVariantSelect,
   selectedVariant,
 }: ProductPropertiesProps) => {
+  // Use ref to track if variant selection is internal vs external
+  const [internalUpdate, setInternalUpdate] = useState(false);
   const [selectedOptions, setSelectedOptions] = useState<
     Record<string, string>
   >({});
-  const isColorOrMaterialKey = (key: string): boolean => {
-    return (
-      key.toLowerCase() === "color" ||
-      key.toLowerCase().includes("material") ||
-      key.toLowerCase() === "wood" ||
-      key.toLowerCase() === "wash"
-    );
-  };
 
-  // Normalize property keys for consistent display (color/colour)
-  const normalizeKey = (key: string): string => {
+  // Normalize property keys (handle color/colour, etc)
+  const normalizeKey = useCallback((key: string): string => {
     const keyMap: Record<string, string> = {
       colour: "color",
     };
     return keyMap[key.toLowerCase()] || key;
-  };
+  }, []);
 
-  // Extract and process variant properties
+  // Inverse normalize keys for variant matching
+  const denormalizeKey = useCallback(
+    (normalizedKey: string, variant: ProductVariant): string => {
+      if (normalizedKey === "color" && variant.hasOwnProperty("colour")) {
+        return "colour";
+      }
+      return normalizedKey;
+    },
+    []
+  );
+
+  // Extract variant properties with optimization
   const variantProperties = useMemo<VariantProperties>(() => {
     if (
       !product?.type ||
@@ -101,51 +107,92 @@ const ProductProperties = ({
 
     propertyKeys.forEach((key) => {
       const normalizedKey = normalizeKey(key);
+
+      // Get unique values for this property
       const values = Array.from(
         new Set(
           product.type
             .filter((variant) => variant[key] !== undefined)
-            .map((variant) => variant[key])
+            .map((variant) => String(variant[key]))
         )
       );
 
       properties[normalizedKey] = values.map((value) => {
+        // Calculate availability once per option
         const isAvailable = product.type.some(
-          (variant) =>
-            String(variant[key]) === String(value) && variant.quantity > 0
+          (variant) => String(variant[key]) === value && variant.quantity > 0
         );
 
+        const isColorProperty =
+          normalizedKey.toLowerCase() === "color" ||
+          key.toLowerCase() === "colour" ||
+          normalizedKey.toLowerCase().includes("material") ||
+          normalizedKey.toLowerCase() === "wood" ||
+          normalizedKey.toLowerCase() === "wash";
+
         return {
-          id: String(value),
-          name: String(value),
-          value: String(value),
+          id: value,
+          name: value,
+          value: value,
           isAvailable,
-          hex: isColorOrMaterialKey(normalizedKey)
-            ? getColorHex(String(value))
-            : undefined,
+          hex: isColorProperty ? getColorHex(value) : undefined,
         };
       });
     });
 
     return properties;
-  }, [product?.type]);
+  }, [product?.type, normalizeKey]);
 
   // Find a matching variant based on selected options
-  const findMatchingVariant = (): ProductVariant | undefined => {
-    if (!product?.type) return undefined;
+  const findMatchingVariant = useCallback((): ProductVariant | undefined => {
+    if (!product?.type || Object.keys(selectedOptions).length === 0)
+      return undefined;
 
     return product.type.find((variant) => {
       return Object.entries(selectedOptions).every(([key, value]) => {
-        const variantKey =
-          key === "color" && variant["colour"] !== undefined ? "colour" : key;
+        const variantKey = denormalizeKey(key, variant);
         return String(variant[variantKey]) === value;
       });
     });
-  };
+  }, [product?.type, selectedOptions, denormalizeKey]);
+
+  // Get available options for a property based on current selections
+  const getAvailableOptionsForProperty = useCallback(
+    (propertyId: string): Set<string> => {
+      if (!product?.type) return new Set();
+
+      // For each property, we need to consider only variants that match all other selected options
+      const availableOptions = new Set<string>();
+
+      product.type.forEach((variant) => {
+        // Check if this variant matches all other selected options
+        const matchesOtherSelections = Object.entries(selectedOptions).every(
+          ([key, value]) => {
+            if (key === propertyId) return true; // Skip the current property
+            const variantKey = denormalizeKey(key, variant);
+            return String(variant[variantKey]) === value;
+          }
+        );
+
+        if (matchesOtherSelections && variant.quantity > 0) {
+          const variantKey = denormalizeKey(propertyId, variant);
+          if (variant[variantKey] !== undefined) {
+            availableOptions.add(String(variant[variantKey]));
+          }
+        }
+      });
+
+      return availableOptions;
+    },
+    [product?.type, selectedOptions, denormalizeKey]
+  );
 
   // Initialize with first available variant
   useEffect(() => {
     if (Object.keys(variantProperties).length === 0) return;
+
+    // Don't initialize if we already have selections
+    if (Object.keys(selectedOptions).length > 0) return;
 
     const initialOptions: Record<string, string> = {};
 
@@ -155,76 +202,115 @@ const ProductProperties = ({
     );
 
     if (availableVariant) {
+      // Use the available variant's properties
       Object.entries(availableVariant).forEach(([key, value]) => {
         if (key !== "quantity") {
           const normalizedKey = normalizeKey(key);
           initialOptions[normalizedKey] = String(value);
         }
       });
-    } else {
-      // Fallback to first option of each property
-      Object.entries(variantProperties).forEach(([key, options]) => {
-        if (options.length > 0) {
-          initialOptions[key] = options[0].id;
+      setSelectedOptions(initialOptions);
+    } else if (product?.type && product.type.length > 0) {
+      // Fallback to first variant regardless of availability
+      Object.entries(product.type[0]).forEach(([key, value]) => {
+        if (key !== "quantity") {
+          const normalizedKey = normalizeKey(key);
+          initialOptions[normalizedKey] = String(value);
         }
       });
+      setSelectedOptions(initialOptions);
     }
-
-    setSelectedOptions(initialOptions);
-  }, [variantProperties, product?.type]);
+  }, [variantProperties, product?.type, normalizeKey, selectedOptions]);
 
   // Update selected options when variant changes externally
   useEffect(() => {
-    if (selectedVariant) {
-      const newSelection: Record<string, string> = {};
-      Object.entries(selectedVariant).forEach(([key, value]) => {
-        if (key !== "quantity") {
-          const normalizedKey = normalizeKey(key);
-          newSelection[normalizedKey] = String(value);
-        }
-      });
+    if (!selectedVariant || internalUpdate) {
+      setInternalUpdate(false);
+      return;
+    }
+
+    const newSelection: Record<string, string> = {};
+    Object.entries(selectedVariant).forEach(([key, value]) => {
+      if (key !== "quantity") {
+        const normalizedKey = normalizeKey(key);
+        newSelection[normalizedKey] = String(value);
+      }
+    });
+
+    // Only update if different from current selection
+    const isDifferent = Object.entries(newSelection).some(
+      ([key, value]) => selectedOptions[key] !== value
+    );
+
+    if (isDifferent) {
       setSelectedOptions(newSelection);
     }
-  }, [selectedVariant]);
+  }, [selectedVariant, normalizeKey, internalUpdate, selectedOptions]);
 
   // Notify parent when selection changes
-
   useEffect(() => {
-    if (
-      onVariantSelect &&
-      product?.type &&
-      Object.keys(selectedOptions).length > 0
-    ) {
-      // First check if we need to update anything
-      if (selectedVariant) {
-        const areOptionsEqual = Object.entries(selectedOptions).every(
-          ([key, value]) => {
-            const variantKey =
-              key === "color" && selectedVariant["colour"] !== undefined
-                ? "colour"
-                : key;
-            return String(selectedVariant[variantKey]) === value;
-          }
-        );
+    if (!onVariantSelect || Object.keys(selectedOptions).length === 0) return;
 
-        if (areOptionsEqual) return;
-      }
-
-      const matchingVariant = findMatchingVariant();
-      if (matchingVariant) {
-        console.log("matchingVariant", matchingVariant);
-        onVariantSelect(matchingVariant);
-      }
+    const matchingVariant = findMatchingVariant();
+    if (matchingVariant) {
+      setInternalUpdate(true);
+      onVariantSelect(matchingVariant);
     }
-  }, [selectedOptions, product?.type, onVariantSelect, selectedVariant]);
+  }, [selectedOptions, onVariantSelect, findMatchingVariant]);
 
-  const handleOptionSelect = (propertyId: string, optionId: string) => {
-    setSelectedOptions((prev) => ({
-      ...prev,
-      [propertyId]: optionId,
-    }));
-  };
+  const handleOptionSelect = useCallback(
+    (propertyId: string, optionId: string) => {
+      setSelectedOptions((prev) => {
+        // Don't update if already selected
+        if (prev[propertyId] === optionId) return prev;
 
+        const newSelection = { ...prev, [propertyId]: optionId };
+
+        // Check if this creates an invalid selection
+        // If so, we need to reset other properties to create a valid combination
+        const tempVariant = product?.type?.find((variant) => {
+          return Object.entries(newSelection).every(([key, value]) => {
+            const variantKey = denormalizeKey(key, variant);
+            return key === propertyId
+              ? String(variant[variantKey]) === value
+              : String(variant[variantKey]) === value;
+          });
+        });
+
+        if (!tempVariant) {
+          // Find a variant that at least matches the current property selection
+          const matchingVariant =
+            product?.type?.find((variant) => {
+              const variantKey = denormalizeKey(propertyId, variant);
+              return (
+                String(variant[variantKey]) === optionId && variant.quantity > 0
+              );
+            }) ||
+            product?.type?.find((variant) => {
+              const variantKey = denormalizeKey(propertyId, variant);
+              return String(variant[variantKey]) === optionId;
+            });
+
+          if (matchingVariant) {
+            // Create a new selection based on this variant
+            const resetSelection: Record<string, string> = {};
+            Object.entries(matchingVariant).forEach(([key, value]) => {
+              if (key !== "quantity") {
+                const normalizedKey = normalizeKey(key);
+                resetSelection[normalizedKey] = String(value);
+              }
+            });
+            return resetSelection;
+          }
+        }
+
+        return newSelection;
+      });
+    },
+    [product?.type, normalizeKey, denormalizeKey]
+  );
+
+  // Display loading state if no product variants
   if (
     !product?.type ||
     !Array.isArray(product.type) ||
@@ -238,61 +324,87 @@ const ProductProperties = ({
 
   return (
     <div className="space-y-5 sm:space-y-6">
-      {Object.entries(variantProperties).map(([propertyId, options]) => (
-        <div key={propertyId} className="space-y-2">
-          <p className="text-white text-sm sm:text-base mb-2 capitalize">
-            {propertyId}
-          </p>
+      {Object.entries(variantProperties).map(([propertyId, options]) => {
+        // Get available options for dynamic UI feedback
+        const availableOptions = getAvailableOptionsForProperty(propertyId);
 
-          {options[0]?.hex ? (
-            <div className="flex gap-2 sm:gap-3">
-              {options.map((option) => (
-                <button
-                  key={option.id}
-                  onClick={() => handleOptionSelect(propertyId, option.id)}
-                  className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full relative transition-all ${
-                    !option.isAvailable
-                      ? "opacity-40 cursor-not-allowed"
-                      : "hover:scale-110"
-                  } ${
-                    selectedOptions[propertyId] === option.id
-                      ? "ring-2 ring-white ring-offset-1 ring-offset-[#212428]"
-                      : ""
-                  }`}
-                  style={{ backgroundColor: option.hex }}
-                  aria-label={`${option.name}`}
-                  disabled={!option.isAvailable}
-                >
-                  {selectedOptions[propertyId] === option.id && (
-                    <span className="absolute inset-0 flex items-center justify-center text-white">
-                      <MdCheck size={14} />
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-wrap gap-2 sm:gap-3">
-              {options.map((option) => (
-                <button
-                  key={option.id}
-                  onClick={() => handleOptionSelect(propertyId, option.id)}
-                  disabled={!option.isAvailable}
-                  className={`px-3 py-1.5 text-sm rounded-md transition-all ${
-                    selectedOptions[propertyId] === option.id
-                      ? "bg-Red text-white"
-                      : "text-white/70 hover:bg-gray-700/50"
-                  } ${
-                    !option.isAvailable ? "opacity-40 cursor-not-allowed" : ""
-                  }`}
-                >
-                  {option.name}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      ))}
+        return (
+          <div key={propertyId} className="space-y-2">
+            <p className="text-white text-sm sm:text-base mb-2 capitalize">
+              {propertyId}
+            </p>
+
+            {options[0]?.hex ? (
+              // Color/Material selection
+              <div className="flex flex-wrap gap-2 sm:gap-3">
+                {options.map((option) => {
+                  // An option is available if it's in available options or is currently selected
+                  const isSelectable =
+                    availableOptions.has(option.id) ||
+                    selectedOptions[propertyId] === option.id;
+
+                  return (
+                    <button
+                      key={option.id}
+                      onClick={() => handleOptionSelect(propertyId, option.id)}
+                      className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full relative transition-all
+                        ${
+                          !isSelectable
+                            ? "opacity-40 cursor-not-allowed"
+                            : "hover:scale-110"
+                        }
+                        ${
+                          selectedOptions[propertyId] === option.id
+                            ? "ring-2 ring-white ring-offset-1 ring-offset-[#212428]"
+                            : ""
+                        }`}
+                      style={{ backgroundColor: option.hex }}
+                      aria-label={option.name}
+                      disabled={!isSelectable}
+                      title={option.name}
+                    >
+                      {selectedOptions[propertyId] === option.id && (
+                        <span className="absolute inset-0 flex items-center justify-center text-white">
+                          <MdCheck size={14} />
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              // Text-based selection
+              <div className="flex flex-wrap gap-2 sm:gap-3">
+                {options.map((option) => {
+                  const isSelectable =
+                    availableOptions.has(option.id) ||
+                    selectedOptions[propertyId] === option.id;
+
+                  return (
+                    <button
+                      key={option.id}
+                      onClick={() => handleOptionSelect(propertyId, option.id)}
+                      disabled={!isSelectable}
+                      className={`px-3 py-1.5 text-sm rounded-md transition-all 
+                        ${
+                          selectedOptions[propertyId] === option.id
+                            ? "bg-Red text-white"
+                            : "text-white/70 hover:bg-gray-700/50"
+                        } 
+                        ${
+                          !isSelectable ? "opacity-40 cursor-not-allowed" : ""
+                        }`}
+                      title={option.name}
+                    >
+                      {option.name}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+      })}
 
       {currentVariant && (
         <div className="mt-4 pt-4 border-t border-gray-700/50">
