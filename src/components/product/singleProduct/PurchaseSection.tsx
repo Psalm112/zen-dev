@@ -6,6 +6,7 @@ import { useOrderData } from "../../../utils/hooks/useOrder";
 import { useNavigate } from "react-router-dom";
 import QuantitySelector from "./QuantitySelector";
 import { useCurrency } from "../../../context/CurrencyContext";
+import LogisticsSelector, { LogisticsProvider } from "./LogisticsSelector";
 
 interface PurchaseSectionProps {
   product?: Product;
@@ -30,6 +31,8 @@ const PurchaseSection = ({
     balanceInCELO,
     setDisplayCurrency,
   } = useWallet();
+  const [selectedLogistics, setSelectedLogistics] =
+    useState<LogisticsProvider | null>(null);
 
   // Reset quantity when variant changes
   useEffect(() => {
@@ -50,8 +53,16 @@ const PurchaseSection = ({
     }
   };
 
+  const handleLogisticsSelect = (provider: LogisticsProvider) => {
+    setSelectedLogistics(provider);
+  };
+
   const handlePurchase = async () => {
     if (!product) return;
+    if (!selectedLogistics) {
+      setError("Please select a delivery method");
+      return;
+    }
 
     setIsProcessing(true);
     setError(null);
@@ -71,7 +82,7 @@ const PurchaseSection = ({
       const order = await placeOrder({
         product: product._id,
         quantity: quantity,
-        logisticsProviderWalletAddress: "",
+        logisticsProviderWalletAddress: selectedLogistics.walletAddress,
         // seller:
         //   typeof product.seller === "object"
         //     ? product.seller._id
@@ -133,6 +144,12 @@ const PurchaseSection = ({
           </span>
         ) : null}
       </div>
+
+      {/* Logistics Selector */}
+      <LogisticsSelector
+        onSelect={handleLogisticsSelect}
+        selectedProvider={selectedLogistics}
+      />
 
       <div className="flex gap-3 w-full">
         <button

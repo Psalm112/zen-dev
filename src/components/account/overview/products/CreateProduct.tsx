@@ -17,6 +17,7 @@ import Button from "../../../common/Button";
 import { useCurrencyConverter } from "../../../../utils/hooks/useCurrencyConverter";
 import { LogisticsProvider } from "../../../../utils/types";
 import { useSnackbar } from "../../../../context/SnackbarContext";
+import { useContract } from "../../../../utils/hooks/useContract";
 
 // Lazy load the LoadingSpinner component with a fallback
 const LoadingSpinner = lazy(() => import("../../../common/LoadingSpinner"));
@@ -63,25 +64,52 @@ const CATEGORIES = [
   "Other",
 ];
 
-const logisticsProviders: LogisticsProvider[] = [
-  {
-    address: "0xF46F1B3Bea9cdd4102105EE9bAefc83db333354B",
-    name: "Fast Delivery Co.",
-    location: "Ikeja, Lagos, Nigeria",
-    cost: 1,
-  },
-  {
-    address: "0x3207D4728c32391405C7122E59CCb115A4af31eA",
-    name: "Global Logistics Ltd.",
-    location: "Maitama, Abuja, Nigeria",
-    cost: 1,
-  },
-  {
-    address: "0x7A1c3b09298C227D910E90CD55985300bd1032F3",
-    name: "Express Shipping Inc.",
-    location: "Kano",
-    cost: 2,
-  },
+// Replace the hardcoded logisticsProviders array with an empty array
+const logisticsProviders: LogisticsProvider[] = [];
+
+// Add Nigerian cities and company names for random generation
+const NIGERIAN_CITIES = [
+  "Lagos",
+  "Abuja",
+  "Port Harcourt",
+  "Kano",
+  "Ibadan",
+  "Kaduna",
+  "Enugu",
+  "Benin City",
+  "Owerri",
+  "Calabar",
+  "Warri",
+  "Abeokuta",
+  "Onitsha",
+  "Uyo",
+  "Maiduguri",
+];
+
+const COMPANY_PREFIXES = [
+  "Swift",
+  "Express",
+  "Global",
+  "Royal",
+  "Premium",
+  "Fast",
+  "Reliable",
+  "Elite",
+  "Prime",
+  "Rapid",
+];
+
+const COMPANY_SUFFIXES = [
+  "Logistics",
+  "Delivery",
+  "Shipping",
+  "Courier",
+  "Transport",
+  "Express",
+  "Cargo",
+  "Freight",
+  "Distribution",
+  "Movers",
 ];
 
 // Animation variants
@@ -97,6 +125,11 @@ const CreateProduct = () => {
   const { createProduct, loading } = useProductData();
   const { showSnackbar } = useSnackbar();
   const { convertPrice, userCountry } = useCurrencyConverter();
+  const {
+    getLogisticsProviders,
+    logisticsProviders: apiLogisticsProviders,
+    logisticsProviderLoading,
+  } = useContract();
 
   // Refs
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -458,19 +491,48 @@ const CreateProduct = () => {
     setErrors((prev) => ({ ...prev, logistics: undefined }));
   }, []);
 
-  // Memoize filtered logistics providers
+  // Generate random logistics provider data
+  const generateRandomLogisticsData = useCallback((address: string) => {
+    const randomPrefix =
+      COMPANY_PREFIXES[Math.floor(Math.random() * COMPANY_PREFIXES.length)];
+    const randomSuffix =
+      COMPANY_SUFFIXES[Math.floor(Math.random() * COMPANY_SUFFIXES.length)];
+    const randomCity =
+      NIGERIAN_CITIES[Math.floor(Math.random() * NIGERIAN_CITIES.length)];
+    const randomCost = Math.floor(Math.random() * 4) + 1; // Random cost between 1 and 5
+
+    return {
+      address,
+      name: `${randomPrefix} ${randomSuffix}`,
+      location: `${randomCity}, Nigeria`,
+      cost: randomCost,
+    };
+  }, []);
+
+  // Transform API logistics providers into full provider objects
+  const transformedLogisticsProviders = useMemo(() => {
+    if (!apiLogisticsProviders) return [];
+    return apiLogisticsProviders.map(generateRandomLogisticsData);
+  }, [apiLogisticsProviders, generateRandomLogisticsData]);
+
+  // Fetch logistics providers on component mount
+  useEffect(() => {
+    getLogisticsProviders();
+  }, [getLogisticsProviders]);
+
+  // Update the filteredLogistics to use transformed providers
   const filteredLogistics = useMemo(() => {
     if (!debouncedSearchTerm.trim()) {
-      return logisticsProviders;
+      return transformedLogisticsProviders;
     }
 
     const searchTerm = debouncedSearchTerm.toLowerCase().trim();
-    return logisticsProviders.filter(
+    return transformedLogisticsProviders.filter(
       (provider) =>
         provider.name.toLowerCase().includes(searchTerm) ||
         provider.location.toLowerCase().includes(searchTerm)
     );
-  }, [debouncedSearchTerm]);
+  }, [debouncedSearchTerm, transformedLogisticsProviders]);
 
   // Form validation
   const validateForm = useCallback(() => {
@@ -1273,7 +1335,13 @@ const CreateProduct = () => {
                 aria-multiselectable="true"
                 aria-label="Available logistics providers"
               >
-                {filteredLogistics.length > 0 ? (
+                {logisticsProviderLoading ? (
+                  <div className="p-4 text-center">
+                    <Suspense fallback={<div className="w-6 h-6" />}>
+                      <LoadingSpinner size="sm" color="white" />
+                    </Suspense>
+                  </div>
+                ) : filteredLogistics.length > 0 ? (
                   filteredLogistics.map((provider) => {
                     const isSelected = selectedLogistics.some(
                       (p) => p.address === provider.address
