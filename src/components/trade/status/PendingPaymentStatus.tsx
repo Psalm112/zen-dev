@@ -8,7 +8,7 @@ import BaseStatus from "./BaseStatus";
 import StatusAlert from "./StatusAlert";
 import Button from "../../common/Button";
 import { BsShieldExclamation } from "react-icons/bs";
-import { useContractData } from "../../../utils/hooks/useContract";
+import { useContract } from "../../../utils/hooks/useContract";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import Modal from "../../common/Modal";
@@ -56,7 +56,7 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     isUSDT: boolean;
     usdtAddress: string;
   } | null>(null);
-  const { initiateTradeContract, sendFundsToEscrow } = useContractData();
+  // const { initiateTradeContract, sendFundsToEscrow } = useContract();
   const { isConnected } = useWallet();
 
   useEffect(() => {
@@ -83,61 +83,8 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
 
   const processRelease = async () => {
     setIsProcessing(true);
-    console.log({
-      seller: "0xe42d9833970534ce655d361CA1C4C4A23A6Db997",
 
-      productCost:
-        tradeDetails && tradeDetails.amount
-          ? tradeDetails.amount
-          : orderDetails?.product.price || 200,
-      logisticsProvider: "0x57aEAAEb6081A394675642B5A7E70e94618641d9",
-      logisticsCost: "2000",
-      useUSDT: true,
-      orderId: orderId || "",
-    });
     try {
-      const tradeResponse = await initiateTradeContract({
-        // tradeDetails
-        // ? tradeDetails.sellerId
-        // : orderDetails?.seller._id || "",
-        productCost:
-          tradeDetails && tradeDetails.amount
-            ? tradeDetails.amount
-            : orderDetails?.product.price || 200,
-        logisticsProvider: [
-          "0xF46F1B3Bea9cdd4102105EE9bAefc83db333354B",
-          "0x3207D4728c32391405C7122E59CCb115A4af31eA",
-          "0x7A1c3b09298C227D910E90CD55985300bd1032F3",
-        ],
-        logisticsCost: [
-          1 * Math.pow(10, 18),
-          1 * Math.pow(10, 18),
-          2 * Math.pow(10, 18),
-        ],
-        useUSDT: true,
-        totalQuantity: "44",
-      });
-      console.log(tradeResponse, orderDetails?.product.price);
-      if (tradeResponse.status !== "success" || !tradeResponse.data) {
-        throw new Error(
-          tradeResponse.message || "Failed to create trade contract"
-        );
-      }
-
-      const { contractAddress, amount, isUSDT, usdtAddress } =
-        tradeResponse.data;
-
-      // const escrowResult = await sendFundsToEscrow(
-      //   contractAddress,
-      //   amount,
-      //   isUSDT,
-      //   usdtAddress
-      // );
-
-      // if (!escrowResult.success) {
-      //   throw new Error("Failed to send funds to escrow");
-      // }
-
       if (navigatePath) {
         navigate(navigatePath, { replace: true });
       } else if (onReleaseNow) {

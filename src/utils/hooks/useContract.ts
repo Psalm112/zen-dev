@@ -86,11 +86,11 @@ export const useContract = () => {
   const handleConfirmDelivery = useCallback(
     async (tradeId: string, showNotifications = true) => {
       try {
-        await dispatch(confirmDelivery(tradeId)).unwrap();
+        const result = await dispatch(confirmDelivery(tradeId)).unwrap();
         if (showNotifications) {
           showSnackbar("Delivery confirmed successfully", "success");
         }
-        return true;
+        return { success: true, message: result.message };
       } catch (err) {
         if (showNotifications) {
           showSnackbar(
@@ -98,7 +98,7 @@ export const useContract = () => {
             "error"
           );
         }
-        return false;
+        return { success: false, message: err as string };
       }
     },
     [dispatch, showSnackbar]

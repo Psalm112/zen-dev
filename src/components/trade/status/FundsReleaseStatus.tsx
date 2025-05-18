@@ -9,7 +9,7 @@ import StatusAlert from "./StatusAlert";
 import Button from "../../common/Button";
 import { BsShieldExclamation } from "react-icons/bs";
 import { toast } from "react-toastify";
-import { useContractData } from "../../../utils/hooks/useContract";
+import { useContract } from "../../../utils/hooks/useContract";
 import Modal from "../../common/Modal";
 import ConnectWallet from "../ConnectWallet";
 // import { useWallet } from "../../../utils/hooks/useWallet";
@@ -45,7 +45,7 @@ const FundsReleaseStatus: FC<FundsReleaseStatusProps> = ({
   const [isDisputeModalOpen, setIsDisputeModalOpen] = useState(false);
   const [dispute, setDispute] = useState("");
   const [loading, setLoading] = useState(false);
-  const { confirmTradeDelivery, raiseTradeDispute } = useContractData();
+  const { confirmDelivery } = useContract();
   const { isConnected } = useWallet();
 
   useEffect(() => {
@@ -73,7 +73,7 @@ const FundsReleaseStatus: FC<FundsReleaseStatusProps> = ({
 
     setIsProcessing(true);
     try {
-      const result = await confirmTradeDelivery(orderId);
+      const result = await confirmDelivery(orderId);
 
       if (!result.success) {
         throw new Error(result.message || "Failed to confirm delivery");

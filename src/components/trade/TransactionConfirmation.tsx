@@ -3,7 +3,7 @@
 import { FC, useState, useEffect } from "react";
 import { FaSpinner, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import { motion } from "framer-motion";
-import { useContractData } from "../../utils/hooks/useContract";
+// import { useContract } from "../../utils/hooks/useContract";
 
 interface TransactionConfirmationProps {
   contractAddress: string;
@@ -20,8 +20,8 @@ const TransactionConfirmation: FC<TransactionConfirmationProps> = ({
   usdtAddress,
   onComplete,
 }) => {
-  const { sendFundsToEscrow, isTransactionPending, transactionHash } =
-    useContractData();
+  // const { sendFundsToEscrow, isTransactionPending, transactionHash } =
+  //   useContract();
   const [status, setStatus] = useState<"pending" | "success" | "error">(
     "pending"
   );
@@ -31,19 +31,19 @@ const TransactionConfirmation: FC<TransactionConfirmationProps> = ({
     const handleTransaction = async () => {
       setIsProcessing(true);
       try {
-        const result = await sendFundsToEscrow(
-          contractAddress,
-          amount,
-          isUSDT,
-          usdtAddress
-        );
-        if (result.success) {
-          setStatus("success");
-          onComplete(true);
-        } else {
-          setStatus("error");
-          onComplete(false);
-        }
+        // const result = await sendFundsToEscrow(
+        //   contractAddress,
+        //   amount,
+        //   isUSDT,
+        //   usdtAddress
+        // );
+        // if (result.success) {
+        //   setStatus("success");
+        //   onComplete(true);
+        // } else {
+        //   setStatus("error");
+        //   onComplete(false);
+        // }
       } catch (error) {
         console.error("Transaction error:", error);
         setStatus("error");
@@ -59,7 +59,7 @@ const TransactionConfirmation: FC<TransactionConfirmationProps> = ({
     amount,
     isUSDT,
     usdtAddress,
-    sendFundsToEscrow,
+    // sendFundsToEscrow,
     onComplete,
   ]);
 
@@ -111,14 +111,14 @@ const TransactionConfirmation: FC<TransactionConfirmationProps> = ({
         </p>
       </div>
 
-      {transactionHash && (
+      {/* {transactionHash && (
         <div className="bg-[#2A2D35] p-4 rounded-lg mb-4">
           <p className="text-gray-400 text-sm">Transaction Hash</p>
           <p className="text-white font-mono text-sm break-all">
             {transactionHash}
           </p>
         </div>
-      )}
+      )} */}
 
       {status === "error" && (
         <button
