@@ -331,6 +331,14 @@ const ProductProperties = ({
   const [selectedOptions, setSelectedOptions] = useState<
     Record<string, string>
   >({});
+  const isColorOrMaterialKey = (key: string): boolean => {
+    return (
+      key.toLowerCase() === "color" ||
+      key.toLowerCase().includes("material") ||
+      key.toLowerCase() === "wood" ||
+      key.toLowerCase() === "wash"
+    );
+  };
 
   // Normalize property keys for consistent display (color/colour)
   const normalizeKey = (key: string): string => {
@@ -389,15 +397,6 @@ const ProductProperties = ({
 
     return properties;
   }, [product?.type]);
-
-  const isColorOrMaterialKey = (key: string): boolean => {
-    return (
-      key.toLowerCase() === "color" ||
-      key.toLowerCase().includes("material") ||
-      key.toLowerCase() === "wood" ||
-      key.toLowerCase() === "wash"
-    );
-  };
 
   // Find a matching variant based on selected options
   const findMatchingVariant = (): ProductVariant | undefined => {
