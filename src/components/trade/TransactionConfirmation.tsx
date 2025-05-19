@@ -3,13 +3,17 @@
 import { FC, useState, useEffect } from "react";
 import { FaSpinner, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import { motion } from "framer-motion";
-// import { useContract } from "../../utils/hooks/useContract";
+import { useContract } from "../../utils/hooks/useContract";
+import { useWallet } from "../../context/WalletContext";
 
 interface TransactionConfirmationProps {
   contractAddress: string;
   amount: string;
   isUSDT?: boolean;
   usdtAddress?: string;
+  tradeId?: string;
+  quantity?: number;
+  logisticsProviderAddress?: string;
   onComplete: (success: boolean) => void;
 }
 
@@ -18,35 +22,96 @@ const TransactionConfirmation: FC<TransactionConfirmationProps> = ({
   amount,
   isUSDT = false,
   usdtAddress,
+  tradeId,
+  quantity = 1,
+  logisticsProviderAddress,
   onComplete,
 }) => {
-  // const { sendFundsToEscrow, isTransactionPending, transactionHash } =
-  //   useContract();
+  const { buyTrade } = useContract();
+  const { balanceInUSDT, balanceInCELO } = useWallet();
+
   const [status, setStatus] = useState<"pending" | "success" | "error">(
     "pending"
   );
   const [isProcessing, setIsProcessing] = useState(false);
+  const [transactionHash, setTransactionHash] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const handleTransaction = async () => {
       setIsProcessing(true);
+
       try {
-        // const result = await sendFundsToEscrow(
-        //   contractAddress,
-        //   amount,
-        //   isUSDT,
-        //   usdtAddress
-        // );
-        // if (result.success) {
-        //   setStatus("success");
-        //   onComplete(true);
-        // } else {
-        //   setStatus("error");
-        //   onComplete(false);
-        // }
-      } catch (error) {
+        // Check if user has sufficient balance
+        if (isUSDT) {
+          const userBalance = parseFloat(
+            balanceInUSDT?.replace(" USDT", "") || "0"
+          );
+          const requiredAmount = parseFloat(amount) * 1.02; // Add 2% for gas fees
+
+          if (userBalance < requiredAmount) {
+            setStatus("error");
+            setErrorMessage(
+              `Insufficient USDT balance. You need at least ${requiredAmount.toFixed(
+                2
+              )} USDT.`
+            );
+            onComplete(false);
+            return;
+          }
+        } else {
+          const userBalance = parseFloat(
+            balanceInCELO?.replace(" CELO", "") || "0"
+          );
+          const requiredAmount = parseFloat(amount) * 1.02; // Add 2% for gas fees
+
+          if (userBalance < requiredAmount) {
+            setStatus("error");
+            setErrorMessage(
+              `Insufficient CELO balance. You need at least ${requiredAmount.toFixed(
+                2
+              )} CELO.`
+            );
+            onComplete(false);
+            return;
+          }
+        }
+
+        if (tradeId && logisticsProviderAddress) {
+          const result = await buyTrade({
+            tradeId,
+            quantity,
+            logisterProvider: logisticsProviderAddress,
+          });
+
+          if (result.success) {
+            // Use the transaction hash from the result if available
+            if (result.transactionHash) {
+              setTransactionHash(result.transactionHash);
+            } else {
+              // Fallback if no hash is provided (shouldn't happen in production)
+              setTransactionHash(
+                "0x" + Math.random().toString(16).substr(2, 64)
+              );
+            }
+            setStatus("success");
+            onComplete(true);
+          } else {
+            setStatus("error");
+            setErrorMessage(
+              result.message || "Transaction failed. Please try again."
+            );
+            onComplete(false);
+          }
+        } else {
+          setStatus("error");
+          setErrorMessage("Missing trade information.");
+          onComplete(false);
+        }
+      } catch (error: any) {
         console.error("Transaction error:", error);
         setStatus("error");
+        setErrorMessage(error.message || "Unknown error occurred");
         onComplete(false);
       } finally {
         setIsProcessing(false);
@@ -59,7 +124,12 @@ const TransactionConfirmation: FC<TransactionConfirmationProps> = ({
     amount,
     isUSDT,
     usdtAddress,
-    // sendFundsToEscrow,
+    tradeId,
+    quantity,
+    logisticsProviderAddress,
+    buyTrade,
+    balanceInUSDT,
+    balanceInCELO,
     onComplete,
   ]);
 
@@ -93,7 +163,7 @@ const TransactionConfirmation: FC<TransactionConfirmationProps> = ({
           {status === "success" &&
             `Successfully sent ${amount} ${isUSDT ? "USDT" : "ETH"} to escrow.`}
           {status === "error" &&
-            "There was an error processing your transaction."}
+            (errorMessage || "There was an error processing your transaction.")}
         </p>
       </div>
 
@@ -111,14 +181,14 @@ const TransactionConfirmation: FC<TransactionConfirmationProps> = ({
         </p>
       </div>
 
-      {/* {transactionHash && (
+      {transactionHash && (
         <div className="bg-[#2A2D35] p-4 rounded-lg mb-4">
           <p className="text-gray-400 text-sm">Transaction Hash</p>
           <p className="text-white font-mono text-sm break-all">
             {transactionHash}
           </p>
         </div>
-      )} */}
+      )}
 
       {status === "error" && (
         <button

@@ -97,7 +97,7 @@ const ViewOrderDetail = () => {
     toast.info("Opening chat with buyer...");
     // navigate(`/chat/${orderDetails?.buyer?._id}`);
   };
-  const handleOrderDispute = async (reason: string) => {
+  const handleOrderDispute = async (reason: string): Promise<void> => {
     if (!orderId) return;
 
     try {

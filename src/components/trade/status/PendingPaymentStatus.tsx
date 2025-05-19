@@ -17,6 +17,11 @@ import { useWallet } from "../../../context/WalletContext";
 import { FiEdit2 } from "react-icons/fi";
 import LogisticsSelector from "../../product/singleProduct/LogisticsSelector";
 import { useContract } from "../../../utils/hooks/useContract";
+import TransactionConfirmation from "../TransactionConfirmation";
+
+// Import the contract address from environment variables
+const ESCROW_CONTRACT_ADDRESS =
+  import.meta.env.VITE_ESCROW_CONTRACT_ADDRESS || "";
 
 interface PendingPaymentStatusProps {
   tradeDetails?: TradeDetails;
@@ -49,7 +54,7 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     seconds: 59,
   });
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
-  // const [isDisputeModalOpen, setIsDisputeModalOpen] = useState(false);
+  const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [dispute, setDispute] = useState("");
   const [loading, setLoading] = useState(false);
@@ -58,9 +63,12 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     contractAddress: string;
     amount: string;
     isUSDT: boolean;
-    usdtAddress: string;
+    usdtAddress?: string;
+    tradeId: string;
+    quantity: number;
+    logisticsProviderAddress: string;
   } | null>(null);
-  const { isConnected } = useWallet();
+  const { isConnected, balanceInUSDT, balanceInCELO } = useWallet();
   const { buyTrade } = useContract();
 
   // Order update state
@@ -99,67 +107,98 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     return () => clearInterval(timer);
   }, []);
 
-  const processRelease = async () => {
-    setIsProcessing(true);
+  // Check if user has sufficient balance
+  const checkSufficientBalance = () => {
+    if (!orderDetails?.product?.price) return false;
 
-    try {
-      if (orderDetails?.product?.tradeId) {
-        const success = await buyTrade({
-          tradeId: orderDetails.product.tradeId,
-          quantity: quantity,
-          logisterProvider: selectedLogisticsProvider?.walletAddress,
-        });
+    const totalAmount = orderDetails.product.price * quantity;
+    const requiredAmount = totalAmount * 1.02; // Add 2% for gas fees
 
-        if (success) {
-          toast.success("Funds successfully sent to escrow!");
+    // Check if the currency is USDT or CELO (default to CELO if not specified)
+    // const isCELO =
+    // orderDetails.product.currency === "CELO" ||
+    // !orderDetails.product.hasOwnProperty("currency");
 
-          if (navigatePath) {
-            navigate(navigatePath, { replace: true });
-          } else if (onReleaseNow) {
-            onReleaseNow();
-          }
-        } else {
-          toast.error("Transaction failed. Please try again.");
-        }
-      } else {
-        toast.error("Missing trade information. Please refresh and try again.");
-      }
-    } catch (error: any) {
-      console.error("Error during release process:", error);
-      toast.error(error.message || "Transaction failed. Please try again.");
-    } finally {
-      setIsProcessing(false);
-    }
+    // if (isCELO) {
+    //   const userBalance = parseFloat(
+    //     balanceInCELO?.replace(" CELO", "") || "0"
+    //   );
+    //   return userBalance >= requiredAmount;
+    // } else {
+    const userBalance = parseFloat(balanceInUSDT?.replace(" USDT", "") || "0");
+    return userBalance >= requiredAmount;
+    // }
   };
 
-  const handleReleaseNow = async () => {
+  const handleShowConfirmationModal = () => {
     if (!isConnected) {
       setIsWalletModalOpen(true);
       return;
     }
 
-    await processRelease();
+    setIsConfirmationModalOpen(true);
+  };
+
+  const processPayment = async () => {
+    setIsProcessing(true);
+
+    try {
+      if (
+        !orderDetails?.product?.tradeId ||
+        !(
+          selectedLogisticsProvider?.walletAddress ||
+          orderDetails?.logisticsProviderWalletAddress
+        )
+      ) {
+        toast.error("Missing trade information. Please refresh and try again.");
+        setIsProcessing(false);
+        return;
+      }
+
+      // Check for sufficient balance before proceeding
+      if (!checkSufficientBalance()) {
+        toast.error("Insufficient balance for this transaction");
+        setIsProcessing(false);
+        return;
+      }
+
+      // Create transaction data for confirmation modal
+      setPendingTransactionData({
+        contractAddress: ESCROW_CONTRACT_ADDRESS,
+        amount: (orderDetails.product.price * quantity).toString(),
+        // isUSDT: (orderDetails.product.currency || "CELO") !== "CELO",
+        isUSDT: true,
+        tradeId: orderDetails.product.tradeId,
+        quantity: quantity,
+        logisticsProviderAddress:
+          selectedLogisticsProvider?.walletAddress ||
+          orderDetails.logisticsProviderWalletAddress,
+      });
+
+      setIsConfirmationModalOpen(false);
+      setIsWalletModalOpen(true);
+    } catch (error: any) {
+      console.error("Error preparing payment:", error);
+      toast.error(error.message || "Failed to prepare transaction");
+      setIsProcessing(false);
+    }
   };
 
   const handleWalletConnected = (success: boolean) => {
     setIsWalletModalOpen(false);
+    setIsProcessing(false);
+
     if (success) {
-      processRelease();
+      toast.success("Payment completed successfully!");
+
+      // Navigate to the specified path or call the onReleaseNow callback
+      if (navigatePath) {
+        navigate(navigatePath, { replace: true });
+      } else if (onReleaseNow) {
+        onReleaseNow();
+      }
     }
   };
-
-  // const handleDisputeSubmit = async () => {
-  //   setLoading(true);
-  //   try {
-  //     if (onOrderDispute) {
-  //       await onOrderDispute(dispute);
-  //     }
-  //   } catch (error) {
-  //     console.log(error);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
 
   const handleUpdateOrder = async () => {
     if (!orderId || !onUpdateOrder) return;
@@ -182,6 +221,9 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     }
   };
 
+  // Get the currency with fallback to CELO
+  // const getProductCurrency = () => orderDetails?.product?.currency || "CELO";
+
   return (
     <>
       <BaseStatus
@@ -197,8 +239,6 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
         orderDetails={orderDetails}
         tradeDetails={tradeDetails}
         transactionInfo={transactionInfo}
-        // contactLabel="Contact Seller"
-        // onContact={onContactSeller}
         showTimer={showTimer}
         timeRemaining={timeRemaining}
         actionButtons={
@@ -215,15 +255,6 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
               disabled={isProcessing}
             />
 
-            {/* {hasChanges && (
-              <Button
-                title="Update Order"
-                className="bg-amber-600 hover:bg-amber-700 text-white text-sm px-6 py-3 rounded transition-colors"
-                onClick={handleUpdateOrder}
-                disabled={isProcessing || loading}
-              />
-            )} */}
-
             <Button
               title={
                 isProcessing ? (
@@ -238,13 +269,80 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
               className={`bg-Red hover:bg-[#e02d37] text-white text-sm px-6 py-3 rounded transition-colors ${
                 isProcessing ? "opacity-70 cursor-not-allowed" : ""
               }`}
-              onClick={handleReleaseNow}
+              onClick={handleShowConfirmationModal}
               disabled={isProcessing}
             />
           </div>
         }
       />
 
+      {/* Confirmation Modal */}
+      <Modal
+        isOpen={isConfirmationModalOpen}
+        onClose={() => setIsConfirmationModalOpen(false)}
+        title="Confirm Payment"
+        maxWidth="md:max-w-lg"
+      >
+        <div className="p-4">
+          <div className="mb-6 text-center">
+            <div className="bg-amber-500/10 text-amber-400 p-4 rounded-lg border border-amber-500/20 mb-4">
+              <p className="text-sm">
+                By proceeding, funds will be held in escrow until the order is
+                completed. The seller will not receive the funds until delivery
+                is confirmed.
+              </p>
+            </div>
+
+            <h3 className="text-lg font-medium text-white mb-2">
+              Payment Summary
+            </h3>
+
+            <div className="bg-[#2A2D35] p-4 rounded-lg mb-3 text-left">
+              <div className="flex justify-between mb-2">
+                <span className="text-gray-400">Item Price:</span>
+                <span className="text-white">
+                  {orderDetails?.product?.price} USDT
+                </span>
+              </div>
+              <div className="flex justify-between mb-2">
+                <span className="text-gray-400">Quantity:</span>
+                <span className="text-white">{quantity}</span>
+              </div>
+              <div className="flex justify-between font-medium">
+                <span className="text-gray-300">Total Amount:</span>
+                <span className="text-white">
+                  {(orderDetails?.product?.price || 0) * quantity} USDT
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3">
+            <Button
+              title="Cancel"
+              className="bg-transparent hover:bg-gray-700 text-white text-sm px-6 py-3 border border-gray-600 rounded transition-colors"
+              onClick={() => setIsConfirmationModalOpen(false)}
+            />
+            <Button
+              title={
+                isProcessing ? (
+                  <div className="flex items-center">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                    Processing...
+                  </div>
+                ) : (
+                  "Proceed to Payment"
+                )
+              }
+              className="bg-Red hover:bg-[#e02d37] text-white text-sm px-6 py-3 rounded transition-colors"
+              onClick={processPayment}
+              disabled={isProcessing}
+            />
+          </div>
+        </div>
+      </Modal>
+
+      {/* Edit Order Modal */}
       <Modal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
@@ -291,54 +389,35 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
         </div>
       </Modal>
 
-      {/* <Modal
-        isOpen={isDisputeModalOpen}
-        onClose={() => setIsDisputeModalOpen(false)}
-        title="Reason for Dispute"
-        maxWidth="md:max-w-lg"
-      >
-        <form onSubmit={handleDisputeSubmit} className="space-y-4 mt-4">
-          <div>
-            <textarea
-              id="dispue-reason"
-              value={dispute}
-              onChange={(e) => setDispute(e.target.value)}
-              className="w-full px-3 py-2 bg-neutral-800 text-white border border-neutral-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-              rows={4}
-              placeholder="Share the reason for the dispute or issue"
-            />
-          </div>
-          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-            <Button
-              title="Submit Review"
-              type="submit"
-              className={`max-w-md mx-auto flex items-center justify-center p-3 ${
-                loading ? "bg-Red/20" : "bg-Red"
-              } hover:bg-red-600 text-white w-full`}
-            />
-          </motion.div>
-        </form>
-      </Modal> */}
-
+      {/* Wallet Connection Modal */}
       <Modal
         isOpen={isWalletModalOpen}
-        onClose={() => setIsWalletModalOpen(false)}
-        title="Connect Wallet"
+        onClose={() => {
+          setIsWalletModalOpen(false);
+          setIsProcessing(false);
+        }}
+        title="Transaction Confirmation"
         maxWidth="md:max-w-lg"
       >
-        <ConnectWallet
-          showAlternatives={true}
-          onTransactionComplete={handleWalletConnected}
-          pendingTransaction={
-            pendingTransactionData
-              ? {
-                  type: "escrow",
-                  contractAddress: pendingTransactionData.contractAddress,
-                  amount: pendingTransactionData.amount,
-                }
-              : null
-          }
-        />
+        {pendingTransactionData ? (
+          <TransactionConfirmation
+            contractAddress={pendingTransactionData.contractAddress}
+            amount={pendingTransactionData.amount}
+            isUSDT={pendingTransactionData.isUSDT}
+            usdtAddress={pendingTransactionData.usdtAddress}
+            tradeId={pendingTransactionData.tradeId}
+            quantity={pendingTransactionData.quantity}
+            logisticsProviderAddress={
+              pendingTransactionData.logisticsProviderAddress
+            }
+            onComplete={handleWalletConnected}
+          />
+        ) : (
+          <ConnectWallet
+            showAlternatives={true}
+            onTransactionComplete={handleWalletConnected}
+          />
+        )}
       </Modal>
     </>
   );

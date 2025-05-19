@@ -217,16 +217,25 @@ export const useContract = () => {
       showNotifications = true
     ) => {
       try {
-        await dispatch(buyTrade(params)).unwrap();
+        const result = await dispatch(buyTrade(params)).unwrap();
         if (showNotifications) {
           showSnackbar("Trade purchase successful", "success");
         }
-        return true;
+
+        // Return success with transaction hash if available
+        return {
+          success: true,
+          transactionHash: result?.transactionHash || null,
+          message: result?.message || "Transaction completed successfully",
+        };
       } catch (err) {
         if (showNotifications) {
           showSnackbar((err as string) || "Failed to purchase trade", "error");
         }
-        return false;
+        return {
+          success: false,
+          message: (err as string) || "Failed to purchase trade",
+        };
       }
     },
     [dispatch, showSnackbar]
