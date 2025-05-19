@@ -3,6 +3,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FiTruck, FiChevronDown, FiCheck } from "react-icons/fi";
 import { useContract } from "../../../utils/hooks/useContract";
 
+interface ApiResponse {
+  status: string;
+  data: string[];
+}
+
 export interface LogisticsProvider {
   id: string;
   name: string;
@@ -62,7 +67,7 @@ const LogisticsSelector = ({
   const [selected, setSelected] = useState<LogisticsProvider | null>(null);
   const {
     getLogisticsProviders,
-    logisticsProviders: apiLogisticsProviders,
+    logisticsProviders: apiResponse,
     logisticsProviderLoading,
   } = useContract();
 
@@ -92,11 +97,9 @@ const LogisticsSelector = ({
 
   // Transform API logistics providers into full provider objects
   const transformedLogisticsProviders = useMemo(() => {
-    console.log(apiLogisticsProviders);
-    if (!apiLogisticsProviders || !Array.isArray(apiLogisticsProviders))
-      return [];
-    return apiLogisticsProviders.map(generateRandomLogisticsData);
-  }, [apiLogisticsProviders, generateRandomLogisticsData]);
+    if (!apiResponse || !Array.isArray(apiResponse.data)) return [];
+    return apiResponse.data.map(generateRandomLogisticsData);
+  }, [apiResponse, generateRandomLogisticsData]);
 
   // Initialize logistics providers
   useEffect(() => {

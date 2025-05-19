@@ -127,7 +127,7 @@ const CreateProduct = () => {
   const { convertPrice, userCountry } = useCurrencyConverter();
   const {
     getLogisticsProviders,
-    logisticsProviders: apiLogisticsProviders,
+    logisticsProviders: apiResponse,
     logisticsProviderLoading,
   } = useContract();
 
@@ -511,10 +511,9 @@ const CreateProduct = () => {
 
   // Transform API logistics providers into full provider objects
   const transformedLogisticsProviders = useMemo(() => {
-    if (!apiLogisticsProviders || !Array.isArray(apiLogisticsProviders))
-      return [];
-    return apiLogisticsProviders.map(generateRandomLogisticsData);
-  }, [apiLogisticsProviders, generateRandomLogisticsData]);
+    if (!apiResponse || !Array.isArray(apiResponse.data)) return [];
+    return apiResponse.data.map(generateRandomLogisticsData);
+  }, [apiResponse, generateRandomLogisticsData]);
 
   // Fetch logistics providers on component mount
   useEffect(() => {

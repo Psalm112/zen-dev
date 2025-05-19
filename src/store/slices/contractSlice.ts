@@ -12,7 +12,7 @@ interface ContractState {
   currentTrade: any | null;
   sellerTrades: any[];
   buyerTrades: any[];
-  logisticsProviders: string[];
+  logisticsProviders: { status: string; data: string[] } | null;
   logisticsProviderLoading: boolean;
   logisticsProviderError: string | null;
   registerLogisticsLoading: boolean;
@@ -30,7 +30,7 @@ const initialState: ContractState = {
   currentTrade: null,
   sellerTrades: [],
   buyerTrades: [],
-  logisticsProviders: [],
+  logisticsProviders: null,
   logisticsProviderLoading: false,
   logisticsProviderError: null,
   registerLogisticsLoading: false,
@@ -192,7 +192,7 @@ export const buyTrade = createAsyncThunk<
 );
 
 export const getLogisticsProviders = createAsyncThunk<
-  string[],
+  { status: string; data: string[] },
   void,
   { rejectValue: string }
 >("contract/getLogisticsProviders", async (_, { rejectWithValue }) => {
