@@ -181,69 +181,71 @@ const LogisticsSelector = ({
               transition={{ duration: 0.2 }}
               className="absolute z-20 mt-1 w-full bg-[#31333a] border border-gray-700/30 rounded-lg shadow-lg overflow-hidden"
             >
-              <div className="max-h-30 overflow-y-auto py-1 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
-                <AnimatePresence>
-                  {logisticsProviderLoading ? (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="p-3 text-center text-gray-400"
-                    >
-                      Loading delivery options...
-                    </motion.div>
-                  ) : providers.length > 0 ? (
-                    providers.map((provider, index) => (
-                      <motion.button
-                        key={provider.id}
-                        onClick={() => handleSelectProvider(provider)}
-                        className={`w-full p-3 text-left hover:bg-gray-700/20 transition-colors flex items-center justify-between ${
-                          selected?.id === provider.id ? "bg-gray-700/20" : ""
-                        }`}
-                        initial={{ opacity: 0, y: -5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 5 }}
-                        transition={{ duration: 0.2, delay: index * 0.05 }}
-                        whileHover={{
-                          backgroundColor: "rgba(255,255,255,0.05)",
-                        }}
+              <div className="max-h-[240px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
+                <div className="py-1">
+                  <AnimatePresence>
+                    {logisticsProviderLoading ? (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="p-3 text-center text-gray-400"
                       >
-                        <div className="flex flex-col">
-                          <span className="text-white text-sm font-medium">
-                            {provider.name}
-                          </span>
-                          <div className="flex items-center gap-3 mt-0.5">
-                            <span className="text-xs text-gray-400">
-                              {provider.deliveryTime}
+                        Loading delivery options...
+                      </motion.div>
+                    ) : providers.length > 0 ? (
+                      providers.map((provider, index) => (
+                        <motion.button
+                          key={provider.id}
+                          onClick={() => handleSelectProvider(provider)}
+                          className={`w-full p-3 text-left hover:bg-gray-700/20 transition-colors flex items-center justify-between ${
+                            selected?.id === provider.id ? "bg-gray-700/20" : ""
+                          }`}
+                          initial={{ opacity: 0, y: -5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 5 }}
+                          transition={{ duration: 0.2, delay: index * 0.05 }}
+                          whileHover={{
+                            backgroundColor: "rgba(255,255,255,0.05)",
+                          }}
+                        >
+                          <div className="flex flex-col">
+                            <span className="text-white text-sm font-medium">
+                              {provider.name}
                             </span>
-                            <span className="text-xs text-gray-400">
-                              {provider.cost === 0
-                                ? "Free"
-                                : `${provider.cost} USDT`}
-                            </span>
-                            {provider.rating && (
+                            <div className="flex items-center gap-3 mt-0.5">
                               <span className="text-xs text-gray-400">
-                                ★ {provider.rating}
+                                {provider.deliveryTime}
                               </span>
-                            )}
+                              <span className="text-xs text-gray-400">
+                                {provider.cost === 0
+                                  ? "Free"
+                                  : `${provider.cost} USDT`}
+                              </span>
+                              {provider.rating && (
+                                <span className="text-xs text-gray-400">
+                                  ★ {provider.rating}
+                                </span>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                        {selected?.id === provider.id && (
-                          <FiCheck className="text-Red" />
-                        )}
-                      </motion.button>
-                    ))
-                  ) : (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="p-3 text-center text-gray-400"
-                    >
-                      No delivery options available
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                          {selected?.id === provider.id && (
+                            <FiCheck className="text-Red" />
+                          )}
+                        </motion.button>
+                      ))
+                    ) : (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="p-3 text-center text-gray-400"
+                      >
+                        No delivery options available
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
             </motion.div>
           )}
