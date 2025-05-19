@@ -49,7 +49,7 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     seconds: 59,
   });
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
-  const [isDisputeModalOpen, setIsDisputeModalOpen] = useState(false);
+  // const [isDisputeModalOpen, setIsDisputeModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [dispute, setDispute] = useState("");
   const [loading, setLoading] = useState(false);
@@ -103,12 +103,11 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     setIsProcessing(true);
 
     try {
-      // Call buyTrade with the necessary parameters
       if (orderDetails?.product?.tradeId) {
         const success = await buyTrade({
           tradeId: orderDetails.product.tradeId,
           quantity: quantity,
-          logisterProvider: selectedLogisticsProvider?.walletAddress || "",
+          logisterProvider: selectedLogisticsProvider?.walletAddress,
         });
 
         if (success) {
@@ -149,18 +148,18 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     }
   };
 
-  const handleDisputeSubmit = async () => {
-    setLoading(true);
-    try {
-      if (onOrderDispute) {
-        await onOrderDispute(dispute);
-      }
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // const handleDisputeSubmit = async () => {
+  //   setLoading(true);
+  //   try {
+  //     if (onOrderDispute) {
+  //       await onOrderDispute(dispute);
+  //     }
+  //   } catch (error) {
+  //     console.log(error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const handleUpdateOrder = async () => {
     if (!orderId || !onUpdateOrder) return;
@@ -216,14 +215,14 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
               disabled={isProcessing}
             />
 
-            {hasChanges && (
+            {/* {hasChanges && (
               <Button
                 title="Update Order"
                 className="bg-amber-600 hover:bg-amber-700 text-white text-sm px-6 py-3 rounded transition-colors"
                 onClick={handleUpdateOrder}
                 disabled={isProcessing || loading}
               />
-            )}
+            )} */}
 
             <Button
               title={
@@ -292,7 +291,7 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
         </div>
       </Modal>
 
-      <Modal
+      {/* <Modal
         isOpen={isDisputeModalOpen}
         onClose={() => setIsDisputeModalOpen(false)}
         title="Reason for Dispute"
@@ -319,7 +318,7 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
             />
           </motion.div>
         </form>
-      </Modal>
+      </Modal> */}
 
       <Modal
         isOpen={isWalletModalOpen}
