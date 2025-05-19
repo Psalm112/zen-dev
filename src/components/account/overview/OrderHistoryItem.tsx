@@ -63,7 +63,10 @@ const OrderHistoryItem: React.FC<OrderHistoryItemProps> = (item) => {
               {item.product.name}
             </h3>
             <span className="flex items-center gap-2 text-[12px] text-[#AEAEB2]">
-              By {item.seller?.name || "Unknown Vendor"}{" "}
+              By{" "}
+              {typeof item.seller === "object"
+                ? item.seller?.name
+                : item.seller || "Unknown Vendor"}{" "}
               {/* {seller?.verified && ( */}
               <RiVerifiedBadgeFill className="text-[#4FA3FF] text-xs" />
               {/* )} */}

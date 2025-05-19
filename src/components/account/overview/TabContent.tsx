@@ -254,7 +254,11 @@ const TabContent: React.FC<TabContentProps> = ({ activeTab, productImage }) => {
                       "https://placehold.co/300x300?text=No+Image"
                     }
                     productName={order.product.name}
-                    vendor={order.seller?.name || "Unknown Vendor"}
+                    vendor={
+                      typeof order.seller === "object"
+                        ? order.seller?.name
+                        : order.seller || "Unknown Vendor"
+                    }
                     disputeDate={new Date(order.createdAt).toLocaleDateString(
                       "en-US",
                       { month: "short", day: "numeric", year: "numeric" }
