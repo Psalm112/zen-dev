@@ -83,16 +83,20 @@ export interface Order {
     price: number;
     images: string[];
   };
-  buyer: {
-    _id: string;
-    profileImage: string;
-  };
-  seller: {
-    _id: string;
-    name: string;
-    profileImage: string;
-    rating?: number;
-  };
+  buyer:
+    | {
+        _id: string;
+        profileImage: string;
+      }
+    | string;
+  seller:
+    | {
+        _id: string;
+        name: string;
+        profileImage: string;
+        rating?: number;
+      }
+    | string;
   amount: number;
   status: OrderStatus;
   dispute?: {
@@ -100,9 +104,11 @@ export interface Order {
     reason: string;
     resolved: boolean;
   };
+  sellerWalletAddress: string;
   createdAt: string;
   quantity: number;
   updatedAt: string;
+  logisticsProviderWalletAddress: string;
 }
 
 export interface OrderStatusUpdate {

@@ -301,6 +301,7 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
   const [logisticsProvider, setLogisticsProvider] = useState<string>(
     orderDetails?.logisticsProviderWalletAddress || ""
   );
+
   const [orderType, setOrderType] = useState<string>("standard");
   const [hasChanges, setHasChanges] = useState(false);
 

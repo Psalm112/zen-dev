@@ -65,7 +65,10 @@ const ViewOrderDetail = () => {
 
   const transactionInfo = orderDetails?.buyer
     ? {
-        buyerName: orderDetails.buyer._id,
+        buyerName:
+          typeof orderDetails.buyer === "object"
+            ? orderDetails.buyer._id
+            : orderDetails.buyer,
         goodRating: 0,
         completedOrders: 0,
         completionRate: 0,
