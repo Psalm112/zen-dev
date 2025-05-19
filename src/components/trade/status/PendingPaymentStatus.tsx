@@ -16,6 +16,7 @@ import { motion } from "framer-motion";
 import { useWallet } from "../../../context/WalletContext";
 import { FiEdit2 } from "react-icons/fi";
 import LogisticsSelector from "../../product/singleProduct/LogisticsSelector";
+import { useContract } from "../../../utils/hooks/useContract";
 
 interface PendingPaymentStatusProps {
   tradeDetails?: TradeDetails;
@@ -60,25 +61,17 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     usdtAddress: string;
   } | null>(null);
   const { isConnected } = useWallet();
+  const { buyTrade } = useContract();
 
   // Order update state
   const [quantity, setQuantity] = useState<number>(orderDetails?.quantity || 1);
+  const [hasChanges, setHasChanges] = useState(false);
   const [selectedLogisticsProvider, setSelectedLogisticsProvider] =
     useState<any>(null);
-  const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
     if (orderDetails) {
       setQuantity(orderDetails.quantity || 1);
-    }
-  }, [orderDetails]);
-
-  // Set initial logistics provider
-  useEffect(() => {
-    if (orderDetails?.logisticsProviderWalletAddress) {
-      setSelectedLogisticsProvider({
-        walletAddress: orderDetails.logisticsProviderWalletAddress,
-      });
     }
   }, [orderDetails]);
 
@@ -110,13 +103,28 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     setIsProcessing(true);
 
     try {
-      if (navigatePath) {
-        navigate(navigatePath, { replace: true });
-      } else if (onReleaseNow) {
-        onReleaseNow();
-      }
+      // Call buyTrade with the necessary parameters
+      if (orderDetails?.product?.tradeId) {
+        const success = await buyTrade({
+          tradeId: orderDetails.product.tradeId,
+          quantity: quantity,
+          logisterProvider: selectedLogisticsProvider?.walletAddress || "",
+        });
 
-      toast.success("Funds successfully sent to escrow!");
+        if (success) {
+          toast.success("Funds successfully sent to escrow!");
+
+          if (navigatePath) {
+            navigate(navigatePath, { replace: true });
+          } else if (onReleaseNow) {
+            onReleaseNow();
+          }
+        } else {
+          toast.error("Transaction failed. Please try again.");
+        }
+      } else {
+        toast.error("Missing trade information. Please refresh and try again.");
+      }
     } catch (error: any) {
       console.error("Error during release process:", error);
       toast.error(error.message || "Transaction failed. Please try again.");
@@ -156,10 +164,7 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
 
   const handleUpdateOrder = async () => {
     if (!orderId || !onUpdateOrder) return;
-    console.log({
-      quantity,
-      logisticsProviderWalletAddress: selectedLogisticsProvider,
-    });
+
     setLoading(true);
     try {
       await onUpdateOrder(orderId, {
@@ -265,7 +270,9 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
           <div>
             <LogisticsSelector
               onSelect={(provider) => setSelectedLogisticsProvider(provider)}
-              selectedProvider={selectedLogisticsProvider}
+              selectedProviderWalletAddress={
+                orderDetails?.logisticsProviderWalletAddress
+              }
             />
           </div>
 

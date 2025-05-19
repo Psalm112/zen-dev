@@ -82,6 +82,7 @@ export interface Order {
     name: string;
     price: number;
     images: string[];
+    tradeId: string;
   };
   buyer:
     | {

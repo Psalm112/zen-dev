@@ -20,6 +20,7 @@ export interface LogisticsProvider {
 interface LogisticsSelectorProps {
   onSelect: (provider: LogisticsProvider) => void;
   selectedProvider?: LogisticsProvider | null;
+  selectedProviderWalletAddress?: string;
 }
 
 // Constants for random data generation
@@ -61,13 +62,14 @@ const DELIVERY_TIMES = [
 const LogisticsSelector = ({
   onSelect,
   selectedProvider,
+  selectedProviderWalletAddress,
 }: LogisticsSelectorProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [providers, setProviders] = useState<LogisticsProvider[]>([]);
   const [selected, setSelected] = useState<LogisticsProvider | null>(null);
   const {
     getLogisticsProviders,
-    logisticsProviders: apiResponse,
+    logisticsProviders,
     logisticsProviderLoading,
   } = useContract();
 
@@ -97,9 +99,10 @@ const LogisticsSelector = ({
 
   // Transform API logistics providers into full provider objects
   const transformedLogisticsProviders = useMemo(() => {
-    if (!apiResponse || !Array.isArray(apiResponse.data)) return [];
-    return apiResponse.data.map(generateRandomLogisticsData);
-  }, [apiResponse, generateRandomLogisticsData]);
+    if (!logisticsProviders || !Array.isArray(logisticsProviders.data))
+      return [];
+    return logisticsProviders.data.map(generateRandomLogisticsData);
+  }, [logisticsProviders, generateRandomLogisticsData]);
 
   // Initialize logistics providers
   useEffect(() => {
@@ -118,6 +121,24 @@ const LogisticsSelector = ({
       setSelected(selectedProvider);
     }
   }, [transformedLogisticsProviders, selectedProvider, onSelect]);
+
+  useEffect(() => {
+    if (
+      selectedProviderWalletAddress &&
+      transformedLogisticsProviders?.length > 0
+    ) {
+      const provider = transformedLogisticsProviders.find(
+        (p) =>
+          p.walletAddress.toLowerCase() ===
+          selectedProviderWalletAddress?.toLowerCase()
+      );
+
+      if (provider) {
+        setSelected(provider);
+        onSelect(provider);
+      }
+    }
+  }, [selectedProviderWalletAddress, transformedLogisticsProviders, onSelect]);
 
   const handleSelectProvider = (provider: LogisticsProvider) => {
     setSelected(provider);
