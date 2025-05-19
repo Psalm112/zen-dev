@@ -499,7 +499,7 @@ const CreateProduct = () => {
       COMPANY_SUFFIXES[Math.floor(Math.random() * COMPANY_SUFFIXES.length)];
     const randomCity =
       NIGERIAN_CITIES[Math.floor(Math.random() * NIGERIAN_CITIES.length)];
-    const randomCost = Math.floor(Math.random() * 4) + 1; // Random cost between 1 and 5
+    const randomCost = Math.floor(Math.random() * 4) + 1;
 
     return {
       address,
@@ -511,7 +511,8 @@ const CreateProduct = () => {
 
   // Transform API logistics providers into full provider objects
   const transformedLogisticsProviders = useMemo(() => {
-    if (!apiLogisticsProviders) return [];
+    if (!apiLogisticsProviders || !Array.isArray(apiLogisticsProviders))
+      return [];
     return apiLogisticsProviders.map(generateRandomLogisticsData);
   }, [apiLogisticsProviders, generateRandomLogisticsData]);
 

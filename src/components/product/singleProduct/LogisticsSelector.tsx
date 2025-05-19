@@ -92,7 +92,8 @@ const LogisticsSelector = ({
 
   // Transform API logistics providers into full provider objects
   const transformedLogisticsProviders = useMemo(() => {
-    if (!apiLogisticsProviders) return [];
+    if (!apiLogisticsProviders || !Array.isArray(apiLogisticsProviders))
+      return [];
     return apiLogisticsProviders.map(generateRandomLogisticsData);
   }, [apiLogisticsProviders, generateRandomLogisticsData]);
 
