@@ -43,6 +43,7 @@ const ViewTradeDetail = () => {
 
   const transactionInfo: TradeTransactionInfo = {
     buyerName: "Femi Cole",
+    sellerName: "John Doe",
     goodRating: 88,
     completedOrders: 456,
     completionRate: 99,

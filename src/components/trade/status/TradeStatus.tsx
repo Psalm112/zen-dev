@@ -34,6 +34,7 @@ const TradeStatus: FC<TradeStatusProps> = ({
 }) => {
   const safeTransactionInfo: TradeTransactionInfo = transactionInfo || {
     buyerName: "Unknown",
+    sellerName: "Unknown",
     goodRating: 0,
     completedOrders: 0,
     completionRate: 0,
