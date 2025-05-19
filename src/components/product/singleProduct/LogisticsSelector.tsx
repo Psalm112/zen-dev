@@ -180,19 +180,8 @@ const LogisticsSelector = ({
               exit={{ opacity: 0, y: -10, height: 0 }}
               transition={{ duration: 0.2 }}
               className="absolute z-20 mt-1 w-full bg-[#31333a] border border-gray-700/30 rounded-lg shadow-lg overflow-hidden"
-              style={{
-                maxHeight: "300px",
-                position: "absolute",
-                left: 0,
-                right: 0,
-                top: "100%",
-                marginTop: "4px",
-              }}
             >
-              <div
-                className="h-full overflow-y-auto py-1 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent"
-                style={{ maxHeight: "inherit" }}
-              >
+              <div className="max-h-60 overflow-y-auto py-1 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
                 <AnimatePresence>
                   {logisticsProviderLoading ? (
                     <motion.div
