@@ -47,6 +47,8 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     minutes: 9,
     seconds: 59,
   });
+  const [availableLogisticsProviders, setAvailableLogisticsProviders] =
+    useState<any[]>([]);
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
   const [isDisputeModalOpen, setIsDisputeModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -73,7 +75,7 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     }
   }, [orderDetails]);
 
-  // Set initial logistics provider
+  // initial logistics provider
   useEffect(() => {
     if (orderDetails?.logisticsProviderWalletAddress) {
       setSelectedLogisticsProvider({
@@ -266,6 +268,10 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
             <LogisticsSelector
               onSelect={(provider) => setSelectedLogisticsProvider(provider)}
               selectedProvider={selectedLogisticsProvider}
+              selectedWalletAddress={
+                orderDetails?.logisticsProviderWalletAddress
+              }
+              onProvidersLoaded={setAvailableLogisticsProviders}
             />
           </div>
 

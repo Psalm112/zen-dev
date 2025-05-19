@@ -669,7 +669,7 @@ const CreateProduct = () => {
 
       // Add media files
       mediaFiles.forEach((media) => {
-        formData.append(`mediaFiles`, media.file);
+        formData.append(`images`, media.file);
         // formData.append(`mediaTypes`, media.type);
       });
 
