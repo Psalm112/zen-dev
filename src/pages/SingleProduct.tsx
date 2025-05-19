@@ -196,7 +196,7 @@ const SingleProduct = () => {
           </div>
 
           <div className="w-full xl:w-7/12">
-            <div className="bg-[#292B30] shadow-xl text-white w-full rounded-xl overflow-x-hidden overflow-y-auto">
+            <div className="bg-[#292B30] shadow-xl text-white w-full rounded-xl overflow-hidden">
               <div className="px-4 sm:px-8 md:px-12 py-6">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <h1 className="text-2xl sm:text-3xl font-bold">

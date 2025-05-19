@@ -179,7 +179,7 @@ const LogisticsSelector = ({
               animate={{ opacity: 1, y: 0, height: "auto" }}
               exit={{ opacity: 0, y: -10, height: 0 }}
               transition={{ duration: 0.2 }}
-              className="absolute z-20 mt-1 w-full bg-[#31333a] border border-gray-700/30 rounded-lg shadow-lg overflow-hidden"
+              className="absolute z-50 mt-1 w-full bg-[#31333a] border border-gray-700/30 rounded-lg shadow-lg overflow-visible"
             >
               <div className="max-h-60 overflow-y-auto py-1 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
                 <AnimatePresence>
