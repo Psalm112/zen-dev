@@ -270,8 +270,8 @@ const BaseStatus: FC<BaseStatusProps> = ({
           </div>
           <div className="space-y-2">
             <TradeDetailRow
-              label="Buyer's Name"
-              value={transactionInfo?.buyerName || "Unknown"}
+              label="Seller's Name"
+              value={transactionInfo?.sellerName || "Unknown"}
             />
             <TradeDetailRow
               label="Good Rating %"

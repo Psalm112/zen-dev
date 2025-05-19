@@ -63,24 +63,30 @@ const ViewOrderDetail = () => {
     }
   }, [orderDetails]);
 
-  const transactionInfo = orderDetails?.buyer
-    ? {
-        buyerName:
-          typeof orderDetails.buyer === "object"
-            ? orderDetails.buyer._id
-            : orderDetails.buyer,
-        goodRating: 0,
-        completedOrders: 0,
-        completionRate: 0,
-        avgPaymentTime: 0,
-      }
-    : {
-        buyerName: "Unknown Buyer",
-        goodRating: 0,
-        completedOrders: 0,
-        completionRate: 0,
-        avgPaymentTime: 0,
-      };
+  const transactionInfo =
+    orderDetails?.buyer && orderDetails?.seller
+      ? {
+          buyerName:
+            typeof orderDetails.buyer === "object"
+              ? orderDetails.buyer.name
+              : orderDetails.buyer,
+          sellerName:
+            typeof orderDetails.seller === "object"
+              ? orderDetails.seller.name
+              : orderDetails.seller,
+          goodRating: 0,
+          completedOrders: 0,
+          completionRate: 0,
+          avgPaymentTime: 0,
+        }
+      : {
+          buyerName: "Unknown Buyer",
+          sellerName: "Unknown Seller",
+          goodRating: 0,
+          completedOrders: 0,
+          completionRate: 0,
+          avgPaymentTime: 0,
+        };
 
   const handleContactSeller = () => {
     toast.info("Opening chat with seller...");
@@ -203,8 +209,12 @@ const ViewOrderDetail = () => {
             status={orderStatus}
             orderDetails={orderDetails}
             transactionInfo={transactionInfo}
-            onContactSeller={handleContactSeller}
-            onContactBuyer={handleContactBuyer}
+            onContactSeller={
+              orderStatus !== "pending" ? handleContactSeller : undefined
+            }
+            onContactBuyer={
+              orderStatus !== "pending" ? handleContactBuyer : undefined
+            }
             onOrderDispute={handleOrderDispute}
             onReleaseNow={handleReleaseNow}
             onConfirmDelivery={handleConfirmDelivery}

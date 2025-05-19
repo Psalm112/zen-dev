@@ -87,6 +87,7 @@ export interface Order {
   buyer:
     | {
         _id: string;
+        name: string;
         profileImage: string;
       }
     | string;
@@ -306,6 +307,7 @@ export interface OrderDetails extends Order {
 
 export interface TradeTransactionInfo {
   buyerName: string;
+  sellerName: string;
   goodRating: number;
   completedOrders: number;
   completionRate: number;
