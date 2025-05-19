@@ -8,18 +8,21 @@ import BaseStatus from "./BaseStatus";
 import StatusAlert from "./StatusAlert";
 import Button from "../../common/Button";
 import { BsShieldExclamation } from "react-icons/bs";
-import { useContract } from "../../../utils/hooks/useContract";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import Modal from "../../common/Modal";
 import ConnectWallet from "../ConnectWallet";
-// import { useWallet } from "../../../utils/hooks/useWallet";
 import { motion } from "framer-motion";
 import { useWallet } from "../../../context/WalletContext";
 
+// Extend OrderDetails to include logistics provider
+interface ExtendedOrderDetails extends OrderDetails {
+  logisticsProviderWalletAddress?: string;
+}
+
 interface PendingPaymentStatusProps {
   tradeDetails?: TradeDetails;
-  orderDetails?: OrderDetails;
+  orderDetails?: ExtendedOrderDetails;
   transactionInfo?: TradeTransactionInfo;
   onContactSeller?: () => void;
   onOrderDispute?: (reason: string) => Promise<void>;
@@ -27,6 +30,13 @@ interface PendingPaymentStatusProps {
   navigatePath?: string;
   orderId?: string;
   showTimer?: boolean;
+  onUpdateOrder?: (orderId: string, updates: OrderUpdateData) => Promise<void>;
+}
+
+interface OrderUpdateData {
+  quantity?: number;
+  logisticsProviderWalletAddress?: string;
+  type?: string;
 }
 
 const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
@@ -39,6 +49,7 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
   navigatePath,
   orderId,
   showTimer,
+  onUpdateOrder,
 }) => {
   const navigate = useNavigate();
   const [timeRemaining, setTimeRemaining] = useState({
@@ -46,7 +57,7 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     seconds: 59,
   });
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
-  const [isDisputeModalOpen, setIsDisputeModalOpen] = useState(false);
+  // const [isDisputeModalOpen, setIsDisputeModalOpen] = useState(false);
   const [dispute, setDispute] = useState("");
   const [loading, setLoading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -56,8 +67,11 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     isUSDT: boolean;
     usdtAddress: string;
   } | null>(null);
-  // const { initiateTradeContract, sendFundsToEscrow } = useContract();
   const { isConnected } = useWallet();
+
+  // New state for order updates
+  const [orderUpdates, setOrderUpdates] = useState<OrderUpdateData>({});
+  const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -71,15 +85,34 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     return () => clearInterval(timer);
   }, []);
 
-  // const getAmount = () => {
-  //   if (tradeDetails && tradeDetails.amount) {
-  //     return tradeDetails.amount.toString();
-  //   }
-  //   if (orderDetails && orderDetails.product.price) {
-  //     return orderDetails.product.price;
-  //   }
-  //   return "200";
-  // };
+  const handleUpdateChange = (field: keyof OrderUpdateData, value: any) => {
+    const updates = { ...orderUpdates, [field]: value };
+    setOrderUpdates(updates);
+
+    // Check if any values are different from original order
+    const hasUpdates = Object.keys(updates).some((key) => {
+      const typedKey = key as keyof OrderUpdateData;
+      return updates[typedKey] !== (orderDetails as any)?.[typedKey];
+    });
+
+    setHasChanges(hasUpdates);
+  };
+
+  const handleUpdateOrder = async () => {
+    if (!orderId || !onUpdateOrder) return;
+
+    setLoading(true);
+    try {
+      await onUpdateOrder(orderId, orderUpdates);
+      toast.success("Order details updated successfully!");
+      setHasChanges(false);
+    } catch (error) {
+      toast.error("Failed to update order details");
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const processRelease = async () => {
     setIsProcessing(true);
@@ -99,6 +132,7 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
       setIsProcessing(false);
     }
   };
+
   const handleReleaseNow = async () => {
     if (!isConnected) {
       setIsWalletModalOpen(true);
@@ -107,6 +141,7 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
 
     await processRelease();
   };
+
   const handleWalletConnected = (success: boolean) => {
     setIsWalletModalOpen(false);
     if (success) {
@@ -114,18 +149,96 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     }
   };
 
-  const handleDisputeSubmit = async () => {
-    setLoading(true);
-    try {
-      if (onOrderDispute) {
-        await onOrderDispute(dispute);
-      }
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // const handleDisputeSubmit = async () => {
+  //   setLoading(true);
+  //   try {
+  //     if (onOrderDispute) {
+  //       await onOrderDispute(dispute);
+  //     }
+  //   } catch (error) {
+  //     console.log(error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  const renderOrderSummary = () => (
+    <div className="w-full bg-neutral-800 p-4 rounded-lg mb-6">
+      <h3 className="text-lg font-semibold mb-4">Order Summary</h3>
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <span>Product:</span>
+          <span>{orderDetails?.product?.name}</span>
+        </div>
+        <div className="flex justify-between items-center">
+          <span>Price:</span>
+          <span>${orderDetails?.product?.price}</span>
+        </div>
+        <div className="flex justify-between items-center">
+          <span>Quantity:</span>
+          <input
+            type="number"
+            min="1"
+            value={orderUpdates.quantity || orderDetails?.quantity || 1}
+            onChange={(e) =>
+              handleUpdateChange("quantity", parseInt(e.target.value))
+            }
+            className="bg-neutral-700 px-2 py-1 rounded"
+          />
+        </div>
+        <div className="flex justify-between items-center">
+          <span>Logistics Provider:</span>
+          <input
+            type="text"
+            value={
+              orderUpdates.logisticsProviderWalletAddress ||
+              orderDetails?.logisticsProviderWalletAddress ||
+              ""
+            }
+            onChange={(e) =>
+              handleUpdateChange(
+                "logisticsProviderWalletAddress",
+                e.target.value
+              )
+            }
+            className="bg-neutral-700 px-2 py-1 rounded"
+            placeholder="Provider wallet address"
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderActionButtons = () => (
+    <div className="w-full flex items-center justify-center flex-wrap gap-4">
+      {hasChanges && (
+        <Button
+          title={loading ? "Updating..." : "Update Order"}
+          className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-6 py-3 rounded transition-colors"
+          onClick={handleUpdateOrder}
+          disabled={loading || isProcessing}
+        />
+      )}
+      <Button
+        title={
+          isProcessing ? (
+            <div className="flex items-center">
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+              Processing...
+            </div>
+          ) : (
+            "Pay Now"
+          )
+        }
+        className={`bg-Red hover:bg-[#e02d37] text-white text-sm px-6 py-3 rounded transition-colors ${
+          isProcessing ? "opacity-70 cursor-not-allowed" : ""
+        }`}
+        onClick={handleReleaseNow}
+        disabled={isProcessing}
+      />
+    </div>
+  );
+
   return (
     <>
       <BaseStatus
@@ -146,36 +259,14 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
         showTimer={showTimer}
         timeRemaining={timeRemaining}
         actionButtons={
-          <div className="w-full flex justify-evenly flex-row flex-wrap gap-4">
-            {onOrderDispute && (
-              <Button
-                title="Order Dispute?"
-                className="bg-transparent hover:bg-gray-700 text-white text-sm px-6 py-3 border border-gray-600 rounded transition-colors"
-                onClick={() => setIsDisputeModalOpen(true)}
-                disabled={isProcessing}
-              />
-            )}
-            <Button
-              title={
-                isProcessing ? (
-                  <div className="flex items-center">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                    Processing...
-                  </div>
-                ) : (
-                  "Release Now"
-                )
-              }
-              className={`bg-Red hover:bg-[#e02d37] text-white text-sm px-6 py-3 rounded transition-colors ${
-                isProcessing ? "opacity-70 cursor-not-allowed" : ""
-              }`}
-              onClick={handleReleaseNow}
-              disabled={isProcessing}
-            />
-          </div>
+          <>
+            {renderOrderSummary()}
+            {renderActionButtons()}
+          </>
         }
       />
-      <Modal
+
+      {/* <Modal
         isOpen={isDisputeModalOpen}
         onClose={() => setIsDisputeModalOpen(false)}
         title="Reason for Dispute"
@@ -183,9 +274,6 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
       >
         <form onSubmit={handleDisputeSubmit} className="space-y-4 mt-4">
           <div>
-            {/* <label htmlFor="comment" className="block text-gray-300 mb-2">
-              Reason for Dispute
-            </label> */}
             <textarea
               id="dispue-reason"
               value={dispute}
@@ -205,7 +293,7 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
             />
           </motion.div>
         </form>
-      </Modal>
+      </Modal> */}
 
       <Modal
         isOpen={isWalletModalOpen}
