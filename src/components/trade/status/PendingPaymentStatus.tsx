@@ -15,6 +15,7 @@ import ConnectWallet from "../ConnectWallet";
 import { motion } from "framer-motion";
 import { useWallet } from "../../../context/WalletContext";
 import { FiEdit2 } from "react-icons/fi";
+import LogisticsSelector from "../../product/singleProduct/LogisticsSelector";
 
 interface PendingPaymentStatusProps {
   tradeDetails?: TradeDetails;
@@ -62,16 +63,22 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
 
   // Order update state
   const [quantity, setQuantity] = useState<number>(orderDetails?.quantity || 1);
-  const [logisticsProvider, setLogisticsProvider] = useState<string>(
-    orderDetails?.logisticsProviderWalletAddress || ""
-  );
-  const [orderType, setOrderType] = useState<string>("standard");
+  const [selectedLogisticsProvider, setSelectedLogisticsProvider] =
+    useState<any>(null);
   const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
     if (orderDetails) {
       setQuantity(orderDetails.quantity || 1);
-      setLogisticsProvider(orderDetails.logisticsProviderWalletAddress || "");
+    }
+  }, [orderDetails]);
+
+  // Set initial logistics provider
+  useEffect(() => {
+    if (orderDetails?.logisticsProviderWalletAddress) {
+      setSelectedLogisticsProvider({
+        walletAddress: orderDetails.logisticsProviderWalletAddress,
+      });
     }
   }, [orderDetails]);
 
@@ -80,11 +87,12 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     if (orderDetails) {
       const hasQuantityChanged = quantity !== orderDetails.quantity;
       const hasLogisticsChanged =
-        logisticsProvider !== orderDetails.logisticsProviderWalletAddress;
+        selectedLogisticsProvider?.walletAddress !==
+        orderDetails.logisticsProviderWalletAddress;
 
       setHasChanges(hasQuantityChanged || hasLogisticsChanged);
     }
-  }, [quantity, logisticsProvider, orderDetails]);
+  }, [quantity, selectedLogisticsProvider, orderDetails]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -148,13 +156,16 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
 
   const handleUpdateOrder = async () => {
     if (!orderId || !onUpdateOrder) return;
-
+    console.log({
+      quantity,
+      logisticsProviderWalletAddress: selectedLogisticsProvider,
+    });
     setLoading(true);
     try {
       await onUpdateOrder(orderId, {
         quantity,
-        logisticsProviderWalletAddress: logisticsProvider,
-        orderType,
+        logisticsProviderWalletAddress:
+          selectedLogisticsProvider?.walletAddress,
       });
 
       toast.success("Order updated successfully!");
@@ -252,33 +263,10 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
           </div>
 
           <div>
-            <label htmlFor="logistics" className="block text-gray-300 mb-2">
-              Logistics Provider Address
-            </label>
-            <input
-              type="text"
-              id="logistics"
-              value={logisticsProvider}
-              onChange={(e) => setLogisticsProvider(e.target.value)}
-              className="w-full px-3 py-2 bg-neutral-800 text-white border border-neutral-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-              placeholder="0x..."
+            <LogisticsSelector
+              onSelect={(provider) => setSelectedLogisticsProvider(provider)}
+              selectedProvider={selectedLogisticsProvider}
             />
-          </div>
-
-          <div>
-            <label htmlFor="orderType" className="block text-gray-300 mb-2">
-              Order Type
-            </label>
-            <select
-              id="orderType"
-              value={orderType}
-              onChange={(e) => setOrderType(e.target.value)}
-              className="w-full px-3 py-2 bg-neutral-800 text-white border border-neutral-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-            >
-              <option value="standard">Standard</option>
-              <option value="express">Express</option>
-              <option value="priority">Priority</option>
-            </select>
           </div>
 
           <div className="flex justify-end gap-3 mt-6">
