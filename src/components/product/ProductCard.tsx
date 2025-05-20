@@ -33,7 +33,7 @@ const ProductCard = React.memo(
 
     const imageUrl =
       images && images.length > 0
-        ? `${API_URL}/uploads/${images[0]}`
+        ? images[0]
         : "https://placehold.co/300x300?text=No+Image";
 
     const handleToggleFavorite = (e: React.MouseEvent) => {
