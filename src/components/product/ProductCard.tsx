@@ -59,28 +59,28 @@ const ProductCard = React.memo(
           className="bg-[#292B30] rounded-lg relative flex flex-col overflow-hidden h-full shadow-lg hover:shadow-xl transition-shadow duration-300"
         >
           {/* Top section with New tag and favorite */}
-          <div className="absolute top-0 left-0 right-0 z-10 flex justify-between p-3">
+          <div className="absolute top-0 left-0 right-0 z-10 flex justify-between p-2 sm:p-3">
             {isNew && (
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="text-white text-xs md:text-sm bg-Red/80 rounded-xl py-1 px-2 font-medium"
+                className="text-white text-xs bg-Red/50 rounded-xl py-0.5 px-2 font-medium"
               >
                 New
               </motion.div>
             )}
             <motion.button
               whileTap={{ scale: 0.9 }}
-              className="ml-auto bg-[#1A1B1F]/70 rounded-full p-2 backdrop-blur-sm"
+              className="ml-auto bg-[#1A1B1F]/50 rounded-full p-1.5 sm:p-2 backdrop-blur-sm"
               aria-label={
                 isFavorite ? "Remove from favorites" : "Add to favorites"
               }
               onClick={handleToggleFavorite}
             >
               {isFavorite ? (
-                <FaHeart className="text-xl text-Red" />
+                <FaHeart className="text-base sm:text-xl text-Red" />
               ) : (
-                <FaRegHeart className="text-xl text-white" />
+                <FaRegHeart className="text-base sm:text-xl text-white" />
               )}
             </motion.button>
           </div>
@@ -88,7 +88,7 @@ const ProductCard = React.memo(
           {/* Image container with fixed aspect ratio */}
           <div className="w-full pt-[100%] relative bg-[#1A1B1F]/30 overflow-hidden">
             <motion.div
-              className="absolute inset-0 flex items-center justify-center p-6"
+              className="absolute inset-0 flex items-center justify-center p-4 sm:p-6"
               whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
@@ -102,22 +102,22 @@ const ProductCard = React.memo(
           </div>
 
           {/* Product info */}
-          <div className="flex flex-col w-full p-4 flex-grow">
-            <h4 className="text-white text-base md:text-lg font-bold truncate">
+          <div className="flex flex-col w-full p-3 sm:p-4 flex-grow">
+            <h4 className="text-white text-sm sm:text-base md:text-lg font-bold truncate">
               {name}
             </h4>
-            <div className="flex items-center gap-1 text-xs md:text-sm text-[#AEAEB2] py-1">
+            <div className="flex items-center gap-1 text-xs md:text-sm text-[#AEAEB2] py-0.5 sm:py-1">
               <span>
                 By {typeof seller === "string" ? seller : "Unknown Seller"}
               </span>
               <RiVerifiedBadgeFill className="text-[#4FA3FF] text-xs" />
             </div>
-            <p className="text-white/80 text-xs md:text-sm py-1 line-clamp-2 min-h-[2.5rem]">
+            <p className="text-white/80 text-xs md:text-sm py-0.5 sm:py-1 line-clamp-2 min-h-[2.25rem]">
               {description}
             </p>
 
             {/* Price and buy button container */}
-            <div className="mt-auto pt-3">
+            <div className="mt-auto pt-2 sm:pt-3">
               <div className="flex flex-col">
                 <span className="text-white text-sm md:text-base font-semibold">
                   {product.formattedCeloPrice}
@@ -130,7 +130,7 @@ const ProductCard = React.memo(
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="mt-3 gap-2 font-medium text-white bg-Red py-2.5 rounded-md flex justify-center items-center w-full transition-all duration-300"
+                className="mt-2 sm:mt-3 gap-2 font-medium text-white bg-Red py-2 sm:py-2.5 rounded-md flex justify-center items-center w-full transition-all duration-300"
                 onClick={navigateToProduct}
               >
                 <span>Buy Now</span>
