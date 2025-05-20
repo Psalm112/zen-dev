@@ -18,6 +18,7 @@ import { FiEdit2 } from "react-icons/fi";
 import LogisticsSelector from "../../product/singleProduct/LogisticsSelector";
 import { useContract } from "../../../utils/hooks/useContract";
 import TransactionConfirmation from "../TransactionConfirmation";
+import { useSnackbar } from "../../../context/SnackbarContext";
 
 // Import the contract address from environment variables
 const ESCROW_CONTRACT_ADDRESS =
@@ -56,7 +57,8 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [dispute, setDispute] = useState("");
+
+  const { showSnackbar } = useSnackbar();
   const [loading, setLoading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [pendingTransactionData, setPendingTransactionData] = useState<{
@@ -150,14 +152,14 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
           orderDetails?.logisticsProviderWalletAddress
         )
       ) {
-        toast.error("Missing trade information. Please refresh and try again.");
+        ("Missing trade information. Please refresh and try again.");
         setIsProcessing(false);
         return;
       }
 
       // Check for sufficient balance before proceeding
       if (!checkSufficientBalance()) {
-        toast.error("Insufficient balance for this transaction");
+        showSnackbar("Insufficient balance for this transaction", "error");
         setIsProcessing(false);
         return;
       }

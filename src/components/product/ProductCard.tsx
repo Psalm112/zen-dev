@@ -6,6 +6,7 @@ import { BsCart3 } from "react-icons/bs";
 import { Product } from "../../utils/types";
 import { useWatchlist } from "../../utils/hooks/useWatchlist";
 import { useCurrency } from "../../context/CurrencyContext";
+import { motion } from "framer-motion";
 
 interface ProductCardProps {
   product: Product & {
@@ -38,70 +39,107 @@ const ProductCard = React.memo(
 
     const handleToggleFavorite = (e: React.MouseEvent) => {
       e.preventDefault();
+      e.stopPropagation();
       toggleWatchlist(_id);
     };
 
+    const navigateToProduct = (e: React.MouseEvent) => {
+      e.preventDefault();
+      navigate(`/product/${_id}`);
+    };
+
     return (
-      <Link
-        to={`/product/${_id}`}
-        className="bg-[#292B30] rounded-lg relative flex flex-col justify-center items-center overflow-hidden group h-full"
+      <motion.div
+        whileHover={{ y: -5 }}
+        transition={{ type: "spring", stiffness: 300 }}
+        className="h-full"
       >
-        <div className="mb-2 md:mb-10 w-full flex justify-between p-2 md:p-4">
-          {isNew && (
-            <div className="text-white text-xs md:text-sm bg-Red/20 rounded-xl py-1 px-2">
-              New
-            </div>
-          )}
-          <button
-            className="ml-auto"
-            aria-label={
-              isFavorite ? "Remove from favorites" : "Add to favorites"
-            }
-            onClick={handleToggleFavorite}
-          >
-            {isFavorite ? (
-              <FaHeart className="text-xl md:text-2xl text-Red transition-colors" />
-            ) : (
-              <FaRegHeart className="text-xl md:text-2xl text-white hover:text-Red transition-colors" />
+        <Link
+          to={`/product/${_id}`}
+          className="bg-[#292B30] rounded-lg relative flex flex-col overflow-hidden h-full shadow-lg hover:shadow-xl transition-shadow duration-300"
+        >
+          {/* Top section with New tag and favorite */}
+          <div className="absolute top-0 left-0 right-0 z-10 flex justify-between p-3">
+            {isNew && (
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="text-white text-xs md:text-sm bg-Red/80 rounded-xl py-1 px-3 font-medium"
+              >
+                New
+              </motion.div>
             )}
-          </button>
-        </div>
-
-        <img
-          src={imageUrl}
-          alt={name}
-          className="py-2 md:py-4 w-[60%] md:w-[70%] object-contain"
-          loading="lazy"
-        />
-
-        <div className="flex flex-col w-full p-3 md:p-6">
-          <h4 className="text-white text-base md:text-lg font-bold truncate">
-            {name}
-          </h4>
-          <h4 className="flex items-center gap-1 text-xs md:text-sm text-[#AEAEB2] py-1">
-            By {typeof seller === "string" ? seller : "Unknown Seller"}
-            <RiVerifiedBadgeFill className="text-[#4FA3FF] text-xs" />
-          </h4>
-          <h4 className="text-white text-xs md:text-sm py-0 line-clamp-1">
-            {description}
-          </h4>
-          <div className="py-1 md:py-3 group-hover:hidden">
-            <h4 className="text-white text-sm md:text-base font-semibold">
-              {product.formattedCeloPrice}
-            </h4>
-            <h4 className="text-[#AEAEB2] text-xs md:text-sm">
-              {secondaryPrice}
-            </h4>
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              className="ml-auto bg-[#1A1B1F]/70 rounded-full p-2 backdrop-blur-sm"
+              aria-label={
+                isFavorite ? "Remove from favorites" : "Add to favorites"
+              }
+              onClick={handleToggleFavorite}
+            >
+              {isFavorite ? (
+                <FaHeart className="text-xl text-Red" />
+              ) : (
+                <FaRegHeart className="text-xl text-white" />
+              )}
+            </motion.button>
           </div>
-          <button
-            className="mt-[5px] gap-3 lg:gap-7 font-bold text-white bg-Red py-2 hidden group-hover:flex justify-center items-center w-full transition-all duration-300"
-            onClick={() => navigate(`/product/${_id}`)}
-          >
-            <div>Buy Now</div>
-            <BsCart3 className="font-bold text-xl" />
-          </button>
-        </div>
-      </Link>
+
+          {/* Image container with fixed aspect ratio */}
+          <div className="w-full pt-[100%] relative bg-[#1A1B1F]/30 overflow-hidden">
+            <motion.div
+              className="absolute inset-0 flex items-center justify-center p-6"
+              whileHover={{ scale: 1.05 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
+              <img
+                src={imageUrl}
+                alt={name}
+                className="max-w-full max-h-full object-contain"
+                loading="lazy"
+              />
+            </motion.div>
+          </div>
+
+          {/* Product info */}
+          <div className="flex flex-col w-full p-4 flex-grow">
+            <h4 className="text-white text-base md:text-lg font-bold truncate">
+              {name}
+            </h4>
+            <div className="flex items-center gap-1 text-xs md:text-sm text-[#AEAEB2] py-1">
+              <span>
+                By {typeof seller === "string" ? seller : "Unknown Seller"}
+              </span>
+              <RiVerifiedBadgeFill className="text-[#4FA3FF] text-xs" />
+            </div>
+            <p className="text-white/80 text-xs md:text-sm py-1 line-clamp-2 min-h-[2.5rem]">
+              {description}
+            </p>
+
+            {/* Price and buy button container */}
+            <div className="mt-auto pt-3">
+              <div className="flex flex-col">
+                <span className="text-white text-sm md:text-base font-semibold">
+                  {product.formattedCeloPrice}
+                </span>
+                <span className="text-[#AEAEB2] text-xs md:text-sm">
+                  {secondaryPrice}
+                </span>
+              </div>
+
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="mt-3 gap-2 font-medium text-white bg-Red py-2.5 rounded-md flex justify-center items-center w-full transition-all duration-300"
+                onClick={navigateToProduct}
+              >
+                <span>Buy Now</span>
+                <BsCart3 className="text-lg" />
+              </motion.button>
+            </div>
+          </div>
+        </Link>
+      </motion.div>
     );
   }
 );

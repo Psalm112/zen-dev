@@ -1,10 +1,9 @@
-// src/components/trade/TransactionConfirmation.tsx
-
 import { FC, useState, useEffect } from "react";
 import { FaSpinner, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import { motion } from "framer-motion";
 import { useContract } from "../../utils/hooks/useContract";
 import { useWallet } from "../../context/WalletContext";
+import { useCurrencyConverter } from "../../utils/hooks/useCurrencyConverter";
 
 interface TransactionConfirmationProps {
   contractAddress: string;
@@ -29,6 +28,7 @@ const TransactionConfirmation: FC<TransactionConfirmationProps> = ({
 }) => {
   const { buyTrade } = useContract();
   const { balanceInUSDT, balanceInCELO } = useWallet();
+  const { convertPrice, formatPrice } = useCurrencyConverter();
 
   const [status, setStatus] = useState<"pending" | "success" | "error">(
     "pending"
@@ -52,30 +52,35 @@ const TransactionConfirmation: FC<TransactionConfirmationProps> = ({
           if (userBalance < requiredAmount) {
             setStatus("error");
             setErrorMessage(
-              `Insufficient USDT balance. You need at least ${requiredAmount.toFixed(
-                2
-              )} USDT.`
-            );
-            onComplete(false);
-            return;
-          }
-        } else {
-          const userBalance = parseFloat(
-            balanceInCELO?.replace(" CELO", "") || "0"
-          );
-          const requiredAmount = parseFloat(amount) * 1.02; // Add 2% for gas fees
-
-          if (userBalance < requiredAmount) {
-            setStatus("error");
-            setErrorMessage(
-              `Insufficient CELO balance. You need at least ${requiredAmount.toFixed(
-                2
+              `Insufficient USDT balance. You need at least ${formatPrice(
+                requiredAmount,
+                "USDT"
+              )} USDT or ${formatPrice(
+                convertPrice(requiredAmount, "USDT", "CELO"),
+                "CELO"
               )} CELO.`
             );
             onComplete(false);
             return;
           }
         }
+        // else {
+        //   const userBalance = parseFloat(
+        //     balanceInCELO?.replace(" CELO", "") || "0"
+        //   );
+        //   const requiredAmount = parseFloat(amount) * 1.02; // Add 2% for gas fees
+
+        //   if (userBalance < requiredAmount) {
+        //     setStatus("error");
+        //     setErrorMessage(
+        //       `Insufficient CELO balance. You need at least ${requiredAmount.toFixed(
+        //         2
+        //       )} CELO.`
+        //     );
+        //     onComplete(false);
+        //     return;
+        //   }
+        // }
 
         if (tradeId && logisticsProviderAddress) {
           const result = await buyTrade({
