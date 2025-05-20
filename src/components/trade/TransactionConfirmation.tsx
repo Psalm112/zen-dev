@@ -86,7 +86,7 @@ const TransactionConfirmation: FC<TransactionConfirmationProps> = ({
           const result = await buyTrade({
             tradeId,
             quantity,
-            logisterProvider: logisticsProviderAddress,
+            logisticsProvider: logisticsProviderAddress,
           });
 
           if (result.success) {

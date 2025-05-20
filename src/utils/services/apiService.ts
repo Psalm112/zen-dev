@@ -427,7 +427,7 @@ export const api = {
 
   buyTrade: async (
     tradeId: string,
-    data: { quantity: number; logisterProvider: string }
+    data: { quantity: number; logisticsProvider: string }
   ) => {
     return fetchWithAuth(`/contracts/trades/${tradeId}/buy`, {
       method: "POST",
