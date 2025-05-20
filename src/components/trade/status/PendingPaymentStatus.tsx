@@ -134,8 +134,9 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     //   return userBalance >= requiredAmount;
     // } else {
     const userBalance = parseFloat(balanceInUSDT?.replace(" USDT", "") || "0");
-    return userBalance >= requiredAmount;
     console.log(userBalance, requiredAmount);
+    return userBalance >= requiredAmount;
+
     // }
   };
 
