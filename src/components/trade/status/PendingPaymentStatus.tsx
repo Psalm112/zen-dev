@@ -114,6 +114,12 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     if (!orderDetails?.product?.price) return false;
 
     const totalAmount = orderDetails.product.price * quantity;
+    console.log(
+      totalAmount,
+      orderDetails.product.price,
+      quantity,
+      "totalAmount"
+    );
     const requiredAmount = totalAmount * 1.02; // Add 2% for gas fees
 
     // Check if the currency is USDT or CELO (default to CELO if not specified)
@@ -129,6 +135,7 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     // } else {
     const userBalance = parseFloat(balanceInUSDT?.replace(" USDT", "") || "0");
     return userBalance >= requiredAmount;
+    console.log(userBalance, requiredAmount);
     // }
   };
 
