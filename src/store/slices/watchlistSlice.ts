@@ -133,6 +133,13 @@ const watchlistSlice = createSlice({
       state.lastFetched = null;
       state.isWatchlist = {};
     },
+    // Add immediate state update for better UX
+    optimisticAddToWatchlist: (state, action: PayloadAction<string>) => {
+      state.isWatchlist[action.payload] = true;
+    },
+    optimisticRemoveFromWatchlist: (state, action: PayloadAction<string>) => {
+      state.isWatchlist[action.payload] = false;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -148,9 +155,11 @@ const watchlistSlice = createSlice({
           state.lastFetched = Date.now();
 
           // Update isWatchlist object
+          const newIsWatchlist: { [productId: string]: boolean } = {};
           action.payload.forEach((item) => {
-            state.isWatchlist[item.product._id] = true;
+            newIsWatchlist[item.product._id] = true;
           });
+          state.isWatchlist = newIsWatchlist;
         }
       )
       .addCase(fetchWatchlist.rejected, (state, action) => {
@@ -161,14 +170,15 @@ const watchlistSlice = createSlice({
         state.isWatchlist[action.payload.productId] =
           action.payload.isWatchlist;
       })
-      .addCase(addToWatchlist.pending, (state) => {
-        state.loading = "pending";
+      .addCase(addToWatchlist.pending, (state, action) => {
+        // Optimistic update
+        state.isWatchlist[action.meta.arg] = true;
         state.error = null;
       })
       .addCase(
         addToWatchlist.fulfilled,
         (state, action: PayloadAction<WatchlistItem>) => {
-          // Update local state
+          // Confirm the optimistic update
           state.isWatchlist[action.payload.product._id] = true;
 
           // Add to items if not already present
@@ -180,11 +190,14 @@ const watchlistSlice = createSlice({
         }
       )
       .addCase(addToWatchlist.rejected, (state, action) => {
+        // Revert optimistic update
+        state.isWatchlist[action.meta.arg] = false;
         state.loading = "failed";
         state.error = (action.payload as string) || "Unknown error occurred";
       })
-      .addCase(removeFromWatchlist.pending, (state) => {
-        state.loading = "pending";
+      .addCase(removeFromWatchlist.pending, (state, action) => {
+        // Optimistic update
+        state.isWatchlist[action.meta.arg] = false;
         state.error = null;
       })
       .addCase(
@@ -194,23 +207,27 @@ const watchlistSlice = createSlice({
           action: PayloadAction<{ success: boolean; productId: string }>
         ) => {
           if (action.payload.success) {
-            // Remove from items array
+            // Confirm the optimistic update
             state.items = state.items.filter(
               (item) => item.product._id !== action.payload.productId
             );
-
-            // Update isWatchlist status
             state.isWatchlist[action.payload.productId] = false;
           }
           state.loading = "succeeded";
         }
       )
       .addCase(removeFromWatchlist.rejected, (state, action) => {
+        // Revert optimistic update
+        state.isWatchlist[action.meta.arg] = true;
         state.loading = "failed";
         state.error = (action.payload as string) || "Unknown error occurred";
       });
   },
 });
 
-export const { clearWatchlist } = watchlistSlice.actions;
+export const {
+  clearWatchlist,
+  optimisticAddToWatchlist,
+  optimisticRemoveFromWatchlist,
+} = watchlistSlice.actions;
 export default watchlistSlice.reducer;

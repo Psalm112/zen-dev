@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "./redux";
 import {
   fetchWatchlist,
@@ -24,6 +24,13 @@ export const useWatchlist = () => {
   const error = useAppSelector(selectWatchlistError);
   const watchlistCount = useAppSelector(selectWatchlistCount);
   const isWatchlistMap = useAppSelector(selectIsWatchlistMap);
+
+  // Fetch watchlist on mount if not already loaded
+  useEffect(() => {
+    if (watchlistItems.length === 0 && loading === "idle") {
+      dispatch(fetchWatchlist(false));
+    }
+  }, [dispatch, watchlistItems.length, loading]);
 
   const isProductInWatchlist = useCallback(
     (productId: string) => {
@@ -65,7 +72,7 @@ export const useWatchlist = () => {
   const addProductToWatchlist = useCallback(
     async (productId: string, showNotifications = true) => {
       try {
-        await dispatch(addToWatchlist(productId)).unwrap();
+        const result = await dispatch(addToWatchlist(productId)).unwrap();
         if (showNotifications) {
           showSnackbar("Product added to watchlist", "success");
         }
@@ -109,9 +116,9 @@ export const useWatchlist = () => {
       const inWatchlist = isProductInWatchlist(productId);
 
       if (inWatchlist) {
-        return removeProductFromWatchlist(productId, showNotifications);
+        return await removeProductFromWatchlist(productId, showNotifications);
       } else {
-        return addProductToWatchlist(productId, showNotifications);
+        return await addProductToWatchlist(productId, showNotifications);
       }
     },
     [isProductInWatchlist, addProductToWatchlist, removeProductFromWatchlist]

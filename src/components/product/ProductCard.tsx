@@ -37,11 +37,11 @@ const ProductCard = React.memo(
         ? images[0]
         : "https://placehold.co/300x300?text=No+Image";
 
-    const handleToggleFavorite = (e: React.MouseEvent) => {
+    const handleToggleFavorite = async (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
       console.log("toggleWatchlist", _id);
-      toggleWatchlist(_id);
+      await toggleWatchlist(_id);
     };
 
     const navigateToProduct = (e: React.MouseEvent) => {
@@ -59,30 +59,22 @@ const ProductCard = React.memo(
           to={`/product/${_id}`}
           className="bg-[#292B30] rounded-lg relative flex flex-col overflow-hidden h-full shadow-lg hover:shadow-xl transition-shadow duration-300"
         >
+          {/* Top section with New tag and favorite */}
           <div className="absolute top-0 left-0 right-0 z-10 flex justify-between p-2 sm:p-3">
-            <div className="flex gap-2">
-              {isSponsored && (
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="text-white text-xs bg-Green/50 rounded-xl py-0.5 px-2 font-medium"
-                >
-                  Sponsored
-                </motion.div>
-              )}
-              {isNew && (
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="text-white text-xs bg-Red/50 rounded-xl py-0.5 px-2 font-medium"
-                >
-                  New
-                </motion.div>
-              )}
-            </div>
+            {isNew && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-white text-xs bg-gradient-to-r from-Red to-Red/80 rounded-full py-1 px-3 font-semibold shadow-lg border border-Red/30"
+              >
+                ✨ New
+              </motion.div>
+            )}
             <motion.button
               whileTap={{ scale: 0.9 }}
-              className="bg-[#1A1B1F]/50 rounded-full p-1.5 sm:p-2 backdrop-blur-sm"
+              className={`ml-auto bg-[#1A1B1F]/50 rounded-full p-1.5 sm:p-2 backdrop-blur-sm ${
+                !isNew ? "mr-0" : ""
+              }`}
               aria-label={
                 isFavorite ? "Remove from favorites" : "Add to favorites"
               }
@@ -114,6 +106,15 @@ const ProductCard = React.memo(
 
           {/* Product info */}
           <div className="flex flex-col w-full p-3 sm:p-4 flex-grow">
+            {/* Sponsored text above product name */}
+            {isSponsored && (
+              <div className="mb-1">
+                <span className="text-Green text-xs font-medium bg-Green/10 px-2 py-0.5 rounded-md border border-Green/20">
+                  🎯 Sponsored
+                </span>
+              </div>
+            )}
+
             <h4 className="text-white text-sm sm:text-base md:text-lg font-bold truncate">
               {name}
             </h4>
