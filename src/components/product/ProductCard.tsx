@@ -22,7 +22,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 const ProductCard = React.memo(
   ({ product, isNew = false }: ProductCardProps) => {
     const navigate = useNavigate();
-    const { _id, name, description, images, seller } = product;
+    const { _id, name, description, images, seller, isSponsored } = product;
     const { isProductInWatchlist, toggleWatchlist } = useWatchlist();
     const { secondaryCurrency } = useCurrency();
     const isFavorite = isProductInWatchlist(_id);
@@ -40,6 +40,7 @@ const ProductCard = React.memo(
     const handleToggleFavorite = (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
+      console.log("toggleWatchlist", _id);
       toggleWatchlist(_id);
     };
 
@@ -103,6 +104,13 @@ const ProductCard = React.memo(
 
           {/* Product info */}
           <div className="flex flex-col w-full p-3 sm:p-4 flex-grow">
+            {isSponsored && (
+              <div className="absolute top-0 left-0 right-0 z-10 flex justify-between p-2 sm:p-3">
+                <span className="text-white text-xs bg-Green/50 rounded-xl py-0.5 px-2 font-medium">
+                  Sponsored
+                </span>
+              </div>
+            )}
             <h4 className="text-white text-sm sm:text-base md:text-lg font-bold truncate">
               {name}
             </h4>
