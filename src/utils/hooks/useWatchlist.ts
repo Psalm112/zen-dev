@@ -10,8 +10,8 @@ import {
   selectWatchlistItems,
   selectWatchlistLoading,
   selectWatchlistError,
-  selectIsProductInWatchlist,
   selectWatchlistCount,
+  selectIsWatchlistMap,
 } from "../../store/selectors/watchlistSelectors";
 import { useSnackbar } from "../../context/SnackbarContext";
 
@@ -23,10 +23,14 @@ export const useWatchlist = () => {
   const loading = useAppSelector(selectWatchlistLoading);
   const error = useAppSelector(selectWatchlistError);
   const watchlistCount = useAppSelector(selectWatchlistCount);
+  const isWatchlistMap = useAppSelector(selectIsWatchlistMap);
 
-  const isProductInWatchlist = useCallback((productId: string) => {
-    return useAppSelector(selectIsProductInWatchlist(productId));
-  }, []);
+  const isProductInWatchlist = useCallback(
+    (productId: string) => {
+      return !!isWatchlistMap[productId];
+    },
+    [isWatchlistMap]
+  );
 
   const fetchUserWatchlist = useCallback(
     async (showNotifications = false, forceRefresh = false) => {
