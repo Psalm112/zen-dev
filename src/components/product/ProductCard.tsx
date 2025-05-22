@@ -65,9 +65,9 @@ const ProductCard = React.memo(
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="text-white text-xs bg-gradient-to-r from-Red to-Red/80 rounded-full py-1 px-3 font-semibold shadow-lg border border-Red/30"
+                className="text-Red text-xs bg-Red/20 rounded-full py-1 px-2 font-semibold"
               >
-                ✨ New
+                New
               </motion.div>
             )}
             <motion.button
@@ -88,7 +88,7 @@ const ProductCard = React.memo(
             </motion.button>
           </div>
 
-          {/* Image container with fixed aspect ratio */}
+          {/* Image container */}
           <div className="w-full pt-[100%] relative bg-[#1A1B1F]/30 overflow-hidden">
             <motion.div
               className="absolute inset-0 flex items-center justify-center p-4 sm:p-6"
@@ -106,11 +106,10 @@ const ProductCard = React.memo(
 
           {/* Product info */}
           <div className="flex flex-col w-full p-3 sm:p-4 flex-grow">
-            {/* Sponsored text above product name */}
             {isSponsored && (
               <div className="mb-1">
                 <span className="text-Green text-xs font-medium bg-Green/10 px-2 py-0.5 rounded-md border border-Green/20">
-                  🎯 Sponsored
+                  Sponsored
                 </span>
               </div>
             )}
