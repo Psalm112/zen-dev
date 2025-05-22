@@ -18,7 +18,7 @@ const FloatingActionButton: FC<FloatingActionButtonProps> = ({
   color = "primary",
 }) => {
   const positionClasses = {
-    "bottom-right": "bottom-30 md:bottom-20 max-xl:right-2",
+    "bottom-right": "bottom-50 md:bottom-20 max-xl:right-2 right-0",
     "bottom-center": "bottom-20 left-1/2 transform -translate-x-1/2",
   };
 
