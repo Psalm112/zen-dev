@@ -18,10 +18,10 @@ const EditProfile = lazy(
 const Settings = lazy(() => import("../components/account/settings/Settings"));
 
 const TAB_OPTIONS: TabOption[] = [
-  { id: "1", label: "Order History" },
-  { id: "2", label: "Saved Items" },
-  { id: "3", label: "Dispute History" },
-  { id: "4", label: "Rewards" },
+  { id: "1", label: "Saved Items" },
+  { id: "2", label: "Rewards" },
+  { id: "3", label: "Order History" },
+  { id: "4", label: "Dispute History" },
   { id: "5", label: "Create Product" },
 ];
 

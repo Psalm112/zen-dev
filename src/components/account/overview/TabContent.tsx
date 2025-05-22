@@ -50,7 +50,7 @@ const TabContent: React.FC<TabContentProps> = React.memo(
         fetchUserWatchlist(false, true);
         setIsInitialLoad(false);
       }
-      if (activeTab === "2" && isInitialLoad) {
+      if (activeTab === "3" && isInitialLoad) {
         const loadOrders = async () => {
           await fetchBuyerOrders(false, true);
           setIsInitialLoad(false);
@@ -58,7 +58,7 @@ const TabContent: React.FC<TabContentProps> = React.memo(
         loadOrders();
       }
 
-      if (activeTab === "3" && isInitialLoad) {
+      if (activeTab === "4" && isInitialLoad) {
         const loadOrders = async () => {
           await fetchBuyerOrders(false, true);
           setIsInitialLoad(false);
@@ -121,7 +121,18 @@ const TabContent: React.FC<TabContentProps> = React.memo(
               )}
           </m.div>
         )}
+
         {activeTab === "2" && (
+          <m.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <ReferralsTab />
+          </m.div>
+        )}
+        {activeTab === "3" && (
           <m.div
             className="mt-6 space-y-4"
             initial={{ opacity: 0, x: -20 }}
@@ -169,7 +180,7 @@ const TabContent: React.FC<TabContentProps> = React.memo(
           </m.div>
         )}
 
-        {activeTab === "3" && (
+        {activeTab === "4" && (
           <m.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -225,17 +236,6 @@ const TabContent: React.FC<TabContentProps> = React.memo(
                     ))}
                 </div>
               )}
-          </m.div>
-        )}
-
-        {activeTab === "4" && (
-          <m.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            transition={{ duration: 0.3 }}
-          >
-            <ReferralsTab />
           </m.div>
         )}
 
