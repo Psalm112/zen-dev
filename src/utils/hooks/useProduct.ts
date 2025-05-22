@@ -64,19 +64,6 @@ export const useProductData = () => {
     [convertPrice, formatPrice]
   );
 
-  // const formattedProduct = useMemo(() => {
-  //   if (!rawFormattedProduct) return null;
-
-  //   return {
-  //     ...rawFormattedProduct,
-  //     ...selectFormattedProduct(
-  //       { products: { currentProduct: rawFormattedProduct } } as any,
-  //       rates,
-  //       userCountry
-  //     ),
-  //   };
-  // }, [rawFormattedProduct, rates, userCountry]);
-
   const formattedProduct = useMemo(() => {
     if (!product) return null;
     return formatProductWithCurrencies(product);
