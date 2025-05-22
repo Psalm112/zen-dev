@@ -38,6 +38,16 @@ const CompletedTradeCard: FC<CompletedTradeCardProps> = ({ trade }) => {
     }, 2000);
   };
 
+  const handleContactSeller = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+  };
+
+  const handleCopyClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    copyOrderId(trade?._id || "");
+  };
+
   // const getProductName = () => {
   //   return trade?.product?.name || "Unknown Product";
   // };
@@ -90,6 +100,7 @@ const CompletedTradeCard: FC<CompletedTradeCardProps> = ({ trade }) => {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
+          onClick={handleContactSeller}
         >
           <Button
             title="Contact Seller"
@@ -142,7 +153,7 @@ const CompletedTradeCard: FC<CompletedTradeCardProps> = ({ trade }) => {
                     {trade?._id?.slice(-12) || "N/A"}
                   </span>
                   <motion.button
-                    onClick={() => copyOrderId(trade?._id || "")}
+                    onClick={handleCopyClick}
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                   >

@@ -7,7 +7,7 @@ import { FaCopy } from "react-icons/fa";
 import { LuMessageSquare } from "react-icons/lu";
 import { Order } from "../../../utils/types";
 import { useCurrency } from "../../../context/CurrencyContext";
-
+import { useNavigate } from "react-router-dom";
 interface ActiveTradeCardProps {
   trade: Order & {
     formattedUsdtAmount: string;
@@ -18,6 +18,7 @@ interface ActiveTradeCardProps {
 }
 
 const ActiveTradeCard: FC<ActiveTradeCardProps> = ({ trade }) => {
+  const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
   const { secondaryCurrency } = useCurrency();
 
@@ -37,7 +38,15 @@ const ActiveTradeCard: FC<ActiveTradeCardProps> = ({ trade }) => {
       setCopied(false);
     }, 2000);
   };
+  const handleContactSeller = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+  };
 
+  const handleCopyClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    copyOrderId(trade?._id || "");
+  };
   // const getSellerInfo = () => {
   //   if (typeof trade?.seller === "object" && trade.seller) {
   //     return trade.seller.name;
@@ -100,6 +109,7 @@ const ActiveTradeCard: FC<ActiveTradeCardProps> = ({ trade }) => {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
+          onClick={handleContactSeller}
         >
           <Button
             title="Contact Seller"
@@ -156,7 +166,7 @@ const ActiveTradeCard: FC<ActiveTradeCardProps> = ({ trade }) => {
                     {trade?._id?.slice(-12) || "N/A"}
                   </span>
                   <motion.button
-                    onClick={() => copyOrderId(trade?._id || "")}
+                    onClick={handleCopyClick}
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                   >

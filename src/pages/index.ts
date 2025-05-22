@@ -2,6 +2,7 @@ import googleIcon from "/images/google-icon.png";
 import facebookIcon from "/images/facebookicon.png";
 import xIcon from "/images/xicon.png";
 import Logo from "/images/logo.png";
+import FullLogo from "/images/logo-full.png";
 import BlackLogo from "/images/logoBlack.png";
 // import Mainlogo from "/images/mainlogo.png"
 import Avatar from "/images/avatar.png";
@@ -25,6 +26,7 @@ export {
   facebookIcon,
   xIcon,
   Logo,
+  FullLogo,
   BlackLogo,
   Avatar,
   Avatar2,

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { HiOutlineBell } from "react-icons/hi";
 import { BiLogIn, BiWallet } from "react-icons/bi";
-import { Logo } from "../../pages";
+import { FullLogo, Logo } from "../../pages";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import Container from "../common/Container";
 import { useNotifications } from "../../utils/hooks/useNotifications";
@@ -87,8 +87,13 @@ const Header = () => {
         >
           <div className="w-8 h-8 md:w-9 md:h-9 relative overflow-hidden">
             <img
+              src={FullLogo}
+              className="w-full md:hidden transition-transform group-hover:scale-110 object-cover object-[25%_25%]"
+              alt="dezenmart logo"
+            />
+            <img
               src={Logo}
-              className="w-full transition-transform group-hover:scale-110 object-cover object-[25%_25%]"
+              className="w-full hidden md:block transition-transform group-hover:scale-110 object-cover object-[25%_25%]"
               alt="dezenmart logo"
             />
           </div>
