@@ -7,7 +7,6 @@ import { LiaAngleDownSolid } from "react-icons/lia";
 import Button from "../components/common/Button";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import { useUserManagement } from "../utils/hooks/useUser";
-import { Product1 } from ".";
 import { TabOption, TabType } from "../utils/types";
 
 const TabContent = lazy(
@@ -183,7 +182,6 @@ const Account = () => {
               <Suspense fallback={<LoadingFallback />}>
                 <TabContent
                   activeTab={activeTab}
-                  productImage={Product1}
                   milestones={selectedUser.milestones}
                   referralCode={selectedUser.referralCode}
                   referralCount={selectedUser.referralCount}

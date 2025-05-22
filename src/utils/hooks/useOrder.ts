@@ -43,11 +43,14 @@ export const useOrderData = () => {
 
   const formatOrderWithCurrencies = useCallback(
     (order: Order) => {
-      if (!order) return null;
+      if (!order || !order._id) return null;
 
-      const usdtPrice = order.amount / 100;
+      const usdtPrice = order.amount;
       const celoPrice = convertPrice(usdtPrice, "USDT", "CELO");
       const fiatPrice = convertPrice(usdtPrice, "USDT", "FIAT");
+      const totalUsdtAmount = usdtPrice * (order.quantity || 1);
+      const totalCeloAmount = celoPrice * (order.quantity || 1);
+      const totalFiatAmount = fiatPrice * (order.quantity || 1);
 
       return {
         ...order,
@@ -61,13 +64,18 @@ export const useOrderData = () => {
         formattedUsdtPrice: formatPrice(usdtPrice, "USDT"),
         formattedCeloPrice: formatPrice(celoPrice, "CELO"),
         formattedFiatPrice: formatPrice(fiatPrice, "FIAT"),
+        formattedUsdtAmount: formatPrice(totalUsdtAmount, "USDT"),
+        formattedCeloAmount: formatPrice(totalCeloAmount, "CELO"),
+        formattedFiatAmount: formatPrice(totalFiatAmount, "FIAT"),
       };
     },
     [convertPrice, formatPrice]
   );
 
   const formattedOrders = useMemo(() => {
-    return orders.map(formatOrderWithCurrencies);
+    return orders
+      .map(formatOrderWithCurrencies)
+      .filter((order): order is NonNullable<typeof order> => order !== null);
   }, [orders, formatOrderWithCurrencies]);
 
   const formattedSellerOrders = useMemo(() => {
@@ -79,6 +87,17 @@ export const useOrderData = () => {
     return formatOrderWithCurrencies(currentOrder);
   }, [currentOrder, formatOrderWithCurrencies]);
 
+  const disputeOrders = useMemo(() => {
+    return formattedOrders.filter(
+      (order) => order.status === "disputed" && order.product?._id
+    );
+  }, [formattedOrders]);
+
+  const nonDisputeOrders = useMemo(() => {
+    return formattedOrders.filter(
+      (order) => order.status !== "disputed" && order.product?._id
+    );
+  }, [formattedOrders]);
   const orderStats = useMemo(() => {
     const buyerTotal = orders.reduce((sum, order) => sum + order.amount, 0);
     const sellerTotal = sellerOrders.reduce(
@@ -172,21 +191,6 @@ export const useOrderData = () => {
       }
     },
     [dispatch, showSnackbar]
-  );
-  const disputeOrders = useMemo(
-    () =>
-      formattedOrders?.filter(
-        (order) => order?.status === "disputed" && order?.product
-      ) || [],
-    [formattedOrders]
-  );
-
-  const nonDisputeOrders = useMemo(
-    () =>
-      formattedOrders?.filter(
-        (order) => order?.status !== "disputed" && order?.product
-      ) || [],
-    [formattedOrders]
   );
 
   const fetchMerchantOrders = useCallback(
