@@ -4,17 +4,49 @@ import { RiVerifiedBadgeFill } from "react-icons/ri";
 import Button from "../../common/Button";
 import { FaArrowRightLong } from "react-icons/fa6";
 import { useCurrency } from "../../../context/CurrencyContext";
-import { useCurrencyConverter } from "../../../utils/hooks/useCurrencyConverter";
 import { Order } from "../../../utils/types";
 
 interface DisputeItemProps {
-  order: Order;
+  order: Order & {
+    formattedDate?: string;
+    formattedUsdtPrice?: string;
+    formattedCeloPrice?: string;
+    formattedFiatPrice?: string;
+    formattedUsdtAmount?: string;
+    formattedCeloAmount?: string;
+    formattedFiatAmount?: string;
+    usdtPrice?: number;
+    celoPrice?: number;
+    fiatPrice?: number;
+  };
   disputeStatus: string;
 }
 
 const DisputeItem: React.FC<DisputeItemProps> = React.memo(
   ({ order, disputeStatus }) => {
     const { secondaryCurrency } = useCurrency();
+
+    const secondaryPrice = useMemo(() => {
+      switch (secondaryCurrency) {
+        case "USDT":
+          return {
+            unit: order.formattedUsdtPrice,
+            total: order.formattedUsdtAmount,
+          };
+        default:
+          return {
+            unit: order.formattedFiatPrice,
+            total: order.formattedFiatAmount,
+          };
+      }
+    }, [secondaryCurrency, order]);
+
+    const formattedDate = useMemo(() => {
+      if (order.formattedDate) return order.formattedDate;
+      return order.dispute?.createdAt
+        ? new Date(order.dispute.createdAt).toLocaleDateString()
+        : new Date(order.createdAt).toLocaleDateString();
+    }, [order]);
 
     const getStatusStyle = useMemo(() => {
       const statusStyles = {
@@ -31,6 +63,21 @@ const DisputeItem: React.FC<DisputeItemProps> = React.memo(
       );
     }, [disputeStatus]);
 
+    const sellerName = useMemo(
+      () =>
+        typeof order?.seller === "object"
+          ? order?.seller?.name
+          : order?.seller || "Unknown Vendor",
+      [order?.seller]
+    );
+
+    const productImage = useMemo(
+      () =>
+        order?.product?.images?.[0] ||
+        "https://placehold.co/300x300?text=No+Image",
+      [order?.product?.images]
+    );
+
     return (
       <motion.div
         className="grid grid-cols-1 xs:grid-cols-[2fr_3fr] h-full items-center gap-6 md:gap-10 p-6 md:px-[10%] lg:px-[15%] md:py-10 bg-[#292B30] mt-8 rounded-lg"
@@ -40,10 +87,7 @@ const DisputeItem: React.FC<DisputeItemProps> = React.memo(
         whileHover={{ scale: 1.01 }}
       >
         <motion.img
-          src={
-            order?.product?.images[0] ||
-            "https://placehold.co/300x300?text=No+Image"
-          }
+          src={productImage}
           alt={order?.product?.name || "Unknown Product"}
           className="w-[60%] md:w-full h-auto mx-auto md:mx-0 rounded-md lg:row-span-2 object-cover aspect-square"
           whileHover={{ scale: 1.05 }}
@@ -53,48 +97,42 @@ const DisputeItem: React.FC<DisputeItemProps> = React.memo(
 
         <div className="flex flex-col w-full text-left">
           <h3 className="font-normal text-2xl md:text-3xl text-white truncate">
-            {order?.product?.name}
+            {order?.product?.name || "Unknown Product"}
           </h3>
           <span className="flex items-center gap-2 text-sm text-[#AEAEB2] mb-4">
-            By{" "}
-            {typeof order?.seller === "object"
-              ? order?.seller?.name
-              : order?.seller || "Unknown Vendor"}
+            By {sellerName}
             <RiVerifiedBadgeFill className="text-[#4FA3FF] text-xs" />
           </span>
 
-          {/* {formattedPrices && ( */}
-          <>
+          <div className="flex justify-between text-sm text-white mb-2">
+            <span>Unit Price:</span>
+            <div className="text-right">
+              <div className="text-white font-medium">
+                {order.formattedCeloPrice}
+              </div>
+              <div className="text-[#AEAEB2] text-xs">
+                {secondaryPrice.unit}
+              </div>
+            </div>
+          </div>
+
+          {order?.quantity && order?.quantity > 1 && (
             <div className="flex justify-between text-sm text-white mb-2">
-              <span>Price:</span>
+              <span>Total ({order?.quantity} items):</span>
               <div className="text-right">
                 <div className="text-white font-medium">
-                  {order?.formattedProductPrice}
+                  {order.formattedCeloAmount}
                 </div>
                 <div className="text-[#AEAEB2] text-xs">
-                  {order?.formattedCeloPrice}
+                  {secondaryPrice.total}
                 </div>
               </div>
             </div>
-            {order?.quantity && order?.quantity > 1 && (
-              <div className="flex justify-between text-sm text-white mb-2">
-                <span>Total ({order?.quantity} items):</span>
-                <div className="text-right">
-                  <div className="text-white font-medium">
-                    {order?.formattedCeloAmount}
-                  </div>
-                  <div className="text-[#AEAEB2] text-xs">
-                    {order?.formattedFiatAmount}
-                  </div>
-                </div>
-              </div>
-            )}
-          </>
-          {/* )} */}
+          )}
 
           <div className="flex justify-between text-sm text-white mb-2">
             <span>Dispute Raised:</span>
-            <span>{order?.formattedDate}</span>
+            <span>{formattedDate}</span>
           </div>
           <div className="flex justify-between text-sm text-white mb-2">
             <span>Dispute Status:</span>

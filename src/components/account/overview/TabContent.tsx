@@ -29,8 +29,8 @@ interface TabContentProps {
 const TabContent: React.FC<TabContentProps> = ({ activeTab, productImage }) => {
   const {
     fetchBuyerOrders,
-    disputeOrders, 
-    nonDisputeOrders, 
+    disputeOrders,
+    nonDisputeOrders,
     loading: orderLoading,
     error: orderError,
   } = useOrderData();
@@ -108,7 +108,7 @@ const TabContent: React.FC<TabContentProps> = ({ activeTab, productImage }) => {
             !orderError &&
             nonDisputeOrders.length > 0 &&
             nonDisputeOrders.map((order, index) => (
-              <OrderHistoryItem key={order._id} {...order} index={index} />
+              <OrderHistoryItem key={order?._id} {...order} index={index} />
             ))}
         </m.div>
       )}
@@ -199,30 +199,33 @@ const TabContent: React.FC<TabContentProps> = ({ activeTab, productImage }) => {
             />
           )}
 
-          {!orderLoading && !orderError && disputeOrders?.length > 0 && (
-            <div className="mt-6 space-y-4">
-              {disputeOrders.map((order) => (
-                <DisputeItem
-                  key={order?._id}
-                  // productImage={
-                  //   order.product?.images[0] ||
-                  //   "https://placehold.co/300x300?text=No+Image"
-                  // }
-                  // productName={order?.product?.name || "Unknown Product"}
-                  // vendor={
-                  //   typeof order?.seller === "object"
-                  //     ? order?.seller?.name
-                  //     : order?.seller || "Unknown Vendor"
-                  // }
-                  // disputeDate={order?.formattedDate || "Unknown Date"}
-                  disputeStatus="Under Review"
-                  // productPrice={order.product.price}
-                  // quantity={order.quantity || 1}
-                  order={order} 
-                />
-              ))}
-            </div>
-          )}
+          {!orderLoading &&
+            !orderError &&
+            disputeOrders &&
+            disputeOrders?.length > 0 && (
+              <div className="mt-6 space-y-4">
+                {disputeOrders.map((order) => (
+                  <DisputeItem
+                    key={order?._id}
+                    // productImage={
+                    //   order.product?.images[0] ||
+                    //   "https://placehold.co/300x300?text=No+Image"
+                    // }
+                    // productName={order?.product?.name || "Unknown Product"}
+                    // vendor={
+                    //   typeof order?.seller === "object"
+                    //     ? order?.seller?.name
+                    //     : order?.seller || "Unknown Vendor"
+                    // }
+                    // disputeDate={order?.formattedDate || "Unknown Date"}
+                    disputeStatus="Under Review"
+                    // productPrice={order.product.price}
+                    // quantity={order.quantity || 1}
+                    order={order}
+                  />
+                ))}
+              </div>
+            )}
         </m.div>
       )}
 
@@ -253,7 +256,7 @@ const TabContent: React.FC<TabContentProps> = ({ activeTab, productImage }) => {
           >
             <CreateProduct />
           </Suspense>
-        </div>
+        </m.div>
       )}
     </LazyMotion>
   );

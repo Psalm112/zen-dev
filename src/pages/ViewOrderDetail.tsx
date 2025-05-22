@@ -18,7 +18,7 @@ const ViewOrderDetail = () => {
 
   const {
     getOrderById,
-    formattedCurrentOrder: orderDetails,
+    currentOrder: orderDetails,
     loading,
     error,
     changeOrderStatus,

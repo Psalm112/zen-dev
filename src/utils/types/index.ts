@@ -105,6 +105,8 @@ export interface Order {
     raisedBy: string;
     reason: string;
     resolved: boolean;
+    createdAt?: string;
+    updatedAt?: string;
   };
   sellerWalletAddress: string;
   createdAt: string;
