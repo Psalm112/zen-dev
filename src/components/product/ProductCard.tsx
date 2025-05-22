@@ -65,7 +65,7 @@ const ProductCard = React.memo(
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="bg-[#1A1B1F]/50 rounded-full p-1.5 sm:p-2 backdrop-blur-xl text-Red text-xs font-bold"
+                className="rounded-full p-1.5 sm:p-2 bg-red-500/20 text-red-500 text-xs font-bold"
               >
                 New
               </motion.div>
