@@ -21,16 +21,28 @@ const CompletedTradeCard: FC<CompletedTradeCardProps> = ({ trade }) => {
   const [copied, setCopied] = useState(false);
   const { secondaryCurrency } = useCurrency();
 
+  // Early return if trade data is incomplete
+  if (!trade || !trade.product) {
+    return (
+      <TradeCardBase className="mt-8 px-6 md:px-12 py-2">
+        <div className="py-4 text-center text-gray-400">
+          <p>Trade data unavailable</p>
+        </div>
+      </TradeCardBase>
+    );
+  }
+
   const secondaryPrice = useMemo(() => {
     switch (secondaryCurrency) {
       case "USDT":
-        return trade.formattedUsdtAmount;
+        return trade.formattedUsdtAmount || "0.00";
       default:
-        return trade.formattedFiatAmount;
+        return trade.formattedFiatAmount || "0.00";
     }
   }, [secondaryCurrency, trade]);
 
   const copyOrderId = (id: string) => {
+    if (!id) return;
     navigator.clipboard.writeText(id);
     setCopied(true);
     setTimeout(() => {
@@ -48,28 +60,16 @@ const CompletedTradeCard: FC<CompletedTradeCardProps> = ({ trade }) => {
     copyOrderId(trade?._id || "");
   };
 
-  // const getProductName = () => {
-  //   return trade?.product?.name || "Unknown Product";
-  // };
+  const getProductName = () => {
+    return trade?.product?.name?.toUpperCase() || "UNKNOWN PRODUCT";
+  };
 
-  // const getSellerInfo = () => {
-  //   if (typeof trade?.seller === "object" && trade.seller) {
-  //     return trade.seller.name;
-  //   }
-  //   return "Unknown Seller";
-  // };
-
-  // const getTradeType = () => {
-  //   return "BUY";
-  // };
-
-  // const getFormattedAmount = () => {
-  //   return trade?.formattedUsdtAmount || trade?.amount?.toFixed(2) || "0.00";
-  // };
-
-  // const getFormattedDate = () => {
-  //   return trade?.formattedDate || new Date(trade?.createdAt).toLocaleString();
-  // };
+  const getSellerId = () => {
+    if (typeof trade?.seller === "object" && trade.seller) {
+      return trade.seller._id;
+    }
+    return trade?.seller || "";
+  };
 
   return (
     <TradeCardBase className="mt-8 px-6 md:px-12 py-2">
@@ -82,7 +82,7 @@ const CompletedTradeCard: FC<CompletedTradeCardProps> = ({ trade }) => {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.1 }}
             >
-              {trade.product.name.toUpperCase()}
+              {getProductName()}
             </motion.h3>
             <motion.span
               className="bg-green-500/20 text-white text-xs px-3 py-1 rounded-full"
@@ -93,7 +93,9 @@ const CompletedTradeCard: FC<CompletedTradeCardProps> = ({ trade }) => {
               COMPLETED
             </motion.span>
           </div>
-          <span className="text-gray-400 text-sm">{trade.formattedDate}</span>
+          <span className="text-gray-400 text-sm">
+            {trade.formattedDate || "Date unavailable"}
+          </span>
         </div>
 
         <motion.div
@@ -105,7 +107,7 @@ const CompletedTradeCard: FC<CompletedTradeCardProps> = ({ trade }) => {
           <Button
             title="Contact Seller"
             className="bg-transparent hover:bg-gray-700 text-white text-sm px-4 py-2 border border-Red rounded-2xl transition-colors flex items-center gap-x-2 justify-center"
-            path=""
+            path={getSellerId() ? `/chat/${getSellerId()}` : "#"}
             icon={<LuMessageSquare className="w-5 h-5 text-Red" />}
             iconPosition="start"
           />
@@ -123,9 +125,7 @@ const CompletedTradeCard: FC<CompletedTradeCardProps> = ({ trade }) => {
             <span className="text-gray-400 text-sm">Amount</span>
             <span className="flex flex-col gap-2 text-right">
               <span className="text-red-500 text-xl font-bold">
-                {/* {getFormattedAmount()} */}
-
-                {trade.formattedCeloAmount}
+                {trade.formattedCeloAmount || "0.00"}
               </span>
               <span className="text-gray-400 text-sm">{secondaryPrice}</span>
             </span>
@@ -136,7 +136,10 @@ const CompletedTradeCard: FC<CompletedTradeCardProps> = ({ trade }) => {
               label="Total Quantity"
               value={trade?.quantity?.toString() || "1"}
             />
-            <TradeDetailRow label="Order Time" value={trade.formattedDate} />
+            <TradeDetailRow
+              label="Order Time"
+              value={trade.formattedDate || "Date unavailable"}
+            />
             <TradeDetailRow
               label="Status"
               value={
@@ -152,13 +155,15 @@ const CompletedTradeCard: FC<CompletedTradeCardProps> = ({ trade }) => {
                   <span className="mr-2">
                     {trade?._id?.slice(-12) || "N/A"}
                   </span>
-                  <motion.button
-                    onClick={handleCopyClick}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                  >
-                    <FaCopy className="text-gray-400 hover:text-white transition-colors" />
-                  </motion.button>
+                  {trade?._id && (
+                    <motion.button
+                      onClick={handleCopyClick}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                    >
+                      <FaCopy className="text-gray-400 hover:text-white transition-colors" />
+                    </motion.button>
+                  )}
                 </div>
               }
               bottomNote={
