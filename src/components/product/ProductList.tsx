@@ -28,7 +28,7 @@ interface FormattedProductProp extends Product {
 }
 
 const ITEMS_PER_PAGE = 8;
-const HOME_PAGE_LIMIT = 4;
+const HOME_PAGE_LIMIT = 2;
 const CATEGORY_SPONSORED_LIMIT = 4;
 
 const ProductList = ({
@@ -330,7 +330,7 @@ const ProductList = ({
             )}
 
             {/* End of results indicator */}
-            {!hasMore &&
+            {/* {!hasMore &&
               totalProducts > 0 &&
               (isCategoryView || isFeatured) && (
                 <div className="text-center py-8 text-gray-400">
@@ -340,7 +340,7 @@ const ProductList = ({
                     <div className="h-px bg-gray-600 w-8"></div>
                   </div>
                 </div>
-              )}
+              )} */}
           </>
         )}
       </div>
