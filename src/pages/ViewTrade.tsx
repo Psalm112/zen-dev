@@ -69,8 +69,11 @@ const ViewTrade = () => {
     }
   }, [orderLoading, isConnected]);
 
-  const handleTradeClick = (tradeId: string, status: string) => {
-    navigate(`/trades/viewtrades/${tradeId}?status=${status}`);
+  // const handleTradeClick = (tradeId: string, status: string) => {
+  //   navigate(`/trades/viewtrades/${tradeId}?status=${status}`);
+  // };
+  const handleTradeClick = (tradeId: string) => {
+    navigate(`/orders/${tradeId}`);
   };
 
   if (!isConnected) {
@@ -140,9 +143,7 @@ const ViewTrade = () => {
                         activeTrades.map((trade) => (
                           <div
                             key={trade._id}
-                            onClick={() =>
-                              handleTradeClick(trade._id, "pending")
-                            }
+                            onClick={() => handleTradeClick(trade._id)}
                             className="cursor-pointer"
                           >
                             <ActiveTradeCard trade={trade} />
@@ -163,9 +164,7 @@ const ViewTrade = () => {
                         completedTrades.map((trade) => (
                           <div
                             key={trade._id}
-                            onClick={() =>
-                              handleTradeClick(trade._id, "completed")
-                            }
+                            onClick={() => handleTradeClick(trade._id)}
                             className="cursor-pointer"
                           >
                             <CompletedTradeCard trade={trade} />

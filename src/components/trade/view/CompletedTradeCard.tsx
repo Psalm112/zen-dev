@@ -1,4 +1,4 @@
-import { useState, FC } from "react";
+import { useState, FC, useMemo } from "react";
 import { motion } from "framer-motion";
 import Button from "../../common/Button";
 import TradeCardBase from "./TradeCardBase";
@@ -6,16 +6,29 @@ import TradeDetailRow from "./TradeDetailRow";
 import { FaCopy } from "react-icons/fa";
 import { LuMessageSquare } from "react-icons/lu";
 import { Order } from "../../../utils/types";
+import { useCurrency } from "../../../context/CurrencyContext";
 
 interface CompletedTradeCardProps {
   trade: Order & {
-    formattedUsdtAmount?: string;
-    formattedDate?: string;
+    formattedUsdtAmount: string;
+    formattedCeloAmount: string;
+    formattedFiatAmount: string;
+    formattedDate: string;
   };
 }
 
 const CompletedTradeCard: FC<CompletedTradeCardProps> = ({ trade }) => {
   const [copied, setCopied] = useState(false);
+  const { secondaryCurrency } = useCurrency();
+
+  const secondaryPrice = useMemo(() => {
+    switch (secondaryCurrency) {
+      case "USDT":
+        return trade.formattedUsdtAmount;
+      default:
+        return trade.formattedFiatAmount;
+    }
+  }, [secondaryCurrency, trade]);
 
   const copyOrderId = (id: string) => {
     navigator.clipboard.writeText(id);
@@ -25,28 +38,28 @@ const CompletedTradeCard: FC<CompletedTradeCardProps> = ({ trade }) => {
     }, 2000);
   };
 
-  const getProductName = () => {
-    return trade?.product?.name || "Unknown Product";
-  };
+  // const getProductName = () => {
+  //   return trade?.product?.name || "Unknown Product";
+  // };
 
-  const getSellerInfo = () => {
-    if (typeof trade?.seller === "object" && trade.seller) {
-      return trade.seller.name;
-    }
-    return "Unknown Seller";
-  };
+  // const getSellerInfo = () => {
+  //   if (typeof trade?.seller === "object" && trade.seller) {
+  //     return trade.seller.name;
+  //   }
+  //   return "Unknown Seller";
+  // };
 
-  const getTradeType = () => {
-    return "BUY";
-  };
+  // const getTradeType = () => {
+  //   return "BUY";
+  // };
 
-  const getFormattedAmount = () => {
-    return trade?.formattedUsdtAmount || trade?.amount?.toFixed(2) || "0.00";
-  };
+  // const getFormattedAmount = () => {
+  //   return trade?.formattedUsdtAmount || trade?.amount?.toFixed(2) || "0.00";
+  // };
 
-  const getFormattedDate = () => {
-    return trade?.formattedDate || new Date(trade?.createdAt).toLocaleString();
-  };
+  // const getFormattedDate = () => {
+  //   return trade?.formattedDate || new Date(trade?.createdAt).toLocaleString();
+  // };
 
   return (
     <TradeCardBase className="mt-8 px-6 md:px-12 py-2">
@@ -59,10 +72,10 @@ const CompletedTradeCard: FC<CompletedTradeCardProps> = ({ trade }) => {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.1 }}
             >
-              {getProductName().toUpperCase()}
+              {trade.product.name.toUpperCase()}
             </motion.h3>
             <motion.span
-              className="bg-green-500 text-white text-xs px-3 py-1 rounded-full"
+              className="bg-green-500/20 text-white text-xs px-3 py-1 rounded-full"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
@@ -70,7 +83,7 @@ const CompletedTradeCard: FC<CompletedTradeCardProps> = ({ trade }) => {
               COMPLETED
             </motion.span>
           </div>
-          <span className="text-gray-400 text-sm">{getFormattedDate()}</span>
+          <span className="text-gray-400 text-sm">{trade.formattedDate}</span>
         </div>
 
         <motion.div
@@ -97,8 +110,13 @@ const CompletedTradeCard: FC<CompletedTradeCardProps> = ({ trade }) => {
         >
           <div className="flex justify-between items-center">
             <span className="text-gray-400 text-sm">Amount</span>
-            <span className="text-green-500 text-xl font-bold">
-              {getFormattedAmount()}
+            <span className="flex flex-col gap-2 text-right">
+              <span className="text-red-500 text-xl font-bold">
+                {/* {getFormattedAmount()} */}
+
+                {trade.formattedCeloAmount}
+              </span>
+              <span className="text-gray-400 text-sm">{secondaryPrice}</span>
             </span>
           </div>
 
@@ -107,11 +125,11 @@ const CompletedTradeCard: FC<CompletedTradeCardProps> = ({ trade }) => {
               label="Total Quantity"
               value={trade?.quantity?.toString() || "1"}
             />
-            <TradeDetailRow label="Order Time" value={getFormattedDate()} />
+            <TradeDetailRow label="Order Time" value={trade.formattedDate} />
             <TradeDetailRow
               label="Status"
               value={
-                <span className="text-green-400 capitalize">
+                <span className="text-green-400/20 capitalize">
                   {trade?.status || "completed"}
                 </span>
               }
