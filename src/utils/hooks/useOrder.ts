@@ -98,6 +98,17 @@ export const useOrderData = () => {
       (order) => order.status !== "disputed" && order.product?._id
     );
   }, [formattedOrders]);
+
+  const activeTrades = useMemo(() => {
+    return formattedOrders.filter(
+      (order) => order.status !== "disputed" && order.status !== "completed"
+    );
+  }, [formattedOrders]);
+
+  const completedTrades = useMemo(() => {
+    return formattedOrders.filter((order) => order.status === "completed");
+  }, [formattedOrders]);
+
   const orderStats = useMemo(() => {
     const buyerTotal = orders.reduce((sum, order) => sum + order.amount, 0);
     const sellerTotal = sellerOrders.reduce(
@@ -304,6 +315,8 @@ export const useOrderData = () => {
     currentOrder: formattedCurrentOrder,
     disputeOrders,
     nonDisputeOrders,
+    activeTrades,
+    completedTrades,
 
     orderStats,
 

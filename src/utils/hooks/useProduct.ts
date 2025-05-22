@@ -25,8 +25,10 @@ import { api } from "../services/apiService";
 import { useCurrencyConverter } from "./useCurrencyConverter";
 import { Product } from "../types";
 import { useCurrency } from "../../context/CurrencyContext";
+import { useAuth } from "../../context/AuthContext";
 
 export const useProductData = () => {
+  const { user } = useAuth();
   const { secondaryCurrency } = useCurrency();
   const dispatch = useAppDispatch();
   const { showSnackbar } = useSnackbar();
@@ -68,21 +70,56 @@ export const useProductData = () => {
     if (!product) return null;
     return formatProductWithCurrencies(product);
   }, [product, formatProductWithCurrencies]);
+
   const formattedProducts = useMemo(() => {
-    return products.map(formatProductWithCurrencies);
-  }, [products, formatProductWithCurrencies]);
+    return products
+      .map(formatProductWithCurrencies)
+      .filter((product) =>
+        typeof product?.seller === "object"
+          ? product?.seller?.name !== user?.name
+          : product?.seller !== user?._id
+      );
+  }, [products, formatProductWithCurrencies, user]);
 
   const formattedRelatedProducts = useMemo(() => {
-    return relatedProducts.map(formatProductWithCurrencies);
-  }, [relatedProducts, formatProductWithCurrencies]);
+    return relatedProducts
+      .map(formatProductWithCurrencies)
+      .filter((product) =>
+        typeof product?.seller === "object"
+          ? product?.seller?.name !== user?.name
+          : product?.seller !== user?._id
+      );
+  }, [relatedProducts, formatProductWithCurrencies, user]);
 
   const formattedSponsoredProducts = useMemo(() => {
-    return sponsoredProducts.map(formatProductWithCurrencies);
-  }, [sponsoredProducts, formatProductWithCurrencies]);
+    return sponsoredProducts
+      .map(formatProductWithCurrencies)
+      .filter((product) =>
+        typeof product?.seller === "object"
+          ? product?.seller?.name !== user?.name
+          : product?.seller !== user?._id
+      );
+  }, [sponsoredProducts, formatProductWithCurrencies, user]);
 
   const formattedSearchResults = useMemo(() => {
-    return searchResults.map(formatProductWithCurrencies);
-  }, [searchResults, formatProductWithCurrencies]);
+    return searchResults
+      .map(formatProductWithCurrencies)
+      .filter((product) =>
+        typeof product?.seller === "object"
+          ? product?.seller?.name !== user?.name
+          : product?.seller !== user?._id
+      );
+  }, [searchResults, formatProductWithCurrencies, user]);
+
+  const formattedProductsByUser = useMemo(() => {
+    return products
+      .map(formatProductWithCurrencies)
+      .filter((product) =>
+        typeof product?.seller === "object"
+          ? product?.seller?.name === user?.name
+          : product?.seller === user?._id
+      );
+  }, [products, formatProductWithCurrencies, user]);
 
   const fetchAllProductsAsync = useCallback(
     async (
@@ -330,6 +367,7 @@ export const useProductData = () => {
     sponsoredProducts: formattedSponsoredProducts,
     searchResults: formattedSearchResults,
     relatedProducts: formattedRelatedProducts,
+    productsByUser: formattedProductsByUser,
     loading: loading,
     error,
     fetchAllProducts: fetchAllProductsAsync,
