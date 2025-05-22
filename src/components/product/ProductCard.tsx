@@ -123,7 +123,7 @@ const ProductCard = React.memo(
               </span>
               <RiVerifiedBadgeFill className="text-[#4FA3FF] text-xs" />
             </div> */}
-            <p className="text-white/80 text-xs md:text-sm py-0.5 sm:py-1 line-clamp-2 ">
+            <p className="text-white/80 text-xs md:text-sm py-0.5 sm:py-1 line-clamp-1 ">
               {description}
             </p>
 
