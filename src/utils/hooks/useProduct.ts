@@ -65,7 +65,20 @@ export const useProductData = () => {
     },
     [convertPrice, formatPrice]
   );
+  const shouldExcludeSeller = useCallback(
+    (productSeller: string | { _id: string; name: string }) => {
+      if (!user) return false;
 
+      if (typeof productSeller === "object" && productSeller) {
+        return (
+          productSeller._id === user._id || productSeller.name === user.name
+        );
+      }
+
+      return productSeller === user._id;
+    },
+    [user]
+  );
   const formattedProduct = useMemo(() => {
     if (!product) return null;
     return formatProductWithCurrencies(product);
@@ -74,53 +87,54 @@ export const useProductData = () => {
   const formattedProducts = useMemo(() => {
     return products
       .map(formatProductWithCurrencies)
-      .filter((product) =>
-        typeof product?.seller === "object"
-          ? product?.seller?.name !== user?.name
-          : product?.seller !== user?._id
-      );
-  }, [products, formatProductWithCurrencies, user]);
+      .filter((product): product is NonNullable<typeof product> => {
+        if (!product) return false;
+        return !shouldExcludeSeller(product.seller);
+      });
+  }, [products, formatProductWithCurrencies, shouldExcludeSeller]);
 
   const formattedRelatedProducts = useMemo(() => {
     return relatedProducts
       .map(formatProductWithCurrencies)
-      .filter((product) =>
-        typeof product?.seller === "object"
-          ? product?.seller?.name !== user?.name
-          : product?.seller !== user?._id
-      );
-  }, [relatedProducts, formatProductWithCurrencies, user]);
+      .filter((product): product is NonNullable<typeof product> => {
+        if (!product) return false;
+        return !shouldExcludeSeller(product.seller);
+      });
+  }, [relatedProducts, formatProductWithCurrencies, shouldExcludeSeller]);
 
   const formattedSponsoredProducts = useMemo(() => {
     return sponsoredProducts
       .map(formatProductWithCurrencies)
-      .filter((product) =>
-        typeof product?.seller === "object"
-          ? product?.seller?.name !== user?.name
-          : product?.seller !== user?._id
-      );
-  }, [sponsoredProducts, formatProductWithCurrencies, user]);
+      .filter((product): product is NonNullable<typeof product> => {
+        if (!product) return false;
+        return !shouldExcludeSeller(product.seller);
+      });
+  }, [sponsoredProducts, formatProductWithCurrencies, shouldExcludeSeller]);
 
   const formattedSearchResults = useMemo(() => {
     return searchResults
       .map(formatProductWithCurrencies)
-      .filter((product) =>
-        typeof product?.seller === "object"
-          ? product?.seller?.name !== user?.name
-          : product?.seller !== user?._id
-      );
-  }, [searchResults, formatProductWithCurrencies, user]);
+      .filter((product): product is NonNullable<typeof product> => {
+        if (!product) return false;
+        return !shouldExcludeSeller(product.seller);
+      });
+  }, [searchResults, formatProductWithCurrencies, shouldExcludeSeller]);
 
   const formattedProductsByUser = useMemo(() => {
     return products
       .map(formatProductWithCurrencies)
-      .filter((product) =>
-        typeof product?.seller === "object"
-          ? product?.seller?.name === user?.name
-          : product?.seller === user?._id
-      );
-  }, [products, formatProductWithCurrencies, user]);
+      .filter((product): product is NonNullable<typeof product> => {
+        if (!product || !user) return false;
 
+        if (typeof product.seller === "object" && product.seller) {
+          return (
+            product.seller._id === user._id || product.seller.name === user.name
+          );
+        }
+
+        return product.seller === user._id;
+      });
+  }, [products, formatProductWithCurrencies, user]);
   const fetchAllProductsAsync = useCallback(
     async (
       showNotification = false,
@@ -128,7 +142,6 @@ export const useProductData = () => {
       preventAbort = false
     ) => {
       try {
-        // const result = await api.getProducts(forceRefresh, preventAbort);
         const result = await dispatch(
           fetchAllProducts({ forceRefresh, preventAbort })
         ).unwrap();
@@ -146,7 +159,6 @@ export const useProductData = () => {
         return true;
       } catch (err: any) {
         if (err.name === "AbortError") {
-          // console.log("Request was cancelled");
           return false;
         }
 
@@ -169,10 +181,6 @@ export const useProductData = () => {
       preventAbort = false
     ) => {
       try {
-        // const result = await api.getSponsoredProducts(
-        //   forceRefresh,
-        //   preventAbort
-        // );
         const result = await dispatch(
           fetchSponsoredProducts({ forceRefresh, preventAbort })
         ).unwrap();
@@ -190,7 +198,6 @@ export const useProductData = () => {
         return result.data;
       } catch (err: any) {
         if (err.name === "AbortError") {
-          // console.log("Request was cancelled");
           return [];
         }
 
@@ -343,9 +350,14 @@ export const useProductData = () => {
         );
       }
 
-      return filteredProducts.map(formatProductWithCurrencies);
+      return filteredProducts
+        .map(formatProductWithCurrencies)
+        .filter((product): product is NonNullable<typeof product> => {
+          if (!product) return false;
+          return !shouldExcludeSeller(product.seller);
+        });
     },
-    [products, formatProductWithCurrencies]
+    [products, formatProductWithCurrencies, shouldExcludeSeller]
   );
 
   const clearProduct = useCallback(() => {
@@ -354,10 +366,7 @@ export const useProductData = () => {
 
   // Clean up on unmount
   useEffect(() => {
-    return () => {
-      // api.cancelRequest("/products");
-      // api.cancelRequest("/products/sponsored");
-    };
+    return () => {};
   }, []);
 
   return {

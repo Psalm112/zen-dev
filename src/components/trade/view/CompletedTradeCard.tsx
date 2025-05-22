@@ -1,26 +1,51 @@
-import { useState } from "react";
+import { useState, FC } from "react";
 import { motion } from "framer-motion";
-// import { Product } from "../../../utils/types";
 import Button from "../../common/Button";
 import TradeCardBase from "./TradeCardBase";
 import TradeDetailRow from "./TradeDetailRow";
 import { FaCopy } from "react-icons/fa";
 import { LuMessageSquare } from "react-icons/lu";
+import { Order } from "../../../utils/types";
 
-// interface CompletedTradeCardProps {
-//   trade: Product;
-// }
+interface CompletedTradeCardProps {
+  trade: Order & {
+    formattedUsdtAmount?: string;
+    formattedDate?: string;
+  };
+}
 
-// const CompletedTradeCard: FC<CompletedTradeCardProps> = ({ trade }) => {
-
-const CompletedTradeCard = () => {
+const CompletedTradeCard: FC<CompletedTradeCardProps> = ({ trade }) => {
   const [copied, setCopied] = useState(false);
+
   const copyOrderId = (id: string) => {
     navigator.clipboard.writeText(id);
     setCopied(true);
     setTimeout(() => {
       setCopied(false);
     }, 2000);
+  };
+
+  const getProductName = () => {
+    return trade?.product?.name || "Unknown Product";
+  };
+
+  const getSellerInfo = () => {
+    if (typeof trade?.seller === "object" && trade.seller) {
+      return trade.seller.name;
+    }
+    return "Unknown Seller";
+  };
+
+  const getTradeType = () => {
+    return "BUY";
+  };
+
+  const getFormattedAmount = () => {
+    return trade?.formattedUsdtAmount || trade?.amount?.toFixed(2) || "0.00";
+  };
+
+  const getFormattedDate = () => {
+    return trade?.formattedDate || new Date(trade?.createdAt).toLocaleString();
   };
 
   return (
@@ -34,18 +59,18 @@ const CompletedTradeCard = () => {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.1 }}
             >
-              IPHONE 16
+              {getProductName().toUpperCase()}
             </motion.h3>
             <motion.span
-              className="bg-red-500 text-white text-xs px-3 py-1 rounded-full"
+              className="bg-green-500 text-white text-xs px-3 py-1 rounded-full"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
             >
-              SELL
+              COMPLETED
             </motion.span>
           </div>
-          <span className="text-gray-400 text-sm">2025-01-24 10:34:22</span>
+          <span className="text-gray-400 text-sm">{getFormattedDate()}</span>
         </div>
 
         <motion.div
@@ -72,19 +97,34 @@ const CompletedTradeCard = () => {
         >
           <div className="flex justify-between items-center">
             <span className="text-gray-400 text-sm">Amount</span>
-            <span className="text-red-500 text-xl font-bold">1,600,000</span>
+            <span className="text-green-500 text-xl font-bold">
+              {getFormattedAmount()}
+            </span>
           </div>
 
           <div className="space-y-2">
-            <TradeDetailRow label="Total Quatity" value="2" />
-            <TradeDetailRow label="Order Time" value="2025-01-24 10:34:22" />
+            <TradeDetailRow
+              label="Total Quantity"
+              value={trade?.quantity?.toString() || "1"}
+            />
+            <TradeDetailRow label="Order Time" value={getFormattedDate()} />
+            <TradeDetailRow
+              label="Status"
+              value={
+                <span className="text-green-400 capitalize">
+                  {trade?.status || "completed"}
+                </span>
+              }
+            />
             <TradeDetailRow
               label="Order No."
               value={
                 <div className="flex items-center">
-                  <span className="mr-2">23435461580011</span>
+                  <span className="mr-2">
+                    {trade?._id?.slice(-12) || "N/A"}
+                  </span>
                   <motion.button
-                    onClick={() => copyOrderId("23435461580011")}
+                    onClick={() => copyOrderId(trade?._id || "")}
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                   >
@@ -105,22 +145,6 @@ const CompletedTradeCard = () => {
                 )
               }
             />
-            {/* {trade.paymentStatus && (
-              <TradeDetailRow
-                label="Payment Status"
-                value={
-                  <span className="text-green-400">{trade.paymentStatus}</span>
-                }
-              />
-            )}
-            {trade.escrowStatus && (
-              <TradeDetailRow
-                label="Escrow Status"
-                value={
-                  <span className="text-green-400">{trade.escrowStatus}</span>
-                }
-              />
-            )} */}
           </div>
         </motion.div>
       </div>

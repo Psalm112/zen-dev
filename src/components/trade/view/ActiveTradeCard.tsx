@@ -1,27 +1,65 @@
-import {
-  // FC,
-  useState,
-} from "react";
+import { useState, FC } from "react";
 import { motion } from "framer-motion";
-// import { Product } from "../../../utils/types";
 import Button from "../../common/Button";
 import TradeCardBase from "./TradeCardBase";
 import TradeDetailRow from "./TradeDetailRow";
 import { FaCopy } from "react-icons/fa";
 import { LuMessageSquare } from "react-icons/lu";
+import { Order } from "../../../utils/types";
 
-// interface ActiveTradeCardProps {
-//   trade: Product;
-// }
+interface ActiveTradeCardProps {
+  trade: Order & {
+    formattedUsdtAmount?: string;
+    formattedDate?: string;
+  };
+}
 
-const ActiveTradeCard = () => {
+const ActiveTradeCard: FC<ActiveTradeCardProps> = ({ trade }) => {
   const [copied, setCopied] = useState(false);
+
   const copyOrderId = (id: string) => {
     navigator.clipboard.writeText(id);
     setCopied(true);
     setTimeout(() => {
       setCopied(false);
     }, 2000);
+  };
+
+  const getProductName = () => {
+    return trade?.product?.name || "Unknown Product";
+  };
+
+  const getSellerInfo = () => {
+    if (typeof trade?.seller === "object" && trade.seller) {
+      return trade.seller.name;
+    }
+    return "Unknown Seller";
+  };
+
+  const getTradeType = () => {
+    // trade?.type ||
+    return "BUY";
+  };
+
+  const getFormattedAmount = () => {
+    return trade?.formattedUsdtAmount || trade?.amount?.toFixed(2) || "0.00";
+  };
+
+  const getFormattedDate = () => {
+    return trade?.formattedDate || new Date(trade?.createdAt).toLocaleString();
+  };
+
+  const getStatusColor = () => {
+    switch (trade?.status) {
+      case "pending":
+        return "bg-yellow-500";
+      case "accepted":
+        return "bg-blue-500";
+      case "disputed":
+        return "bg-red-500";
+      default:
+        return "bg-gray-500";
+    }
   };
 
   return (
@@ -35,18 +73,18 @@ const ActiveTradeCard = () => {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.1 }}
             >
-              IPHONE 16
+              {getProductName().toUpperCase()}
             </motion.h3>
             <motion.span
-              className="bg-red-500 text-white text-xs px-3 py-1 rounded-full"
+              className={`${getStatusColor()} text-white text-xs px-3 py-1 rounded-full`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
             >
-              SELL
+              {getTradeType()}
             </motion.span>
           </div>
-          <span className="text-gray-400 text-sm">2025-01-24 10:34:22</span>
+          <span className="text-gray-400 text-sm">{getFormattedDate()}</span>
         </div>
 
         <motion.div
@@ -73,19 +111,34 @@ const ActiveTradeCard = () => {
         >
           <div className="flex justify-between items-center">
             <span className="text-gray-400 text-sm">Amount</span>
-            <span className="text-red-500 text-xl font-bold">1,600,000</span>
+            <span className="text-red-500 text-xl font-bold">
+              {getFormattedAmount()}
+            </span>
           </div>
 
           <div className="space-y-2">
-            <TradeDetailRow label="Total Quatity" value="2" />
-            <TradeDetailRow label="Order Time" value="2025-01-24 10:34:22" />
+            <TradeDetailRow
+              label="Total Quantity"
+              value={trade?.quantity?.toString() || "1"}
+            />
+            <TradeDetailRow label="Order Time" value={getFormattedDate()} />
+            <TradeDetailRow
+              label="Status"
+              value={
+                <span className="capitalize text-yellow-400">
+                  {trade?.status || "pending"}
+                </span>
+              }
+            />
             <TradeDetailRow
               label="Order No."
               value={
                 <div className="flex items-center">
-                  <span className="mr-2">23435461580011</span>
+                  <span className="mr-2">
+                    {trade?._id?.slice(-12) || "N/A"}
+                  </span>
                   <motion.button
-                    onClick={() => copyOrderId("23435461580011")}
+                    onClick={() => copyOrderId(trade?._id || "")}
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                   >
@@ -112,4 +165,5 @@ const ActiveTradeCard = () => {
     </TradeCardBase>
   );
 };
+
 export default ActiveTradeCard;
