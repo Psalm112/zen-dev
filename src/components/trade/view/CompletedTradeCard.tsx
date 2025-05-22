@@ -121,7 +121,7 @@ const CompletedTradeCard: FC<CompletedTradeCardProps> = ({ trade }) => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-start">
             <span className="text-gray-400 text-sm">Amount</span>
             <span className="flex flex-col gap-2 text-right">
               <span className="text-red-500 text-xl font-bold">

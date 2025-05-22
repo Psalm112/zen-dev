@@ -117,18 +117,18 @@ const ProductCard = React.memo(
             <h4 className="text-white text-sm sm:text-base md:text-lg font-bold truncate">
               {name}
             </h4>
-            <div className="flex items-center gap-1 text-xs md:text-sm text-[#AEAEB2] py-0.5 sm:py-1">
+            {/* <div className="flex items-center gap-1 text-xs md:text-sm text-[#AEAEB2] py-0.5 sm:py-1">
               <span>
                 By {typeof seller === "string" ? seller : "Unknown Seller"}
               </span>
               <RiVerifiedBadgeFill className="text-[#4FA3FF] text-xs" />
-            </div>
+            </div> */}
             <p className="text-white/80 text-xs md:text-sm py-0.5 sm:py-1 line-clamp-2 min-h-[2.25rem]">
               {description}
             </p>
 
             {/* Price and buy button container */}
-            <div className="mt-auto pt-2 sm:pt-3">
+            <div className="mt-auto pt-1 sm:pt-2">
               <div className="flex flex-col">
                 <span className="text-white text-sm md:text-base font-semibold">
                   {product.formattedCeloPrice}
@@ -138,7 +138,7 @@ const ProductCard = React.memo(
                 </span>
               </div>
 
-              <motion.button
+              {/* <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 className="mt-2 sm:mt-3 gap-2 font-medium text-white bg-Red py-2 sm:py-2.5 rounded-md flex justify-center items-center w-full transition-all duration-300"
@@ -146,7 +146,7 @@ const ProductCard = React.memo(
               >
                 <span>Buy Now</span>
                 <BsCart3 className="text-lg" />
-              </motion.button>
+              </motion.button> */}
             </div>
           </div>
         </Link>
