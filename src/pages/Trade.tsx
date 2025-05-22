@@ -32,6 +32,7 @@ const ButtonPlaceholder: FC = () => (
 const Trade = () => {
   const [activeTab, setActiveTab] = useState<TradeTab>("buy");
   const [isLoading, setIsLoading] = useState(true);
+  const [isComponentMounted, setIsComponentMounted] = useState(false);
   const { isConnected } = useWallet();
 
   // Sample data for products
@@ -166,20 +167,23 @@ const Trade = () => {
   ];
 
   useEffect(() => {
-    const loadTimer = window.setTimeout(() => {
-      window.requestAnimationFrame(() => {
+    setIsComponentMounted(true);
+
+    const loadTimer = setTimeout(() => {
+      requestAnimationFrame(() => {
         setIsLoading(false);
       });
     }, 600);
 
-    return () => window.clearTimeout(loadTimer);
+    return () => {
+      clearTimeout(loadTimer);
+      setIsComponentMounted(false);
+    };
   }, []);
 
   // Handle order rejection (for sellers)
   const handleRejectOrder = (product: Product) => {
-    // Implementation for rejecting an order
     console.log("Order rejected:", product);
-    // Logic to reject order
   };
 
   // Close order summary modal
@@ -211,10 +215,9 @@ const Trade = () => {
       </div>
     );
   }
-
   return (
     <div className="bg-Dark min-h-screen text-white relative">
-      <Container className="relative">
+      <Container className="relative pb-20 md:pb-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -223,7 +226,6 @@ const Trade = () => {
           <Title text="P2P Trading" className="text-center my-8 text-3xl" />
         </motion.div>
 
-        {/* Banner */}
         <BannerCarousel
           banners={banners}
           autoRotate={true}
@@ -231,7 +233,6 @@ const Trade = () => {
           rotationInterval={6000}
         />
 
-        {/* Tab Navigation */}
         <div className="max-w-screen-lg mx-auto bg-[#212428] rounded-lg overflow-hidden">
           <div className="flex flex-wrap border-b border-[#292B30]">
             <Tab
@@ -248,7 +249,6 @@ const Trade = () => {
             />
           </div>
 
-          {/* Content Area */}
           <div className="p-4">
             <AnimatePresence mode="wait">
               {isLoading ? (
@@ -264,50 +264,50 @@ const Trade = () => {
                 >
                   {activeTab === "buy" &&
                     products.map((product) => (
-                      <ProductCard
+                      <Suspense
                         key={product._id}
-                        product={product}
-                        // onBuyClick={() => handleBuyClick(product)}
-                        actionType="buy"
-                        isSellTab={false}
-                      />
+                        fallback={
+                          <div className="h-32 bg-[#292B30] rounded animate-pulse" />
+                        }
+                      >
+                        <ProductCard
+                          product={product}
+                          actionType="buy"
+                          isSellTab={false}
+                        />
+                      </Suspense>
                     ))}
 
                   {activeTab === "sell" &&
                     incomingOrders.map((order) => (
-                      <IncomingOrderCard
+                      <Suspense
                         key={order._id}
-                        product={order}
-                        // onAccept={() => handleAcceptOrder(order)}
-                        onReject={() => handleRejectOrder(order)}
-                      />
+                        fallback={
+                          <div className="h-32 bg-[#292B30] rounded animate-pulse" />
+                        }
+                      >
+                        <IncomingOrderCard
+                          product={order}
+                          onReject={() => handleRejectOrder(order)}
+                        />
+                      </Suspense>
                     ))}
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
         </div>
-        <Suspense fallback={<ButtonPlaceholder />}>
-          <LazyFloatingButton
-            icon={<FaExchangeAlt />}
-            to="/trades/viewtrades"
-            label="View Trades"
-            position="bottom-right"
-            color="primary"
-          />
-        </Suspense>
       </Container>
 
-      {/* Order Summary Modal */}
-      {/* <AnimatePresence>
-        {showOrderSummary && selectedProduct && (
-          <OrderSummaryModal
-            product={selectedProduct}
-            onClose={handleCloseOrderSummary}
-            onConfirm={handleConfirmPurchase}
-          />
-        )}
-      </AnimatePresence> */}
+      {isComponentMounted && (
+        <LazyFloatingButton
+          icon={<FaExchangeAlt />}
+          to="/trades/viewtrades"
+          label="View Trades"
+          position="bottom-right"
+          color="primary"
+        />
+      )}
     </div>
   );
 };
