@@ -674,14 +674,15 @@ const CreateProduct = () => {
       });
 
       const result = await createProduct(formData);
-
-      if (result) {
+      console.log(result);
+      if (result.data) {
         setSuccessMessage("Product created successfully! Redirecting...");
         showSnackbar("Product created successfully!", "success");
 
         // Delay navigation to show success message
+        console.log(result, "kk");
         setTimeout(() => {
-          navigate(`/product/${result._id}`);
+          navigate(`/product/${result.data._id}`);
         }, 1500);
       }
     } catch (error) {
