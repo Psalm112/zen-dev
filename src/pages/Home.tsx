@@ -4,7 +4,7 @@ import { RiVerifiedBadgeFill } from "react-icons/ri";
 import Container from "../components/common/Container";
 import ProductList from "../components/product/ProductList";
 import BannerCarousel from "../components/common/BannerCarousel";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import ConnectWallet from "../components/trade/ConnectWallet";
 import Modal from "../components/common/Modal";
 import { useAuth } from "../context/AuthContext";
@@ -12,93 +12,114 @@ import { useAuth } from "../context/AuthContext";
 const Home = () => {
   const { user, isAuthenticated } = useAuth();
   const [showWallet, setShowWallet] = useState(false);
-  const quickActions = [
-    {
-      icon: Browseproduct,
-      title: "Browse Products",
-      path: "/product",
-    },
-    {
-      icon: Trackorder,
-      title: "Track Order",
-      path: "/account",
-    },
-    {
-      icon: Mywallet,
-      title: "My Wallet",
-      onclick: () => setShowWallet(true),
-    },
-  ];
-  const banners = [
-    {
-      title: "Smart Ecommerce for",
-      subtitle: "creators",
-      primaryImage: Pen,
-      secondaryImage: Pen2,
-      backgroundColor: "#ff3b3b",
-      textColor: "white",
-      isUppercase: true,
-    },
-    {
-      title: "Special Offers for",
-      subtitle: "new users",
-      primaryImage: Pen,
-      backgroundColor: "#ff3b3b",
-      textColor: "white",
-      isUppercase: true,
-    },
-    {
-      title: "Smart Ecommerce for",
-      subtitle: "creators",
-      primaryImage: Pen,
-      secondaryImage: Pen2,
-      backgroundColor: "#ff3b3b",
-      textColor: "white",
-      isUppercase: true,
-    },
-    {
-      title: "Special Offers for",
-      subtitle: "new users",
-      primaryImage: Pen,
-      backgroundColor: "#ff3b3b",
-      textColor: "white",
-      isUppercase: true,
-    },
-    {
-      title: "Smart Ecommerce for",
-      subtitle: "creators",
-      primaryImage: Pen,
-      secondaryImage: Pen2,
-      backgroundColor: "#ff3b3b",
-      textColor: "white",
-      isUppercase: true,
-    },
-    {
-      title: "Special Offers for",
-      subtitle: "new users",
-      primaryImage: Pen,
-      backgroundColor: "#ff3b3b",
-      textColor: "white",
-      isUppercase: true,
-    },
-    {
-      title: "Smart Ecommerce for",
-      subtitle: "creators",
-      primaryImage: Pen,
-      secondaryImage: Pen2,
-      backgroundColor: "#ff3b3b",
-      textColor: "white",
-      isUppercase: true,
-    },
-    {
-      title: "Special Offers for",
-      subtitle: "new users",
-      primaryImage: Pen,
-      backgroundColor: "#ff3b3b",
-      textColor: "white",
-      isUppercase: true,
-    },
-  ];
+
+  const quickActions = useMemo(
+    () => [
+      {
+        icon: Browseproduct,
+        title: "Browse Products",
+        path: "/product",
+      },
+      {
+        icon: Trackorder,
+        title: "Track Order",
+        path: "/account",
+      },
+      {
+        icon: Mywallet,
+        title: "My Wallet",
+        onclick: () => setShowWallet(true),
+      },
+    ],
+    []
+  );
+
+  const banners = useMemo(
+    () => [
+      {
+        title: "Smart Ecommerce for",
+        subtitle: "creators",
+        primaryImage: Pen,
+        secondaryImage: Pen2,
+        backgroundColor: "#ff3b3b",
+        textColor: "white",
+        isUppercase: true,
+      },
+      {
+        title: "Special Offers for",
+        subtitle: "new users",
+        primaryImage: Pen,
+        backgroundColor: "#ff3b3b",
+        textColor: "white",
+        isUppercase: true,
+      },
+      {
+        title: "Smart Ecommerce for",
+        subtitle: "creators",
+        primaryImage: Pen,
+        secondaryImage: Pen2,
+        backgroundColor: "#ff3b3b",
+        textColor: "white",
+        isUppercase: true,
+      },
+      {
+        title: "Special Offers for",
+        subtitle: "new users",
+        primaryImage: Pen,
+        backgroundColor: "#ff3b3b",
+        textColor: "white",
+        isUppercase: true,
+      },
+      {
+        title: "Smart Ecommerce for",
+        subtitle: "creators",
+        primaryImage: Pen,
+        secondaryImage: Pen2,
+        backgroundColor: "#ff3b3b",
+        textColor: "white",
+        isUppercase: true,
+      },
+      {
+        title: "Special Offers for",
+        subtitle: "new users",
+        primaryImage: Pen,
+        backgroundColor: "#ff3b3b",
+        textColor: "white",
+        isUppercase: true,
+      },
+      {
+        title: "Smart Ecommerce for",
+        subtitle: "creators",
+        primaryImage: Pen,
+        secondaryImage: Pen2,
+        backgroundColor: "#ff3b3b",
+        textColor: "white",
+        isUppercase: true,
+      },
+      {
+        title: "Special Offers for",
+        subtitle: "new users",
+        primaryImage: Pen,
+        backgroundColor: "#ff3b3b",
+        textColor: "white",
+        isUppercase: true,
+      },
+    ],
+    []
+  );
+
+  const displayName = useMemo(() => {
+    if (!isAuthenticated || !user?.name) return "User";
+
+    if (typeof user.name === "string") {
+      const nameParts = user.name.split(" ");
+      return nameParts.length > 1
+        ? `${nameParts[0]} ${nameParts[nameParts.length - 1]}`
+        : nameParts[0];
+    }
+    return "User";
+  }, [isAuthenticated, user?.name]);
+
   return (
     <div className="bg-Dark min-h-screen">
       <Container className="py-6 md:py-20">
@@ -109,17 +130,7 @@ const Home = () => {
               {isAuthenticated ? (
                 <>
                   <span className="max-xs:hidden">{user?.name}</span>
-                  <span className="xs:hidden">
-                    {user?.name && typeof user.name === "string"
-                      ? `${user.name.split(" ")[0]} ${
-                          user.name.split(" ").length > 1
-                            ? user.name.split(" ")[
-                                user.name.split(" ").length - 1
-                              ]
-                            : ""
-                        }`
-                      : "User"}
-                  </span>
+                  <span className="xs:hidden">{displayName}</span>
                 </>
               ) : (
                 "User"
@@ -176,49 +187,34 @@ const Home = () => {
           )}
         </div>
 
-        {/* <div className="flex justify-between items-center px-4 bg-Red rounded-lg mt-8 md:mt-28 overflow-hidden">
-          <h5 className="text-white text-base md:text-xl p-4">
-            Smart Ecommerce for{" "}
-            <span className="uppercase font-bold block md:inline">
-              creators
-            </span>
-          </h5>
-          <div className="flex items-center justify-center">
-            <img
-              src={Pen}
-              alt=""
-              className="w-[50px] h-[50px] md:w-[90px] md:h-[90px]"
-            />
-            <img
-              src={Pen2}
-              alt=""
-              className="w-[30px] h-[30px] md:w-[69px] md:h-[67px]"
-            />
-          </div>
-        </div> */}
-
+        {/* Banner Carousel */}
         <BannerCarousel
           banners={banners}
           autoRotate={true}
           rotationInterval={6000}
         />
 
+        {/* Featured Products Section - Shows all sponsored products with lazy loading */}
         <ProductList
-          title="Featured Product"
+          title="Featured Products"
           path="/product"
           className="mt-6 md:mt-10"
           isCategoryView={false}
           isFeatured={true}
+          showViewAll={true}
         />
+
+        {/* All Products Section - Shows limited non-sponsored products */}
         <ProductList
-          title="All"
+          title="Recent Products"
           path="/product"
           className="mt-6 md:mt-10"
           isCategoryView={false}
-          maxItems={8}
-          // category="All"
+          maxItems={4}
+          showViewAll={true}
         />
       </Container>
+
       {showWallet && (
         <Modal onClose={() => setShowWallet(false)} isOpen>
           <ConnectWallet showAlternatives />

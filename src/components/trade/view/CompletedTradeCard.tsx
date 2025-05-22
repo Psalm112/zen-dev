@@ -22,15 +22,15 @@ const CompletedTradeCard: FC<CompletedTradeCardProps> = ({ trade }) => {
   const { secondaryCurrency } = useCurrency();
 
   // Early return if trade data is incomplete
-  if (!trade || !trade.product) {
-    return (
-      <TradeCardBase className="mt-8 px-6 md:px-12 py-2">
-        <div className="py-4 text-center text-gray-400">
-          <p>Trade data unavailable</p>
-        </div>
-      </TradeCardBase>
-    );
-  }
+  // if (!trade || !trade.product) {
+  //   return (
+  //     <TradeCardBase className="mt-8 px-6 md:px-12 py-2">
+  //       <div className="py-4 text-center text-gray-400">
+  //         <p>Trade data unavailable</p>
+  //       </div>
+  //     </TradeCardBase>
+  //   );
+  // }
 
   const secondaryPrice = useMemo(() => {
     switch (secondaryCurrency) {

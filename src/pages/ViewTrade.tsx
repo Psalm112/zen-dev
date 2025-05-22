@@ -140,15 +140,17 @@ const ViewTrade = () => {
                   {activeTab === "active" && (
                     <>
                       {activeTrades && activeTrades.length > 0 ? (
-                        activeTrades.map((trade) => (
-                          <div
-                            key={trade._id}
-                            onClick={() => handleTradeClick(trade._id)}
-                            className="cursor-pointer"
-                          >
-                            <ActiveTradeCard trade={trade} />
-                          </div>
-                        ))
+                        activeTrades
+                          .filter((trade) => trade && trade.product) // Add this filter
+                          .map((trade) => (
+                            <div
+                              key={trade._id}
+                              onClick={() => handleTradeClick(trade._id)}
+                              className="cursor-pointer"
+                            >
+                              <ActiveTradeCard trade={trade} />
+                            </div>
+                          ))
                       ) : (
                         <EmptyState
                           title="No Active Trades"
@@ -161,15 +163,17 @@ const ViewTrade = () => {
                   {activeTab === "completed" && (
                     <>
                       {completedTrades && completedTrades.length > 0 ? (
-                        completedTrades.map((trade) => (
-                          <div
-                            key={trade._id}
-                            onClick={() => handleTradeClick(trade._id)}
-                            className="cursor-pointer"
-                          >
-                            <CompletedTradeCard trade={trade} />
-                          </div>
-                        ))
+                        completedTrades
+                          .filter((trade) => trade && trade.product) // Add this filter
+                          .map((trade) => (
+                            <div
+                              key={trade._id}
+                              onClick={() => handleTradeClick(trade._id)}
+                              className="cursor-pointer"
+                            >
+                              <CompletedTradeCard trade={trade} />
+                            </div>
+                          ))
                       ) : (
                         <EmptyState
                           title="No Completed Trades"

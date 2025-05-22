@@ -268,7 +268,7 @@ export const useProductData = () => {
         if (showNotification) {
           showSnackbar("Product created successfully", "success");
         }
-        return response.data;
+        return response.data.data;
       } catch (err) {
         if (showNotification) {
           showSnackbar((err as string) || "Failed to create product", "error");
