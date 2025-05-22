@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { RiVerifiedBadgeFill } from "react-icons/ri";
 import Button from "../../common/Button";
-import { FaArrowRightLong } from "react-icons/fa6";
+// import { FaArrowRightLong } from "react-icons/fa6";
 import { useNavigate } from "react-router-dom";
 import { WatchlistItem } from "../../../utils/types";
 
@@ -32,8 +32,11 @@ const SavedItem: React.FC<SavedItemProps> = ({ item, index, onRemove }) => {
       whileHover={{ scale: 1.01 }}
     >
       <motion.img
-        src={item.product.images[0]}
-        alt={item.product.name}
+        src={
+          item.product?.images?.[0] ||
+          "https://placehold.co/300x300?text=No+Image"
+        }
+        alt={item.product?.name || "Product"}
         className="w-[60%] md:w-full h-auto mx-auto md:mx-0 rounded-md lg:row-span-2 object-cover aspect-square"
         whileHover={{ scale: 1.05 }}
         transition={{ type: "spring", stiffness: 300 }}
@@ -42,16 +45,16 @@ const SavedItem: React.FC<SavedItemProps> = ({ item, index, onRemove }) => {
 
       <div className="flex flex-col w-full text-left">
         <h3 className="font-normal text-2xl md:text-3xl text-white truncate">
-          {item.product.name}
+          {item.product?.name || "Unknown Product"}
         </h3>
         <span className="flex items-center gap-2 text-[12px] text-[#AEAEB2] mb-6">
-          By {item.product.seller}
+          By {item.product?.seller || "Unknown Vendor"}
           <RiVerifiedBadgeFill className="text-[#4FA3FF] text-xs" />
         </span>
 
         <div className="flex justify-between text-sm text-white mb-2">
           <span>Price:</span>
-          <span>{item.product.price} cUSD</span>
+          <span>{item.product?.price || "N/A"} cUSD</span>
         </div>
         <div className="flex justify-between text-sm text-white mb-2">
           <span>Saved:</span>

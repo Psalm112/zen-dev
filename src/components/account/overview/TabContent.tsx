@@ -144,17 +144,21 @@ const TabContent: React.FC<TabContentProps> = ({ activeTab, productImage }) => {
           {!orderLoading &&
             !orderError &&
             nonDisputeOrders.length > 0 &&
-            nonDisputeOrders.map((order, index) =>
-              order.product ? (
-                <OrderHistoryItem key={order._id} {...order} index={index} />
-              ) : (
-                <EmptyState
-                  message="You haven't placed any orders yet."
-                  buttonText="Browse Products"
-                  buttonPath="/product"
-                />
-              )
-            )}
+            nonDisputeOrders
+              .filter((item) => item.product && item.product._id)
+              .map(
+                (order, index) => (
+                  // order.product ? (
+                  <OrderHistoryItem key={order._id} {...order} index={index} />
+                )
+                // ) : (
+                //   <EmptyState
+                //     message="You haven't placed any orders yet."
+                //     buttonText="Browse Products"
+                //     buttonPath="/product"
+                //   />
+                // )
+              )}
         </m.div>
       )}
 
@@ -192,19 +196,20 @@ const TabContent: React.FC<TabContentProps> = ({ activeTab, productImage }) => {
                 buttonPath="/product"
               />
             )}
-
           {!watchlistLoading &&
             !watchlistError &&
             watchlistItems?.length > 0 && (
               <div className="mt-6 space-y-4">
-                {watchlistItems.map((item, index) => (
-                  <SavedItem
-                    key={item._id}
-                    item={item}
-                    index={index}
-                    onRemove={removeProductFromWatchlist}
-                  />
-                ))}
+                {watchlistItems
+                  .filter((item) => item.product && item.product._id)
+                  .map((item, index) => (
+                    <SavedItem
+                      key={item._id}
+                      item={item}
+                      index={index}
+                      onRemove={removeProductFromWatchlist}
+                    />
+                  ))}
               </div>
             )}
         </m.div>

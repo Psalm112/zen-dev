@@ -40,8 +40,8 @@ const ProductCard = React.memo(
     const handleToggleFavorite = async (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      console.log("toggleWatchlist", _id);
-      await toggleWatchlist(_id);
+      // console.log("toggleWatchlist", _id);
+      await toggleWatchlist(_id, false);
     };
 
     const navigateToProduct = (e: React.MouseEvent) => {
