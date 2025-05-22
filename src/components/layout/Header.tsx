@@ -18,7 +18,7 @@ const NavList = [
   { title: "Home", path: "/" },
   { title: "Product", path: "/product" },
   { title: "Trade", path: "/trades" },
-  { title: "Chat", path: "/chat" },
+  // { title: "Chat", path: "/chat" },
   { title: "Community", path: "/community" },
 ];
 

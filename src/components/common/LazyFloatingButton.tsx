@@ -1,7 +1,8 @@
 import { FC, ReactNode, lazy, Suspense } from "react";
 import { motion } from "framer-motion";
+import FloatingActionButton from "./FloatingActionButton";
 
-const FloatingActionButton = lazy(() => import("./FloatingActionButton"));
+// const FloatingActionButton = lazy(() => import("./FloatingActionButton"));
 
 interface LazyFloatingButtonProps {
   icon: ReactNode;

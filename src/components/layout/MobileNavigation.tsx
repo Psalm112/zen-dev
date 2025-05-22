@@ -16,12 +16,12 @@ const navItems = [
     label: "Trade",
     path: "/trades",
   },
-  {
-    icon: <IoChatbubbleOutline size={22} />,
-    label: "Chat",
-    path: "/chat",
-    badgeKey: "totalUnreadMessages",
-  },
+  // {
+  //   icon: <IoChatbubbleOutline size={22} />,
+  //   label: "Chat",
+  //   path: "/chat",
+  //   badgeKey: "totalUnreadMessages",
+  // },
   { icon: <BsPeople size={22} />, label: "Community", path: "/community" },
   { icon: <RiUser3Line size={22} />, label: "Account", path: "/account" },
 ];
@@ -32,10 +32,10 @@ const MobileNavigation = () => {
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-[#212428] flex justify-evenly items-center px-2 py-1.5 md:hidden z-50 border-t border-[#292B30]">
       {navItems.map((item) => {
-        const badge =
-          item.badgeKey === "totalUnreadMessages"
-            ? totalUnreadMessages
-            : undefined;
+        // const badge =
+        //   item.badgeKey === "totalUnreadMessages"
+        //     ? totalUnreadMessages
+        //     : undefined;
         return (
           <NavLink
             key={item.path}
@@ -44,15 +44,16 @@ const MobileNavigation = () => {
               relative flex flex-col items-center text-xs p-1.5
               ${isActive ? "text-Red" : "text-[#545456]"}
             `}
-            aria-label={item.label + (badge ? ` (${badge} unread)` : "")}
+            aria-label={item.label}
+            // aria-label={item.label + (badge ? ` (${badge} unread)` : "")}
           >
             {item.icon}
             <span className="mt-0.5 text-[10px]">{item.label}</span>
-            {badge && badge > 0 && (
+            {/* {badge && badge > 0 && (
               <span className="absolute top-0 right-0 bg-Red text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center">
                 {badge > 9 ? "9+" : badge}
               </span>
-            )}
+            )} */}
           </NavLink>
         );
       })}

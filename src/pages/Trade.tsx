@@ -214,7 +214,7 @@ const Trade = () => {
 
   return (
     <div className="bg-Dark min-h-screen text-white relative">
-      <Container>
+      <Container className="relative">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -287,6 +287,15 @@ const Trade = () => {
             </AnimatePresence>
           </div>
         </div>
+        <Suspense fallback={<ButtonPlaceholder />}>
+          <LazyFloatingButton
+            icon={<FaExchangeAlt />}
+            to="/trades/viewtrades"
+            label="View Trades"
+            position="bottom-right"
+            color="primary"
+          />
+        </Suspense>
       </Container>
 
       {/* Order Summary Modal */}
@@ -299,16 +308,6 @@ const Trade = () => {
           />
         )}
       </AnimatePresence> */}
-
-      <Suspense fallback={<ButtonPlaceholder />}>
-        <LazyFloatingButton
-          icon={<FaExchangeAlt />}
-          to="/trades/viewtrades"
-          label="View Trades"
-          position="bottom-right"
-          color="primary"
-        />
-      </Suspense>
     </div>
   );
 };
