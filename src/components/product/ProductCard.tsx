@@ -91,7 +91,7 @@ const ProductCard = React.memo(
           {/* Image container */}
           <div className="w-full pt-[100%] relative bg-[#1A1B1F]/30 overflow-hidden">
             <motion.div
-              className="absolute inset-0 flex items-center justify-center p-4 sm:p-6"
+              className="absolute inset-0 flex items-center justify-center"
               whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
@@ -123,7 +123,7 @@ const ProductCard = React.memo(
               </span>
               <RiVerifiedBadgeFill className="text-[#4FA3FF] text-xs" />
             </div> */}
-            <p className="text-white/80 text-xs md:text-sm py-0.5 sm:py-1 line-clamp-2 min-h-[2.25rem]">
+            <p className="text-white/80 text-xs md:text-sm py-0.5 sm:py-1 line-clamp-2 ">
               {description}
             </p>
 
