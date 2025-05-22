@@ -26,14 +26,11 @@ interface TabContentProps {
     available: number;
   };
 }
-interface OrderProps extends Order {
-  formattedDate: string;
-  formattedAmount: string;
-}
 const TabContent: React.FC<TabContentProps> = ({ activeTab, productImage }) => {
   const {
     fetchBuyerOrders,
-    formattedOrders,
+    disputeOrders, 
+    nonDisputeOrders, 
     loading: orderLoading,
     error: orderError,
   } = useOrderData();
@@ -46,64 +43,30 @@ const TabContent: React.FC<TabContentProps> = ({ activeTab, productImage }) => {
     error: watchlistError,
   } = useWatchlist();
 
-  // const [disputeOrders, setDisputeOrders] = useState<OrderProps[]>([]);
-  // const [nonDisputeOrders, setNonDisputeOrders] = useState<OrderProps[]>([]);
-  const disputeOrders = useMemo(
-    () =>
-      formattedOrders?.filter(
-        (order) => order.status === "disputed" && order.product
-      ) || [],
-    [formattedOrders]
-  );
-
-  const nonDisputeOrders = useMemo(
-    () =>
-      formattedOrders?.filter(
-        (order) => order.status !== "disputed" && order.product
-      ) || [],
-    [formattedOrders]
-  );
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   useEffect(() => {
-    if (activeTab === "1" && (isInitialLoad || !formattedOrders)) {
+    if (activeTab === "1" && isInitialLoad) {
       const loadOrders = async () => {
-        await fetchBuyerOrders(false, isInitialLoad);
+        await fetchBuyerOrders(false, true);
         setIsInitialLoad(false);
       };
-
       loadOrders();
     }
 
-    if (activeTab === "2" && (isInitialLoad || !watchlistItems)) {
-      fetchUserWatchlist(false, isInitialLoad);
+    if (activeTab === "2" && isInitialLoad) {
+      fetchUserWatchlist(false, true);
       setIsInitialLoad(false);
     }
-    console.log(
-      nonDisputeOrders.length,
-      nonDisputeOrders,
-      disputeOrders.length,
-      disputeOrders
-    );
+
+    if (activeTab === "3" && isInitialLoad) {
+      const loadOrders = async () => {
+        await fetchBuyerOrders(false, true);
+        setIsInitialLoad(false);
+      };
+      loadOrders();
+    }
   }, [activeTab, fetchBuyerOrders, fetchUserWatchlist, isInitialLoad]);
-
-  // Filter orders when they change
-  // useEffect(() => {
-  //   if (formattedOrders?.length > 0) {
-  //     const disputed = formattedOrders.filter(
-  //       (order) => order.status === "disputed"
-  //     );
-  //     const nonDisputed = formattedOrders.filter(
-  //       (order) => order.status !== "disputed"
-  //     );
-
-  //     setDisputeOrders(disputed);
-  //     setNonDisputeOrders(nonDisputed);
-  //   } else {
-  //     setDisputeOrders([]);
-  //     setNonDisputeOrders([]);
-  //   }
-  // }, [formattedOrders]);
 
   return (
     <LazyMotion features={domAnimation}>
@@ -144,21 +107,9 @@ const TabContent: React.FC<TabContentProps> = ({ activeTab, productImage }) => {
           {!orderLoading &&
             !orderError &&
             nonDisputeOrders.length > 0 &&
-            nonDisputeOrders
-              .filter((item) => item.product && item.product._id)
-              .map(
-                (order, index) => (
-                  // order.product ? (
-                  <OrderHistoryItem key={order._id} {...order} index={index} />
-                )
-                // ) : (
-                //   <EmptyState
-                //     message="You haven't placed any orders yet."
-                //     buttonText="Browse Products"
-                //     buttonPath="/product"
-                //   />
-                // )
-              )}
+            nonDisputeOrders.map((order, index) => (
+              <OrderHistoryItem key={order._id} {...order} index={index} />
+            ))}
         </m.div>
       )}
 
@@ -250,34 +201,26 @@ const TabContent: React.FC<TabContentProps> = ({ activeTab, productImage }) => {
 
           {!orderLoading && !orderError && disputeOrders?.length > 0 && (
             <div className="mt-6 space-y-4">
-              {disputeOrders.map((order) =>
-                order.product ? (
-                  <DisputeItem
-                    key={order._id}
-                    productImage={
-                      order.product?.images[0] ||
-                      "https://placehold.co/300x300?text=No+Image"
-                    }
-                    productName={order.product.name}
-                    vendor={
-                      typeof order.seller === "object"
-                        ? order.seller?.name
-                        : order.seller || "Unknown Vendor"
-                    }
-                    disputeDate={new Date(order.createdAt).toLocaleDateString(
-                      "en-US",
-                      { month: "short", day: "numeric", year: "numeric" }
-                    )}
-                    disputeStatus="Under Review"
-                  />
-                ) : (
-                  <EmptyState
-                    message="You haven't raised any disputes yet."
-                    buttonText="View Orders"
-                    buttonPath="/account"
-                  />
-                )
-              )}
+              {disputeOrders.map((order) => (
+                <DisputeItem
+                  key={order?._id}
+                  // productImage={
+                  //   order.product?.images[0] ||
+                  //   "https://placehold.co/300x300?text=No+Image"
+                  // }
+                  // productName={order?.product?.name || "Unknown Product"}
+                  // vendor={
+                  //   typeof order?.seller === "object"
+                  //     ? order?.seller?.name
+                  //     : order?.seller || "Unknown Vendor"
+                  // }
+                  // disputeDate={order?.formattedDate || "Unknown Date"}
+                  disputeStatus="Under Review"
+                  // productPrice={order.product.price}
+                  // quantity={order.quantity || 1}
+                  order={order} 
+                />
+              ))}
             </div>
           )}
         </m.div>
@@ -310,7 +253,7 @@ const TabContent: React.FC<TabContentProps> = ({ activeTab, productImage }) => {
           >
             <CreateProduct />
           </Suspense>
-        </m.div>
+        </div>
       )}
     </LazyMotion>
   );

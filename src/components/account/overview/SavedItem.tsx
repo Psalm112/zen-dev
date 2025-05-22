@@ -10,7 +10,7 @@ import { useCurrencyConverter } from "../../../utils/hooks/useCurrencyConverter"
 interface SavedItemProps {
   item: WatchlistItem;
   index: number;
-  onRemove: (productId: string) => Promise<boolean>;
+  onRemove: (productId: string, showNotification?: boolean) => Promise<boolean>;
 }
 
 const SavedItem: React.FC<SavedItemProps> = React.memo(
@@ -53,7 +53,7 @@ const SavedItem: React.FC<SavedItemProps> = React.memo(
 
     const handleRemoveFromWatchlist = async (e: React.MouseEvent) => {
       e.stopPropagation();
-      await onRemove(item.product._id);
+      await onRemove(item.product._id, false);
     };
 
     return (

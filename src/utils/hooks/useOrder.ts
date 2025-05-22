@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import { useAppDispatch, useAppSelector } from "./redux";
 import {
   createOrder,
@@ -24,15 +24,11 @@ import {
 import { useSnackbar } from "../../context/SnackbarContext";
 import { useEffect } from "react";
 import { api } from "../services/apiService";
-import { OrderStatus, Order } from "../types";
-import { useCurrencyConverter } from "./useCurrencyConverter";
-import { useCurrency } from "../../context/CurrencyContext";
+import { OrderStatus } from "../types";
 
 export const useOrderData = () => {
-  const { secondaryCurrency } = useCurrency();
   const dispatch = useAppDispatch();
   const { showSnackbar } = useSnackbar();
-  const { convertPrice, formatPrice } = useCurrencyConverter();
 
   const orders = useAppSelector(selectAllOrders);
   const sellerOrders = useAppSelector(selectSellerOrders);
@@ -43,51 +39,6 @@ export const useOrderData = () => {
   const orderStats = useAppSelector(selectOrderStats);
   const loading = useAppSelector(selectOrderLoading);
   const error = useAppSelector(selectOrderError);
-
-  const formatOrderWithCurrencies = useCallback(
-    (order: Order) => {
-      if (!order || !order.product) return null;
-
-      const productPrice = order.product.price;
-      const totalAmount = productPrice * (order.quantity || 1);
-
-      const celoPrice = convertPrice(productPrice, "USDT", "CELO");
-      const fiatPrice = convertPrice(productPrice, "USDT", "FIAT");
-      const celoTotal = convertPrice(totalAmount, "USDT", "CELO");
-      const fiatTotal = convertPrice(totalAmount, "USDT", "FIAT");
-
-      return {
-        ...order,
-        formattedDate: new Date(order.createdAt).toLocaleDateString(),
-        formattedAmount: formatPrice(totalAmount, "USDT"),
-        formattedCeloAmount: formatPrice(celoTotal, "CELO"),
-        formattedFiatAmount: formatPrice(fiatTotal, "FIAT"),
-        formattedProductPrice: formatPrice(productPrice, "USDT"),
-        formattedCeloPrice: formatPrice(celoPrice, "CELO"),
-        formattedFiatPrice: formatPrice(fiatPrice, "FIAT"),
-        product: {
-          ...order.product,
-          formattedPrice: formatPrice(productPrice, "USDT"),
-          formattedCeloPrice: formatPrice(celoPrice, "CELO"),
-          formattedFiatPrice: formatPrice(fiatPrice, "FIAT"),
-        },
-      };
-    },
-    [convertPrice, formatPrice]
-  );
-
-  const enhancedOrders = useMemo(() => {
-    return orders.map(formatOrderWithCurrencies).filter(Boolean);
-  }, [orders, formatOrderWithCurrencies]);
-
-  const enhancedSellerOrders = useMemo(() => {
-    return sellerOrders.map(formatOrderWithCurrencies).filter(Boolean);
-  }, [sellerOrders, formatOrderWithCurrencies]);
-
-  const enhancedCurrentOrder = useMemo(() => {
-    if (!currentOrder) return null;
-    return formatOrderWithCurrencies(currentOrder);
-  }, [currentOrder, formatOrderWithCurrencies]);
 
   const placeOrder = useCallback(
     async (
@@ -221,12 +172,9 @@ export const useOrderData = () => {
 
   const getOrdersByStatus = useCallback(
     (status: string) => {
-      return selectOrdersByStatus(
-        { orders: { orders: enhancedOrders } } as any,
-        status
-      );
+      return selectOrdersByStatus({ orders: { orders } } as any, status);
     },
-    [enhancedOrders]
+    [orders]
   );
 
   const clearOrder = useCallback(() => {
@@ -241,9 +189,9 @@ export const useOrderData = () => {
   }, []);
 
   return {
-    orders: enhancedOrders,
-    sellerOrders: enhancedSellerOrders,
-    currentOrder: enhancedCurrentOrder,
+    orders,
+    sellerOrders,
+    currentOrder,
     formattedOrders,
     formattedSellerOrders,
     formattedCurrentOrder,
@@ -258,6 +206,5 @@ export const useOrderData = () => {
     raiseDispute,
     getOrdersByStatus,
     clearOrder,
-    secondaryCurrency,
   };
 };

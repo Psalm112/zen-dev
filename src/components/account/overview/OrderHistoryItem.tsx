@@ -7,20 +7,7 @@ import { Order } from "../../../utils/types";
 import { useNavigate } from "react-router-dom";
 import { useCurrency } from "../../../context/CurrencyContext";
 
-interface OrderHistoryItemProps extends Order {
-  index: number;
-  formattedDate: string;
-  formattedAmount: string;
-  formattedCeloAmount?: string;
-  formattedFiatAmount?: string;
-  product: Order["product"] & {
-    formattedPrice?: string;
-    formattedCeloPrice?: string;
-    formattedFiatPrice?: string;
-  };
-}
-
-const OrderHistoryItem: React.FC<OrderHistoryItemProps> = React.memo((item) => {
+const OrderHistoryItem: React.FC<Order> = React.memo((item) => {
   const navigate = useNavigate();
   const { secondaryCurrency } = useCurrency();
 
@@ -47,7 +34,7 @@ const OrderHistoryItem: React.FC<OrderHistoryItemProps> = React.memo((item) => {
 
   const secondaryUnitPrice = useMemo(() => {
     return secondaryCurrency === "USDT"
-      ? item.product.formattedPrice
+      ? item.product.formattedPrice || item.formattedProductPrice
       : item.product.formattedFiatPrice || item.product.formattedPrice;
   }, [
     secondaryCurrency,
