@@ -27,9 +27,9 @@ interface FormattedProductProp extends Product {
   formattedUsdtPrice: string;
 }
 
-const ITEMS_PER_PAGE = 8;
-const HOME_PAGE_LIMIT = 2;
-const CATEGORY_SPONSORED_LIMIT = 4;
+const ITEMS_PER_PAGE = window.innerWidth < 768 ? 6 : 12;
+const HOME_PAGE_LIMIT = window.innerWidth < 768 ? 6 : 12;
+const CATEGORY_SPONSORED_LIMIT = window.innerWidth < 768 ? 4 : 8;
 
 const ProductList = ({
   title,
@@ -290,7 +290,7 @@ const ProductList = ({
             )}
 
             {/* Main products grid */}
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 md:gap-5">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-4 2xl:grid-cols-6 md:gap-3 lg:gap-4">
               {displayProducts.map((product, index) => {
                 const isNew = (() => {
                   const createdDate = new Date(product.createdAt);
