@@ -72,7 +72,7 @@ const ProductCard = React.memo(
             )}
             <motion.button
               whileTap={{ scale: 0.9 }}
-              className={`ml-auto bg-[#1A1B1F]/50 rounded-full p-1.5 sm:p-2 backdrop-blur-sm ${
+              className={`ml-auto bg-[#1A1B1F]/50 rounded-full p-1.5 sm:p-2 backdrop-blur-md ${
                 !isNew ? "mr-0" : ""
               }`}
               aria-label={
