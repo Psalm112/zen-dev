@@ -42,45 +42,36 @@ const TransactionConfirmation: FC<TransactionConfirmationProps> = ({
       setIsProcessing(true);
 
       try {
-        // Check if user has sufficient balance
-        if (isUSDT) {
-          const userBalance = parseFloat(
-            balanceInUSDT?.replace(" USDT", "") || "0"
+        const userUSDTBalance = parseFloat(
+          balanceInUSDT?.replace(/[^\d.-]/g, "") || "0"
+        );
+        const requiredAmount = parseFloat(amount);
+        const requiredWithBuffer = requiredAmount * 1.01;
+
+        if (userUSDTBalance < requiredWithBuffer) {
+          setStatus("error");
+          setErrorMessage(
+            `Insufficient USDT balance. You need ${formatPrice(
+              requiredAmount,
+              "USDT"
+            )} USDT but only have ${formatPrice(
+              userUSDTBalance,
+              "USDT"
+            )} USDT available.`
           );
-          const requiredAmount = parseFloat(amount) * 1.02; // Add 2% for gas fees
-
-          if (userBalance < requiredAmount) {
-            setStatus("error");
-            setErrorMessage(
-              `Insufficient USDT balance. You need at least ${formatPrice(
-                requiredAmount,
-                "USDT"
-              )} USDT or ${formatPrice(
-                convertPrice(requiredAmount, "USDT", "CELO"),
-                "CELO"
-              )} CELO.`
-            );
-            onComplete(false);
-            return;
-          }
+          onComplete(false);
+          return;
         }
-        // else {
-        //   const userBalance = parseFloat(
-        //     balanceInCELO?.replace(" CELO", "") || "0"
-        //   );
-        //   const requiredAmount = parseFloat(amount) * 1.02; // Add 2% for gas fees
 
-        //   if (userBalance < requiredAmount) {
-        //     setStatus("error");
-        //     setErrorMessage(
-        //       `Insufficient CELO balance. You need at least ${requiredAmount.toFixed(
-        //         2
-        //       )} CELO.`
-        //     );
-        //     onComplete(false);
-        //     return;
-        //   }
-        // }
+        const userCELOBalance = parseFloat(
+          balanceInCELO?.replace(/[^\d.-]/g, "") || "0"
+        );
+
+        if (userCELOBalance < 0.001) {
+          console.warn(
+            "Low CELO balance for gas fees, but proceeding as gas is sponsored"
+          );
+        }
 
         if (tradeId && logisticsProviderAddress) {
           const result = await buyTrade({
@@ -90,11 +81,9 @@ const TransactionConfirmation: FC<TransactionConfirmationProps> = ({
           });
 
           if (result.success) {
-            // Use the transaction hash from the result if available
             if (result.transactionHash) {
               setTransactionHash(result.transactionHash);
             } else {
-              // Fallback if no hash is provided (shouldn't happen in production)
               setTransactionHash(
                 "0x" + Math.random().toString(16).substr(2, 64)
               );
@@ -135,9 +124,9 @@ const TransactionConfirmation: FC<TransactionConfirmationProps> = ({
     buyTrade,
     balanceInUSDT,
     balanceInCELO,
+    formatPrice,
     onComplete,
   ]);
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}

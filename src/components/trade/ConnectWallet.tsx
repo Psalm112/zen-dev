@@ -46,6 +46,7 @@ const ConnectWallet: FC<ConnectWalletProps> = ({
     displayCurrency,
     setDisplayCurrency,
     formattedBalance,
+    celoBalance,
     balanceInUSDT,
     balanceInCELO,
     balanceInFiat,
@@ -217,27 +218,14 @@ const ConnectWallet: FC<ConnectWalletProps> = ({
               </p>
             </div>
             <div className="bg-[#2A2D35] p-4 rounded-lg">
-              <div className="flex justify-between items-center">
-                <p className="text-gray-400 text-sm">Balance</p>
+              <div className="flex justify-between items-center mb-2">
+                <p className="text-gray-400 text-sm">USDT Balance</p>
                 <div className="relative" ref={currencyDropdownRef}>
                   <button
                     onClick={toggleCurrencyDropdown}
                     className="text-xs px-2 py-1 bg-[#35383F] hover:bg-[#3F4249] rounded text-gray-300 flex items-center"
                   >
                     {displayCurrency}
-                    {/* <svg
-                      className="w-3 h-3 ml-1"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg> */}
                     <IoChevronDown className="w-3 h-3" />
                   </button>
                   {showCurrencyDropdown && (
@@ -273,7 +261,10 @@ const ConnectWallet: FC<ConnectWalletProps> = ({
                   )}
                 </div>
               </div>
-              <p className="text-white">{formattedBalance}</p>
+              <p className="text-white font-semibold">{formattedBalance}</p>
+              <p className="text-gray-500 text-xs mt-1">
+                Gas: {celoBalance || "Loading..."}
+              </p>
             </div>
             <div className="bg-[#2A2D35] p-4 rounded-lg">
               <p className="text-gray-400 text-sm">Chain ID</p>
