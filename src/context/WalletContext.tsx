@@ -535,7 +535,7 @@ import { useCurrencyConverter } from "../utils/hooks/useCurrencyConverter";
 export type WalletType = "eoa" | "smart" | null;
 
 // USDT Contract Address on Celo Alfajores Testnet
-const USDT_CONTRACT_ADDRESS = "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e"; // Replace with actual USDT contract address
+const USDT_CONTRACT_ADDRESS = "0x803700bD991d293306D6e7dCcF2B49F9137b437e";
 
 // ERC20 ABI for balance checking
 const ERC20_ABI = [
