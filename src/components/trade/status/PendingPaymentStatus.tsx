@@ -122,22 +122,15 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     );
     const requiredAmount = totalAmount * 1.02; // Add 2% for gas fees
 
-    // Check if the currency is USDT or CELO (default to CELO if not specified)
-    // const isCELO =
-    // orderDetails.product.currency === "CELO" ||
-    // !orderDetails.product.hasOwnProperty("currency");
+    // Parse balance by removing all non-numeric characters except decimal points and commas
+    const cleanBalance = (balanceInUSDT || "0")
+      .replace(/[^\d.,]/g, "") // Remove all non-numeric chars except . and ,
+      .replace(/,/g, ""); // Remove thousand separators
 
-    // if (isCELO) {
-    //   const userBalance = parseFloat(
-    //     balanceInCELO?.replace(" CELO", "") || "0"
-    //   );
-    //   return userBalance >= requiredAmount;
-    // } else {
-    const userBalance = parseFloat(balanceInUSDT?.replace("US$", "") || "0");
-    console.log(userBalance, requiredAmount, balanceInUSDT);
+    const userBalance = parseFloat(cleanBalance) || 0;
+
+    console.log(userBalance, requiredAmount, balanceInUSDT, "balance check");
     return userBalance >= requiredAmount;
-
-    // }
   };
 
   const handleShowConfirmationModal = () => {
