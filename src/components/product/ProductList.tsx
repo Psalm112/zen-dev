@@ -27,9 +27,9 @@ interface FormattedProductProp extends Product {
   formattedUsdtPrice: string;
 }
 
-const ITEMS_PER_PAGE = window.innerWidth < 768 ? 6 : 12;
-const HOME_PAGE_LIMIT = window.innerWidth < 768 ? 6 : 12;
-const CATEGORY_SPONSORED_LIMIT = window.innerWidth < 768 ? 4 : 8;
+// const ITEMS_PER_PAGE = window.innerWidth < 768 ? 6 : 12;
+// const HOME_PAGE_LIMIT = window.innerWidth < 768 ? 6 : 12;
+// const CATEGORY_SPONSORED_LIMIT = window.innerWidth < 768 ? 4 : 8;
 
 const ProductList = ({
   title,
@@ -79,12 +79,10 @@ const ProductList = ({
     } else if (category && category !== "All") {
       const categoryProducts = getProductsByCategory(category);
       // Filter sponsored products for this category
-      categorySponsored = (sponsoredProducts || [])
-        .filter(
-          (product) =>
-            product.category?.toLowerCase() === category.toLowerCase()
-        )
-        .slice(0, CATEGORY_SPONSORED_LIMIT);
+      categorySponsored = (sponsoredProducts || []).filter(
+        (product) => product.category?.toLowerCase() === category.toLowerCase()
+      );
+      // .slice(0, CATEGORY_SPONSORED_LIMIT);
 
       // Get non-sponsored products for this category
       const sponsoredIds = new Set(categorySponsored.map((p) => p._id));
@@ -144,15 +142,16 @@ const ProductList = ({
     }
 
     // Determine how many items to show initially
-    let initialLimit = maxItems || ITEMS_PER_PAGE;
-    if (!isCategoryView && !isFeatured) {
-      initialLimit = HOME_PAGE_LIMIT;
-    }
+    // let initialLimit = maxItems || ITEMS_PER_PAGE;
+    // if (!isCategoryView && !isFeatured) {
+    //   initialLimit = HOME_PAGE_LIMIT;
+    // }
 
-    const initialProducts = allProducts.slice(0, initialLimit);
+    const initialProducts = allProducts;
+    // .slice(0, initialLimit);
     setDisplayProducts(initialProducts);
     setCurrentPage(1);
-    setHasMore(allProducts.length > initialLimit);
+    // setHasMore(allProducts.length > initialLimit);
   }, [
     allProducts,
     categorySponsored,
@@ -173,8 +172,10 @@ const ProductList = ({
     await new Promise((resolve) => setTimeout(resolve, 300));
 
     const nextPage = currentPage + 1;
-    const startIndex = (nextPage - 1) * ITEMS_PER_PAGE;
-    const endIndex = startIndex + ITEMS_PER_PAGE;
+    const startIndex = nextPage - 1;
+    // * ITEMS_PER_PAGE;
+    const endIndex = startIndex;
+    // + ITEMS_PER_PAGE;
 
     const newProducts = allProducts.slice(startIndex, endIndex);
 
