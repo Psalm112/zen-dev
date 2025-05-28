@@ -20,7 +20,6 @@ import { useContract } from "../../../utils/hooks/useContract";
 import TransactionConfirmation from "../TransactionConfirmation";
 import { useSnackbar } from "../../../context/SnackbarContext";
 
-// Import the contract address from environment variables
 const ESCROW_CONTRACT_ADDRESS =
   import.meta.env.VITE_ESCROW_CONTRACT_ADDRESS || "";
 
@@ -41,8 +40,8 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
   tradeDetails,
   orderDetails,
   transactionInfo,
-  onContactSeller,
-  onOrderDispute,
+  // onContactSeller,
+  // onOrderDispute,
   onReleaseNow,
   navigatePath,
   orderId,
@@ -120,12 +119,11 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
       quantity,
       "totalAmount"
     );
-    const requiredAmount = totalAmount * 1.02; // Add 2% for gas fees
+    const requiredAmount = totalAmount * 1.02;
 
-    // Parse balance by removing all non-numeric characters except decimal points and commas
     const cleanBalance = (balanceInUSDT || "0")
-      .replace(/[^\d.,]/g, "") // Remove all non-numeric chars except . and ,
-      .replace(/,/g, ""); // Remove thousand separators
+      .replace(/[^\d.,]/g, "")
+      .replace(/,/g, "");
 
     const userBalance = parseFloat(cleanBalance) || 0;
 
@@ -192,7 +190,7 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     setIsProcessing(false);
 
     if (success) {
-      toast.success("Payment completed successfully!");
+      showSnackbar("Payment completed successfully!", "success");
 
       // Navigate to the specified path or call the onReleaseNow callback
       if (navigatePath) {

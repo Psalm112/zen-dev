@@ -43,7 +43,8 @@ const TransactionConfirmation: FC<TransactionConfirmationProps> = ({
 
       try {
         const userUSDTBalance = parseFloat(
-          balanceInUSDT?.replace(/[^\d.-]/g, "") || "0"
+          (balanceInUSDT || "0").replace(/[^\d.,]/g, "").replace(/,/g, "") ||
+            "0"
         );
         const requiredAmount = parseFloat(amount);
         const requiredWithBuffer = requiredAmount * 1.01;
@@ -68,9 +69,7 @@ const TransactionConfirmation: FC<TransactionConfirmationProps> = ({
         );
 
         if (userCELOBalance < 0.001) {
-          console.warn(
-            "Low CELO balance for gas fees, but proceeding as gas is sponsored"
-          );
+          console.warn("Low CELO balance for gas fees");
         }
 
         if (tradeId && logisticsProviderAddress) {
