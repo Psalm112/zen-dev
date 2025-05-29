@@ -83,7 +83,7 @@ const createDeviceInfo = () => {
       hasWebAuthn: false,
       supportsBiometrics: false,
       preferredConnection: "extension" as ConnectionMethod,
-      availableWallets: [],
+      availableWallets: [] as string[],
     };
   }
 
@@ -200,13 +200,35 @@ const WALLET_CONFIGS = {
     name: "WalletConnect",
     icon: "/icons/walletconnect.svg",
     color: "#3b99fc",
-    supportedMethods: ["qr_code", "mobile_app"],
+    supportedMethods: ["qr_code", "mobile_app"] as ConnectionMethod[],
+    deepLinks: {
+      ios: "",
+      android: "",
+      universal: "",
+    },
+    downloads: {
+      // ios: "",
+      // android: "",
+      // chrome: "",
+      // firefox: "",
+    },
   },
   smart: {
     name: "Smart Wallet",
     icon: "/icons/smart-wallet.svg",
     color: "#7c3aed",
-    supportedMethods: ["embedded"],
+    supportedMethods: ["embedded"] as ConnectionMethod[],
+    deepLinks: {
+      ios: "",
+      android: "",
+      universal: "",
+    },
+    downloads: {
+      // ios: "",
+      // android: "",
+      // chrome: "",
+      // firefox: "",
+    },
   },
 };
 
@@ -488,7 +510,7 @@ function WalletProviderCore({
           available: true,
           recommended:
             deviceInfo.isMobile || deviceInfo.availableWallets.length === 0,
-          supportedMethods: config.supportedMethods,
+          supportedMethods: config.supportedMethods as ConnectionMethod[],
           requiresDownload: false,
         });
         return;
@@ -507,15 +529,15 @@ function WalletProviderCore({
           installed: isInstalled,
           available: true,
           recommended: type === "metamask" && !deviceInfo.isMobile,
-          supportedMethods: config.supportedMethods,
+          supportedMethods: config.supportedMethods as ConnectionMethod[],
           requiresDownload: !isInstalled && !deviceInfo.isMobile,
           downloadUrl: deviceInfo.isMobile
             ? deviceInfo.isIOS
-              ? config.downloads?.ios
-              : config.downloads?.android
-            : config.downloads?.chrome,
+              ? (config as any).downloads?.ios
+              : (config as any).downloads?.android
+            : (config as any).downloads?.chrome,
           deepLink: deviceInfo.isMobile
-            ? config.deepLinks?.universal
+            ? (config as any).deepLinks?.universal
             : undefined,
         });
       }
@@ -827,6 +849,7 @@ function WalletProviderCore({
           default:
             throw new Error(`Unsupported wallet type: ${type}`);
         }
+        // throw new Error("Invalid wallet type");
       } catch (error) {
         handleWalletError(error, `${type} connection`);
       } finally {
@@ -899,6 +922,7 @@ function WalletProviderCore({
       if (!signer || !account) {
         throw new Error("Wallet not connected");
       }
+      const amountFloat = parseFloat(request.amount);
       let tx: ethers.TransactionResponse;
       let amountWei: bigint;
 
@@ -913,7 +937,6 @@ function WalletProviderCore({
         tx = await usdtContract.transfer(request.to, amountInUSDT);
       } else {
         // Native CELO transfer or convert other currencies to CELO
-        const amountFloat = parseFloat(request.amount);
 
         switch (request.currency) {
           case "CELO":
