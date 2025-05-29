@@ -13,6 +13,7 @@ import { ethers } from "ethers";
 import { inAppWallet } from "thirdweb/wallets";
 import { createThirdwebClient, defineChain } from "thirdweb";
 import { useCurrencyConverter } from "../utils/hooks/useCurrencyConverter";
+import { EthereumProvider } from "@walletconnect/ethereum-provider";
 
 export type WalletType = "eoa" | "smart" | "walletConnect" | "coinbase" | null;
 
@@ -691,13 +692,52 @@ export function WalletProvider({
   const connectWalletConnect = useCallback(async (): Promise<string> => {
     setIsConnecting(true);
     try {
-      // This would typically use @walletconnect/web3-provider
-      // For now, we'll use the smart wallet as fallback
-      return (await connectGuest()).address;
+      const provider = await EthereumProvider.init({
+        projectId: import.meta.env.VITE_WALLETCONNECT_PROJECT_ID,
+        chains: [44787], // Celo Alfajores
+        showQrModal: true,
+        methods: ["eth_sendTransaction", "personal_sign"],
+        events: ["chainChanged", "accountsChanged"],
+        metadata: {
+          name: "Your App Name",
+          description: "Your App Description",
+          url: window.location.origin,
+          icons: ["/favicon.png"],
+        },
+      });
+
+      await provider.connect();
+      const accounts = await provider.request({ method: "eth_accounts" });
+
+      const ethersProvider = new ethers.BrowserProvider(provider);
+      const signer = await ethersProvider.getSigner();
+
+      setProvider(ethersProvider);
+      setSigner(signer);
+      setAccount(accounts[0]);
+      setWalletType("walletConnect");
+      setIsConnected(true);
+
+      // Store connection
+      await walletStorage.setItem("walletType", "walletConnect");
+      await walletStorage.setItem("account", accounts[0]);
+
+      await fetchBalances(accounts[0], ethersProvider);
+      return accounts[0];
     } finally {
       setIsConnecting(false);
     }
-  }, []);
+  }, [fetchBalances]);
+  // const connectWalletConnect = useCallback(async (): Promise<string> => {
+  //   setIsConnecting(true);
+  //   try {
+  //     // This would typically use @walletconnect/web3-provider
+  //     // For now, we'll use the smart wallet as fallback
+  //     return (await connectGuest()).address;
+  //   } finally {
+  //     setIsConnecting(false);
+  //   }
+  // }, []);
 
   // Initialize from localStorage
   useEffect(() => {
