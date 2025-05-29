@@ -16,6 +16,9 @@ import ErrorBoundary from "./components/error/ErrorBoundary.tsx";
 import { setupGlobalErrorHandling } from "./utils/errorHandling";
 import ReferralHandler from "./components/referrals/ReferralHandler.tsx";
 import { CurrencyProvider } from "./context/CurrencyContext.tsx";
+import { ProviderPoolProvider } from "./context/ProviderPoolContext.tsx";
+import { BalanceManagerProvider } from "./context/BalanceContext.tsx";
+
 // import GoogleCallback from "./pages/GoogleCallback.tsx";
 
 const Login = lazy(() => import("./pages/Login.tsx"));
@@ -42,20 +45,24 @@ const RouterLayout = () => {
   return (
     <Configuration>
       <Provider store={store}>
-        <WalletProvider>
-          <AuthProvider>
-            <SnackbarProvider>
-              <CurrencyProvider>
-                <Layout>
-                  <Suspense fallback={<Loadscreen />}>
-                    <Outlet />
-                  </Suspense>
-                  <ReferralHandler />
-                </Layout>
-              </CurrencyProvider>
-            </SnackbarProvider>
-          </AuthProvider>
-        </WalletProvider>
+        <ProviderPoolProvider>
+          <BalanceManagerProvider>
+            <WalletProvider>
+              <AuthProvider>
+                <SnackbarProvider>
+                  <CurrencyProvider>
+                    <Layout>
+                      <Suspense fallback={<Loadscreen />}>
+                        <Outlet />
+                      </Suspense>
+                      <ReferralHandler />
+                    </Layout>
+                  </CurrencyProvider>
+                </SnackbarProvider>
+              </AuthProvider>
+            </WalletProvider>
+          </BalanceManagerProvider>
+        </ProviderPoolProvider>
       </Provider>
     </Configuration>
   );
