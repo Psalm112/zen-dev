@@ -14,7 +14,64 @@ import { inAppWallet } from "thirdweb/wallets";
 import { createThirdwebClient, defineChain } from "thirdweb";
 import { useCurrencyConverter } from "../utils/hooks/useCurrencyConverter";
 
-export type WalletType = "eoa" | "smart" | null;
+export type WalletType = "eoa" | "smart" | "walletConnect" | "coinbase" | null;
+
+// Device and browser detection utilities
+const isMobile = () => {
+  if (typeof window === "undefined") return false;
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent
+  );
+};
+
+const isIOS = () => {
+  if (typeof window === "undefined") return false;
+  return /iPad|iPhone|iPod/.test(navigator.userAgent);
+};
+
+const isAndroid = () => {
+  if (typeof window === "undefined") return false;
+  return /Android/.test(navigator.userAgent);
+};
+
+const hasMetaMask = () => {
+  if (typeof window === "undefined") return false;
+  return !!(window as any).ethereum?.isMetaMask;
+};
+
+const hasCoinbaseWallet = () => {
+  if (typeof window === "undefined") return false;
+  return !!(window as any).ethereum?.isCoinbaseWallet;
+};
+
+const isTrustWallet = () => {
+  if (typeof window === "undefined") return false;
+  return !!(window as any).ethereum?.isTrust;
+};
+
+// Deep link utilities for mobile wallets
+const WALLET_DEEP_LINKS = {
+  metamask: {
+    ios: "metamask://",
+    android: "metamask://",
+    universal: "https://metamask.app.link/dapp/",
+  },
+  trustwallet: {
+    ios: "trust://",
+    android: "trust://",
+    universal: "https://link.trustwallet.com/open_url?coin_id=60&url=",
+  },
+  coinbase: {
+    ios: "cbwallet://",
+    android: "cbwallet://",
+    universal: "https://go.cb-w.com/dapp?cb_url=",
+  },
+  rainbow: {
+    ios: "rainbow://",
+    android: "rainbow://",
+    universal: "https://rnbwapp.com/",
+  },
+};
 
 // USDT Contract Address on Celo Alfajores Testnet
 const USDT_CONTRACT_ADDRESS = import.meta.env.VITE_USDT_CONTRACT_ADDRESS;
@@ -26,13 +83,17 @@ const ERC20_ABI = [
   "function symbol() view returns (string)",
 ];
 
-// Chain definitions
+// Chain definitions with fallback RPCs
 const supportedChains = {
   celoAlfajores: defineChain({
     id: 44787,
     name: "Celo Alfajores Testnet",
     nativeCurrency: { name: "Celo", symbol: "CELO", decimals: 18 },
-    rpc: "https://alfajores-forno.celo-testnet.org",
+    rpc: [
+      "https://alfajores-forno.celo-testnet.org",
+      "https://celo-alfajores.infura.io/v3/" + import.meta.env.VITE_INFURA_KEY,
+      "https://alfajores-forno.celo-testnet.org",
+    ],
     blockExplorers: [
       {
         name: "Celo Explorer",
@@ -42,18 +103,46 @@ const supportedChains = {
   }),
 };
 
-// Persistent storage
+// Enhanced persistent storage with error handling
 const walletStorage = {
-  getItem: async (key: string) => localStorage.getItem(`WALLET_${key}`),
-  setItem: async (key: string, value: string) =>
-    localStorage.setItem(`WALLET_${key}`, value),
-  removeItem: async (key: string) => localStorage.removeItem(`WALLET_${key}`),
+  getItem: async (key: string) => {
+    try {
+      return localStorage.getItem(`WALLET_${key}`);
+    } catch (error) {
+      console.warn(`Failed to get item ${key} from storage:`, error);
+      return null;
+    }
+  },
+  setItem: async (key: string, value: string) => {
+    try {
+      localStorage.setItem(`WALLET_${key}`, value);
+    } catch (error) {
+      console.warn(`Failed to set item ${key} in storage:`, error);
+    }
+  },
+  removeItem: async (key: string) => {
+    try {
+      localStorage.removeItem(`WALLET_${key}`);
+    } catch (error) {
+      console.warn(`Failed to remove item ${key} from storage:`, error);
+    }
+  },
 };
 
 // ThirdWeb client
 const thirdwebClient = createThirdwebClient({
   clientId: import.meta.env.VITE_THIRDWEB_CLIENT_ID,
 });
+
+export interface WalletInfo {
+  name: string;
+  icon: string;
+  installed: boolean;
+  mobile: boolean;
+  desktop: boolean;
+  deepLink?: string;
+  downloadUrl?: string;
+}
 
 export interface WalletContextType {
   account: string | null;
@@ -72,7 +161,18 @@ export interface WalletContextType {
   balanceInUSDT: string | null;
   balanceInCELO: string | null;
   balanceInFiat: string | null;
+  availableWallets: WalletInfo[];
+  deviceInfo: {
+    isMobile: boolean;
+    isIOS: boolean;
+    isAndroid: boolean;
+    hasMetaMask: boolean;
+    hasCoinbaseWallet: boolean;
+    isTrustWallet: boolean;
+  };
   connectMetaMask: () => Promise<string>;
+  connectCoinbaseWallet: () => Promise<string>;
+  connectWalletConnect: () => Promise<string>;
   connectEmail: (
     email: string,
     code?: string
@@ -96,9 +196,10 @@ export interface WalletContextType {
     preAuth?: boolean;
     type?: string;
   }>;
+  openWalletApp: (walletName: string) => Promise<void>;
   switchChain: (chainId: number) => Promise<void>;
   disconnect: () => void;
-  connect: () => Promise<
+  connect: (walletType?: string) => Promise
     | string
     | {
         address: string;
@@ -124,7 +225,7 @@ export function WalletProvider({
 }: WalletProviderProps) {
   const [account, setAccount] = useState<string | null>(null);
   const [chainId, setChainId] = useState<number>(defaultChainId);
-  const [balance, setBalance] = useState<string | null>(null); // USDT balance
+  const [balance, setBalance] = useState<string | null>(null);
   const [celoBalance, setCeloBalance] = useState<string | null>(null);
   const [usdtBalance, setUsdtBalance] = useState<string | null>(null);
   const [walletType, setWalletType] = useState<WalletType>(null);
@@ -133,12 +234,118 @@ export function WalletProvider({
   const [isInitialized, setIsInitialized] = useState(false);
   const [provider, setProvider] = useState<ethers.Provider | null>(null);
   const [signer, setSigner] = useState<ethers.Signer | any>(null);
-  const [displayCurrency, setDisplayCurrency] = useState<
+  const [displayCurrency, setDisplayCurrency] = useState
     "USDT" | "CELO" | "FIAT"
   >("USDT");
   const { convertPrice, formatPrice } = useCurrencyConverter();
 
-  // inAppWallet
+  // Device information
+  const deviceInfo = useMemo(
+    () => ({
+      isMobile: isMobile(),
+      isIOS: isIOS(),
+      isAndroid: isAndroid(),
+      hasMetaMask: hasMetaMask(),
+      hasCoinbaseWallet: hasCoinbaseWallet(),
+      isTrustWallet: isTrustWallet(),
+    }),
+    []
+  );
+
+  // Available wallets based on device and environment
+  const availableWallets = useMemo((): WalletInfo[] => {
+    const wallets: WalletInfo[] = [];
+
+    // MetaMask
+    if (deviceInfo.isMobile) {
+      wallets.push({
+        name: "MetaMask",
+        icon: "/icons/metamask.svg",
+        installed: deviceInfo.hasMetaMask,
+        mobile: true,
+        desktop: false,
+        deepLink: deviceInfo.isIOS
+          ? WALLET_DEEP_LINKS.metamask.ios
+          : WALLET_DEEP_LINKS.metamask.android,
+        downloadUrl: deviceInfo.isIOS
+          ? "https://apps.apple.com/app/metamask/id1438144202"
+          : "https://play.google.com/store/apps/details?id=io.metamask",
+      });
+    } else {
+      wallets.push({
+        name: "MetaMask",
+        icon: "/icons/metamask.svg",
+        installed: deviceInfo.hasMetaMask,
+        mobile: false,
+        desktop: true,
+        downloadUrl: "https://metamask.io/download/",
+      });
+    }
+
+    // Coinbase Wallet
+    wallets.push({
+      name: "Coinbase Wallet",
+      icon: "/icons/coinbase.svg",
+      installed: deviceInfo.hasCoinbaseWallet,
+      mobile: deviceInfo.isMobile,
+      desktop: !deviceInfo.isMobile,
+      deepLink: deviceInfo.isMobile
+        ? deviceInfo.isIOS
+          ? WALLET_DEEP_LINKS.coinbase.ios
+          : WALLET_DEEP_LINKS.coinbase.android
+        : undefined,
+      downloadUrl: deviceInfo.isMobile
+        ? deviceInfo.isIOS
+          ? "https://apps.apple.com/app/coinbase-wallet/id1278383455"
+          : "https://play.google.com/store/apps/details?id=org.toshi"
+        : "https://wallet.coinbase.com/",
+    });
+
+    // Trust Wallet (mobile only)
+    if (deviceInfo.isMobile) {
+      wallets.push({
+        name: "Trust Wallet",
+        icon: "/icons/trustwallet.svg",
+        installed: deviceInfo.isTrustWallet,
+        mobile: true,
+        desktop: false,
+        deepLink: deviceInfo.isIOS
+          ? WALLET_DEEP_LINKS.trustwallet.ios
+          : WALLET_DEEP_LINKS.trustwallet.android,
+        downloadUrl: deviceInfo.isIOS
+          ? "https://apps.apple.com/app/trust-crypto-bitcoin-wallet/id1288339409"
+          : "https://play.google.com/store/apps/details?id=com.wallet.crypto.trustapp",
+      });
+
+      // Rainbow Wallet
+      wallets.push({
+        name: "Rainbow",
+        icon: "/icons/rainbow.svg",
+        installed: false,
+        mobile: true,
+        desktop: false,
+        deepLink: deviceInfo.isIOS
+          ? WALLET_DEEP_LINKS.rainbow.ios
+          : WALLET_DEEP_LINKS.rainbow.android,
+        downloadUrl: deviceInfo.isIOS
+          ? "https://apps.apple.com/app/rainbow-ethereum-wallet/id1457119021"
+          : "https://play.google.com/store/apps/details?id=me.rainbow",
+      });
+    }
+
+    // WalletConnect (universal)
+    wallets.push({
+      name: "WalletConnect",
+      icon: "/icons/walletconnect.svg",
+      installed: true,
+      mobile: true,
+      desktop: true,
+    });
+
+    return wallets;
+  }, [deviceInfo]);
+
+  // Enhanced inAppWallet with more auth options
   const smartWallet = useMemo(
     () =>
       inAppWallet({
@@ -147,7 +354,7 @@ export function WalletProvider({
           sponsorGas: true,
         },
         auth: {
-          mode: "popup",
+          mode: deviceInfo.isMobile ? "redirect" : "popup",
           options: ["google", "email", "phone", "passkey", "guest", "wallet"],
           defaultSmsCountryCode: "NG",
           passkeyDomain:
@@ -161,38 +368,76 @@ export function WalletProvider({
         },
         storage: walletStorage,
       }),
-    [chainId]
+    [deviceInfo.isMobile]
   );
 
-  // Retry utility with exponential backoff
+  // Enhanced retry utility with better error handling
   const withRetry = useCallback(
     async <T,>(
       fn: () => Promise<T>,
       maxRetries = 3,
-      delay = 1000
+      delay = 1000,
+      backoff = 2
     ): Promise<T> => {
       let attempt = 0;
+      let lastError: Error;
+
       while (attempt < maxRetries) {
         try {
           return await fn();
         } catch (err: any) {
+          lastError = err;
           attempt++;
-          if (attempt >= maxRetries || !err.message.includes("Failed to fetch"))
+
+          // Don't retry on user rejection or certain errors
+          if (
+            err.code === 4001 || // User rejected
+            err.code === -32002 || // Already pending
+            err.message?.includes("User rejected") ||
+            attempt >= maxRetries
+          ) {
             throw err;
-          await new Promise((res) =>
-            setTimeout(res, delay * 2 ** (attempt - 1))
-          );
+          }
+
+          // Exponential backoff
+          const waitTime = delay * Math.pow(backoff, attempt - 1);
+          await new Promise((resolve) => setTimeout(resolve, waitTime));
         }
       }
-      throw new Error("Retry attempts exhausted");
+
+      throw lastError!;
     },
     []
   );
 
-  // Fetch USDT token balance
+  // Enhanced provider creation with fallback RPCs
+  const createProvider = useCallback(
+    async (rpcUrls: string[]): Promise<ethers.Provider> => {
+      for (const rpc of rpcUrls) {
+        try {
+          const provider = new ethers.JsonRpcProvider(rpc);
+          // Test the provider
+          await provider.getBlockNumber();
+          return provider;
+        } catch (error) {
+          console.warn(`Failed to connect to RPC ${rpc}:`, error);
+          continue;
+        }
+      }
+      throw new Error("All RPC endpoints failed");
+    },
+    []
+  );
+
+  // Fetch USDT token balance with better error handling
   const fetchUSDTBalance = useCallback(
     async (addr: string, prov: ethers.Provider): Promise<string> => {
       try {
+        if (!USDT_CONTRACT_ADDRESS) {
+          console.warn("USDT contract address not configured");
+          return "0.00 USDT";
+        }
+
         const usdtContract = new ethers.Contract(
           USDT_CONTRACT_ADDRESS,
           ERC20_ABI,
@@ -232,18 +477,23 @@ export function WalletProvider({
     []
   );
 
-  // Combined balance fetching function
+  // Combined balance fetching function with retry
   const fetchBalances = useCallback(
     async (addr: string, prov: ethers.Provider) => {
       try {
-        const [usdtBal, celoBal] = await Promise.all([
-          fetchUSDTBalance(addr, prov),
-          fetchCELOBalance(addr, prov),
+        const [usdtBal, celoBal] = await Promise.allSettled([
+          withRetry(() => fetchUSDTBalance(addr, prov)),
+          withRetry(() => fetchCELOBalance(addr, prov)),
         ]);
 
-        setUsdtBalance(usdtBal);
-        setCeloBalance(celoBal);
-        setBalance(usdtBal); // Primary balance is USDT
+        const usdtBalance =
+          usdtBal.status === "fulfilled" ? usdtBal.value : "0.00 USDT";
+        const celoBalance =
+          celoBal.status === "fulfilled" ? celoBal.value : "0.0000 CELO";
+
+        setUsdtBalance(usdtBalance);
+        setCeloBalance(celoBalance);
+        setBalance(usdtBalance); // Primary balance is USDT
       } catch (error) {
         console.error("Error fetching balances:", error);
         setUsdtBalance("0.00 USDT");
@@ -251,7 +501,7 @@ export function WalletProvider({
         setBalance("0.00 USDT");
       }
     },
-    [fetchUSDTBalance, fetchCELOBalance]
+    [fetchUSDTBalance, fetchCELOBalance, withRetry]
   );
 
   // Parse balance values for calculations
@@ -301,81 +551,229 @@ export function WalletProvider({
     setSigner(null);
     setWalletType(null);
     setIsConnected(false);
-    localStorage.removeItem("WALLET_walletType");
-    localStorage.removeItem("WALLET_account");
-    localStorage.removeItem("WALLET_chainId");
+    walletStorage.removeItem("walletType");
+    walletStorage.removeItem("account");
+    walletStorage.removeItem("chainId");
   }, []);
 
-  // Initialize from localStorage
-  useEffect(() => {
-    (async () => {
-      const wt = localStorage.getItem("WALLET_walletType") as WalletType;
-      const acc = localStorage.getItem("WALLET_account");
-      const cid = localStorage.getItem("WALLET_chainId");
-      if (wt && acc) {
-        setWalletType(wt);
-        setAccount(acc);
-        setChainId(cid ? +cid : defaultChainId);
-        setIsConnected(true);
+  // Open wallet app on mobile
+  const openWalletApp = useCallback(
+    async (walletName: string): Promise<void> => {
+      if (!deviceInfo.isMobile) return;
 
-        if (wt === "eoa" && window.ethereum) {
-          const bp = new ethers.BrowserProvider(window.ethereum);
-          const s = await bp.getSigner();
-          setProvider(bp);
-          setSigner(s);
-          await fetchBalances(acc, bp);
-        } else if (wt === "smart") {
-          const chain = supportedChains.celoAlfajores;
-          const rp = new ethers.JsonRpcProvider(chain.rpc);
-          setProvider(rp);
-          await fetchBalances(acc, rp);
+      const wallet = availableWallets.find((w) => w.name === walletName);
+      if (!wallet?.deepLink) return;
+
+      const currentUrl = window.location.href;
+      let deepLinkUrl = "";
+
+      switch (walletName) {
+        case "MetaMask":
+          deepLinkUrl = `${wallet.deepLink}${encodeURIComponent(currentUrl)}`;
+          break;
+        case "Trust Wallet":
+          deepLinkUrl = `${WALLET_DEEP_LINKS.trustwallet.universal}${encodeURIComponent(currentUrl)}`;
+          break;
+        case "Coinbase Wallet":
+          deepLinkUrl = `${WALLET_DEEP_LINKS.coinbase.universal}${encodeURIComponent(currentUrl)}`;
+          break;
+        default:
+          deepLinkUrl = wallet.deepLink;
+      }
+
+      try {
+        window.location.href = deepLinkUrl;
+        
+        // Fallback to app store after a delay
+        setTimeout(() => {
+          if (wallet.downloadUrl) {
+            window.open(wallet.downloadUrl, "_blank");
+          }
+        }, 2000);
+      } catch (error) {
+        console.error("Failed to open wallet app:", error);
+        if (wallet.downloadUrl) {
+          window.open(wallet.downloadUrl, "_blank");
         }
       }
-      setIsInitialized(true);
-    })();
-  }, [defaultChainId, fetchBalances]);
+    },
+    [deviceInfo.isMobile, availableWallets]
+  );
 
-  // MetaMask event handlers
-  useEffect(() => {
-    if (walletType !== "eoa" || !window.ethereum) return;
-    const onAccounts = (addrs: string[]) =>
-      addrs.length ? setAccount(addrs[0]) : reset();
-    const onChain = (hex: string) => setChainId(parseInt(hex, 16));
-    window.ethereum.on("accountsChanged", onAccounts);
-    window.ethereum.on("chainChanged", onChain);
-    return () => {
-      window.ethereum.removeListener("accountsChanged", onAccounts);
-      window.ethereum.removeListener("chainChanged", onChain);
-    };
-  }, [walletType, reset]);
-
-  // Core connect implementations
+  // Enhanced MetaMask connection with mobile support
   const connectMetaMask = useCallback(async (): Promise<string> => {
-    if (!window.ethereum) throw new Error("Install MetaMask");
     setIsConnecting(true);
     try {
-      const bp = new ethers.BrowserProvider(window.ethereum);
-      const [acc] = await window.ethereum.request({
-        method: "eth_requestAccounts",
-      });
-      const net = await bp.getNetwork();
-      const s = await bp.getSigner();
+      // Mobile MetaMask detection and deep link
+      if (deviceInfo.isMobile && !deviceInfo.hasMetaMask) {
+        await openWalletApp("MetaMask");
+        throw new Error("Please open MetaMask app and try again");
+      }
+
+      if (!(window as any).ethereum) {
+        throw new Error("MetaMask not installed");
+      }
+
+      const ethereum = (window as any).ethereum;
+      
+      // Request account access
+      const accounts = await withRetry(() =>
+        ethereum.request({ method: "eth_requestAccounts" })
+      );
+
+      if (!accounts || accounts.length === 0) {
+        throw new Error("No accounts found");
+      }
+
+      const bp = new ethers.BrowserProvider(ethereum);
+      const network = await bp.getNetwork();
+      const signer = await bp.getSigner();
+
       setProvider(bp);
-      setSigner(s);
-      setAccount(acc);
-      setChainId(Number(net.chainId));
+      setSigner(signer);
+      setAccount(accounts[0]);
+      setChainId(Number(network.chainId));
       setWalletType("eoa");
       setIsConnected(true);
-      localStorage.setItem("WALLET_walletType", "eoa");
-      localStorage.setItem("WALLET_account", acc);
-      localStorage.setItem("WALLET_chainId", net.chainId.toString());
-      await fetchBalances(acc, bp);
-      return acc;
+
+      // Persist connection
+      await walletStorage.setItem("walletType", "eoa");
+      await walletStorage.setItem("account", accounts[0]);
+      await walletStorage.setItem("chainId", network.chainId.toString());
+
+      await fetchBalances(accounts[0], bp);
+      return accounts[0];
     } finally {
       setIsConnecting(false);
     }
-  }, [fetchBalances]);
+  }, [deviceInfo, openWalletApp, withRetry, fetchBalances]);
 
+  // Coinbase Wallet connection
+  const connectCoinbaseWallet = useCallback(async (): Promise<string> => {
+    setIsConnecting(true);
+    try {
+      if (deviceInfo.isMobile && !deviceInfo.hasCoinbaseWallet) {
+        await openWalletApp("Coinbase Wallet");
+        throw new Error("Please open Coinbase Wallet app and try again");
+      }
+
+      const ethereum = (window as any).ethereum;
+      if (!ethereum?.isCoinbaseWallet) {
+        throw new Error("Coinbase Wallet not installed");
+      }
+
+      const accounts = await withRetry(() =>
+        ethereum.request({ method: "eth_requestAccounts" })
+      );
+
+      const bp = new ethers.BrowserProvider(ethereum);
+      const network = await bp.getNetwork();
+      const signer = await bp.getSigner();
+
+      setProvider(bp);
+      setSigner(signer);
+      setAccount(accounts[0]);
+      setChainId(Number(network.chainId));
+      setWalletType("coinbase");
+      setIsConnected(true);
+
+      await walletStorage.setItem("walletType", "coinbase");
+      await walletStorage.setItem("account", accounts[0]);
+      await walletStorage.setItem("chainId", network.chainId.toString());
+
+      await fetchBalances(accounts[0], bp);
+      return accounts[0];
+    } finally {
+      setIsConnecting(false);
+    }
+  }, [deviceInfo, openWalletApp, withRetry, fetchBalances]);
+
+  // WalletConnect integration
+  const connectWalletConnect = useCallback(async (): Promise<string> => {
+    setIsConnecting(true);
+    try {
+      // This would typically use @walletconnect/web3-provider
+      // For now, we'll use the smart wallet as fallback
+      return (await connectGuest()).address;
+    } finally {
+      setIsConnecting(false);
+    }
+  }, []);
+
+  // Initialize from localStorage with better error handling
+  useEffect(() => {
+    (async () => {
+      try {
+        const storedWalletType = await walletStorage.getItem("walletType");
+        const storedAccount = await walletStorage.getItem("account");
+        const storedChainId = await walletStorage.getItem("chainId");
+
+        if (storedWalletType && storedAccount) {
+          setWalletType(storedWalletType as WalletType);
+          setAccount(storedAccount);
+          setChainId(storedChainId ? parseInt(storedChainId) : defaultChainId);
+          setIsConnected(true);
+
+          // Reconnect based on wallet type
+          if (storedWalletType === "eoa" && (window as any).ethereum) {
+            const bp = new ethers.BrowserProvider((window as any).ethereum);
+            const signer = await bp.getSigner();
+            setProvider(bp);
+            setSigner(signer);
+            await fetchBalances(storedAccount, bp);
+          } else if (storedWalletType === "smart") {
+            const chain = supportedChains.celoAlfajores;
+            const rp = await createProvider(chain.rpc);
+            setProvider(rp);
+            await fetchBalances(storedAccount, rp);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to initialize wallet from storage:", error);
+        reset();
+      } finally {
+        setIsInitialized(true);
+      }
+    })();
+  }, [defaultChainId, fetchBalances, createProvider, reset]);
+
+  // Enhanced MetaMask event handlers
+  useEffect(() => {
+    if (walletType !== "eoa" || !(window as any).ethereum) return;
+
+    const ethereum = (window as any).ethereum;
+
+    const handleAccountsChanged = (accounts: string[]) => {
+      if (accounts.length === 0) {
+        reset();
+      } else {
+        setAccount(accounts[0]);
+        walletStorage.setItem("account", accounts[0]);
+      }
+    };
+
+    const handleChainChanged = (chainId: string) => {
+      const newChainId = parseInt(chainId, 16);
+      setChainId(newChainId);
+      walletStorage.setItem("chainId", newChainId.toString());
+    };
+
+    const handleDisconnect = () => {
+      reset();
+    };
+
+    ethereum.on("accountsChanged", handleAccountsChanged);
+    ethereum.on("chainChanged", handleChainChanged);
+    ethereum.on("disconnect", handleDisconnect);
+
+    return () => {
+      ethereum.removeListener("accountsChanged", handleAccountsChanged);
+      ethereum.removeListener("chainChanged", handleChainChanged);
+      ethereum.removeListener("disconnect", handleDisconnect);
+    };
+  }, [walletType, reset]);
+
+  // Smart wallet connection methods
   const smartConnect = useCallback(
     async (
       strategy: "google" | "email" | "phone" | "passkey" | "guest",
@@ -390,177 +788,426 @@ export function WalletProvider({
           chain: chainDef,
           strategy,
         };
-        if (strategy === "email")
-          (connOpts.email = opts.email),
-            (connOpts.verificationCode = opts.verificationCode);
-        if (strategy === "phone")
-          (connOpts.phoneNumber = opts.phoneNumber),
-            (connOpts.verificationCode = opts.verificationCode);
 
-        const w = await withRetry(() => smartWallet.connect(connOpts));
-        const rp = new ethers.JsonRpcProvider(chainDef.rpc[0]);
+        if (strategy === "email") {
+          connOpts.email = opts.email;
+          if (opts.verificationCode) {
+            connOpts.verificationCode = opts.verificationCode;
+          }
+        }
+        if (strategy === "phone") {
+          connOpts.phoneNumber = opts.phoneNumber;
+          if (opts.verificationCode) {
+            connOpts.verificationCode = opts.verificationCode;
+          }
+        }
+
+        const wallet = await withRetry(() => smartWallet.connect(connOpts));
+        const rp = await createProvider(chainDef.rpc);
 
         setProvider(rp);
-        setSigner(w);
-        setAccount(w.address);
+        setSigner(wallet);
+        setAccount(wallet.address);
         setWalletType("smart");
         setIsConnected(true);
 
-        localStorage.setItem("WALLET_walletType", "smart");
-        localStorage.setItem("WALLET_account", w.address);
-        localStorage.setItem("WALLET_chainId", chainDef.id.toString());
+        await walletStorage.setItem("walletType", "smart");
+        await walletStorage.setItem("account", wallet.address);
+        await walletStorage.setItem("chainId", chainDef.id.toString());
 
-        await fetchBalances(w.address, rp);
-        return { address: w.address };
+        await fetchBalances(wallet.address, rp);
+        return { address: wallet.address };
       } finally {
         setIsConnecting(false);
       }
     },
-    [fetchBalances, smartWallet, withRetry]
+    [fetchBalances, smartWallet, withRetry, createProvider]
   );
 
   const connectGoogle = useCallback(
     () => smartConnect("google"),
     [smartConnect]
   );
+  
   const connectEmail = useCallback(
     (email: string, code?: string) =>
       smartConnect("email", { email, verificationCode: code }),
     [smartConnect]
   );
+  
   const connectPhone = useCallback(
     (phone: string, code?: string) =>
       smartConnect("phone", { phoneNumber: phone, verificationCode: code }),
     [smartConnect]
   );
+  
   const connectPasskey = useCallback(
     () => smartConnect("passkey"),
     [smartConnect]
   );
+  
   const connectGuest = useCallback(() => smartConnect("guest"), [smartConnect]);
+
+  // Enhanced universal connect function
   const connect = useCallback(
-    async () => (window.ethereum ? connectMetaMask() : connectGuest()),
-    [connectMetaMask, connectGuest]
-  );
+    async (walletType?: string) => {
+      if (walletType) {
+        switch (walletType) {
+          case "metamask":
+            return connectMetaMask();
+          case "coinbase":
+            return connectCoinbaseWallet();
+          case "walletconnect":
+            return connectWalletConnect();
+         case "google":
+           return connectGoogle();
+         case "email":
+           return connectEmail;
+         case "phone":
+           return connectPhone;
+         case "passkey":
+           return connectPasskey();
+         case "guest":
+           return connectGuest();
+         default:
+           throw new Error(`Unsupported wallet type: ${walletType}`);
+       }
+     }
 
-  // Chain switching
-  const switchChain = useCallback(
-    async (newChainId: number) => {
-      if (walletType === "eoa" && window.ethereum) {
-        try {
-          await window.ethereum.request({
-            method: "wallet_switchEthereumChain",
-            params: [{ chainId: `0x${newChainId.toString(16)}` }],
-          });
-        } catch (err: any) {
-          if (err.code === 4902) {
-            const def = supportedChains.celoAlfajores;
-            await window.ethereum.request({
-              method: "wallet_addEthereumChain",
-              params: [
-                {
-                  chainId: `0x${newChainId.toString(16)}`,
-                  chainName: def.name,
-                  nativeCurrency: def.nativeCurrency,
-                  rpcUrls: def.rpc,
-                  blockExplorerUrls: def.blockExplorers?.map((e) => e.url),
-                },
-              ],
-            });
-          } else throw err;
-        }
-      }
-      setChainId(newChainId);
-      localStorage.setItem("WALLET_chainId", newChainId.toString());
-      if (account && provider) await fetchBalances(account, provider);
-    },
-    [walletType, account, provider, fetchBalances]
-  );
+     // Auto-detect best connection method based on device
+     if (deviceInfo.isMobile) {
+       // On mobile, prefer installed wallet apps or smart wallet
+       if (deviceInfo.hasMetaMask) {
+         return connectMetaMask();
+       } else if (deviceInfo.hasCoinbaseWallet) {
+         return connectCoinbaseWallet();
+       } else {
+         // Fallback to guest smart wallet for mobile users
+         return connectGuest();
+       }
+     } else {
+       // On desktop, prefer browser extension wallets
+       if (deviceInfo.hasMetaMask) {
+         return connectMetaMask();
+       } else if (deviceInfo.hasCoinbaseWallet) {
+         return connectCoinbaseWallet();
+       } else {
+         // Fallback to smart wallet for desktop users without extensions
+         return connectGuest();
+       }
+     }
+   },
+   [
+     deviceInfo,
+     connectMetaMask,
+     connectCoinbaseWallet,
+     connectWalletConnect,
+     connectGoogle,
+     connectEmail,
+     connectPhone,
+     connectPasskey,
+     connectGuest,
+   ]
+ );
 
-  // Disconnect
-  const disconnect = useCallback(async () => {
-    try {
-      await smartWallet.disconnect();
-    } catch (err) {
-      console.error("Failed to disconnect smart wallet:", err);
-    }
-    reset();
-    setIsConnecting(false);
-  }, [reset, smartWallet]);
+ // Enhanced chain switching with better error handling
+ const switchChain = useCallback(
+   async (newChainId: number) => {
+     if (!isConnected) {
+       throw new Error("Wallet not connected");
+     }
 
-  // Context value
-  const value = useMemo(
-    () => ({
-      account,
-      chainId,
-      balance, // USDT balance
-      celoBalance,
-      usdtBalance,
-      walletType,
-      isConnected,
-      isConnecting,
-      provider,
-      signer,
-      displayCurrency,
-      setDisplayCurrency,
-      formattedBalance,
-      balanceInUSDT,
-      balanceInCELO,
-      balanceInFiat,
-      connectMetaMask,
-      connectEmail,
-      connectPhone,
-      connectGoogle,
-      connectPasskey,
-      connectGuest,
-      switchChain,
-      disconnect,
-      connect,
-    }),
-    [
-      account,
-      chainId,
-      balance,
-      celoBalance,
-      usdtBalance,
-      walletType,
-      isConnected,
-      isConnecting,
-      provider,
-      signer,
-      displayCurrency,
-      setDisplayCurrency,
-      formattedBalance,
-      balanceInUSDT,
-      balanceInCELO,
-      balanceInFiat,
-      connectMetaMask,
-      connectEmail,
-      connectPhone,
-      connectGoogle,
-      connectPasskey,
-      connectGuest,
-      switchChain,
-      disconnect,
-      connect,
-    ]
-  );
+     try {
+       if (walletType === "eoa" && (window as any).ethereum) {
+         const ethereum = (window as any).ethereum;
+         const hexChainId = `0x${newChainId.toString(16)}`;
 
-  if (!isInitialized) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2"></div>
-      </div>
-    );
-  }
+         try {
+           // Try to switch to the chain
+           await ethereum.request({
+             method: "wallet_switchEthereumChain",
+             params: [{ chainId: hexChainId }],
+           });
+         } catch (switchError: any) {
+           // Chain not added to wallet
+           if (switchError.code === 4902) {
+             const chainConfig = supportedChains.celoAlfajores;
+             
+             await ethereum.request({
+               method: "wallet_addEthereumChain",
+               params: [
+                 {
+                   chainId: hexChainId,
+                   chainName: chainConfig.name,
+                   nativeCurrency: chainConfig.nativeCurrency,
+                   rpcUrls: chainConfig.rpc,
+                   blockExplorerUrls: chainConfig.blockExplorers?.map(
+                     (explorer) => explorer.url
+                   ),
+                 },
+               ],
+             });
+           } else {
+             throw switchError;
+           }
+         }
+       }
 
-  return (
-    <WalletContext.Provider value={value}>{children}</WalletContext.Provider>
-  );
+       setChainId(newChainId);
+       await walletStorage.setItem("chainId", newChainId.toString());
+
+       // Refresh balances after chain switch
+       if (account && provider) {
+         await fetchBalances(account, provider);
+       }
+     } catch (error) {
+       console.error("Failed to switch chain:", error);
+       throw error;
+     }
+   },
+   [walletType, isConnected, account, provider, fetchBalances]
+ );
+
+ // Enhanced disconnect function
+ const disconnect = useCallback(async () => {
+   try {
+     // Disconnect smart wallet if connected
+     if (walletType === "smart") {
+       await smartWallet.disconnect();
+     }
+
+     // Clear ethereum listeners if EOA wallet
+     if (walletType === "eoa" && (window as any).ethereum) {
+       const ethereum = (window as any).ethereum;
+       // Note: MetaMask doesn't have a programmatic disconnect method
+       // We just clear our local state
+     }
+   } catch (error) {
+     console.error("Error during wallet disconnect:", error);
+   } finally {
+     reset();
+     setIsConnecting(false);
+   }
+ }, [walletType, smartWallet, reset]);
+
+ // Auto-refresh balances periodically
+ useEffect(() => {
+   if (!isConnected || !account || !provider) return;
+
+   const refreshBalances = async () => {
+     try {
+       await fetchBalances(account, provider);
+     } catch (error) {
+       console.error("Failed to refresh balances:", error);
+     }
+   };
+
+   // Refresh balances every 30 seconds
+   const interval = setInterval(refreshBalances, 30000);
+
+   return () => clearInterval(interval);
+ }, [isConnected, account, provider, fetchBalances]);
+
+ // Network connectivity check
+ useEffect(() => {
+   const handleOnline = () => {
+     if (isConnected && account && provider) {
+       fetchBalances(account, provider);
+     }
+   };
+
+   const handleOffline = () => {
+     console.warn("Network connection lost");
+   };
+
+   window.addEventListener("online", handleOnline);
+   window.addEventListener("offline", handleOffline);
+
+   return () => {
+     window.removeEventListener("online", handleOnline);
+     window.removeEventListener("offline", handleOffline);
+   };
+ }, [isConnected, account, provider, fetchBalances]);
+
+ // Context value
+ const value = useMemo(
+   () => ({
+     account,
+     chainId,
+     balance,
+     celoBalance,
+     usdtBalance,
+     walletType,
+     isConnected,
+     isConnecting,
+     provider,
+     signer,
+     displayCurrency,
+     setDisplayCurrency,
+     formattedBalance,
+     balanceInUSDT,
+     balanceInCELO,
+     balanceInFiat,
+     availableWallets,
+     deviceInfo,
+     connectMetaMask,
+     connectCoinbaseWallet,
+     connectWalletConnect,
+     connectEmail,
+     connectPhone,
+     connectGoogle,
+     connectPasskey,
+     connectGuest,
+     openWalletApp,
+     switchChain,
+     disconnect,
+     connect,
+   }),
+   [
+     account,
+     chainId,
+     balance,
+     celoBalance,
+     usdtBalance,
+     walletType,
+     isConnected,
+     isConnecting,
+     provider,
+     signer,
+     displayCurrency,
+     formattedBalance,
+     balanceInUSDT,
+     balanceInCELO,
+     balanceInFiat,
+     availableWallets,
+     deviceInfo,
+     connectMetaMask,
+     connectCoinbaseWallet,
+     connectWalletConnect,
+     connectEmail,
+     connectPhone,
+     connectGoogle,
+     connectPasskey,
+     connectGuest,
+     openWalletApp,
+     switchChain,
+     disconnect,
+     connect,
+   ]
+ );
+
+ // Loading state with better UX
+ if (!isInitialized) {
+   return (
+     <div className="flex items-center justify-center h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+       <div className="text-center">
+         <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent mx-auto mb-4"></div>
+         <p className="text-gray-600 font-medium">Initializing wallet...</p>
+       </div>
+     </div>
+   );
+ }
+
+ return (
+   <WalletContext.Provider value={value}>{children}</WalletContext.Provider>
+ );
 }
 
 export function useWallet(): WalletContextType {
-  const ctx = useContext(WalletContext);
-  if (!ctx) throw new Error("useWallet must be used within WalletProvider");
-  return ctx;
+ const context = useContext(WalletContext);
+ if (!context) {
+   throw new Error("useWallet must be used within WalletProvider");
+ }
+ return context;
+}
+
+// Utility hook for wallet recommendations
+export function useWalletRecommendations() {
+ const { deviceInfo, availableWallets } = useWallet();
+
+ const getRecommendedWallets = useCallback(() => {
+   const installed = availableWallets.filter((w) => w.installed);
+   const notInstalled = availableWallets.filter((w) => !w.installed);
+
+   // Prioritize installed wallets
+   const recommendations = [...installed, ...notInstalled];
+
+   // Smart wallet options for users without any wallet
+   if (installed.length === 0) {
+     const smartWalletOptions = [
+       { name: "Email", type: "email", icon: "/icons/email.svg" },
+       { name: "Google", type: "google", icon: "/icons/google.svg" },
+       { name: "Phone", type: "phone", icon: "/icons/phone.svg" },
+     ];
+
+     if (deviceInfo.isMobile) {
+       smartWalletOptions.push({
+         name: "Passkey",
+         type: "passkey",
+         icon: "/icons/passkey.svg",
+       });
+     }
+
+     return {
+       wallets: recommendations,
+       smartWalletOptions,
+       hasInstalledWallets: false,
+     };
+   }
+
+   return {
+     wallets: recommendations,
+     smartWalletOptions: [],
+     hasInstalledWallets: true,
+   };
+ }, [availableWallets, deviceInfo]);
+
+ return { getRecommendedWallets };
+}
+
+// Error boundary for wallet operations
+export class WalletErrorBoundary extends React.Component
+ { children: ReactNode; fallback?: ReactNode },
+ { hasError: boolean; error?: Error }
+> {
+ constructor(props: { children: ReactNode; fallback?: ReactNode }) {
+   super(props);
+   this.state = { hasError: false };
+ }
+
+ static getDerivedStateFromError(error: Error) {
+   return { hasError: true, error };
+ }
+
+ componentDidCatch(error: Error, errorInfo: any) {
+   console.error("Wallet error:", error, errorInfo);
+ }
+
+ render() {
+   if (this.state.hasError) {
+     return (
+       this.props.fallback || (
+         <div className="flex items-center justify-center p-8">
+           <div className="text-center">
+             <div className="text-red-500 text-6xl mb-4">⚠️</div>
+             <h3 className="text-lg font-semibold text-gray-900 mb-2">
+               Wallet Connection Error
+             </h3>
+             <p className="text-gray-600 mb-4">
+               Something went wrong with the wallet connection.
+             </p>
+             <button
+               onClick={() => window.location.reload()}
+               className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+             >
+               Reload Page
+             </button>
+           </div>
+         </div>
+       )
+     );
+   }
+
+   return this.props.children;
+ }
 }

@@ -1,135 +1,96 @@
-// import { useContext, useCallback, useMemo } from "react";
-// import { WalletContext } from "../../context/WalletContext";
-// import type { WalletContextType } from "../../context/WalletContext";
+import { useState, useCallback } from "react";
+import { useWallet } from "../../context/WalletContext";
 
-// type UseWalletHook = Pick<
-//   WalletContextType,
-//   | "account"
-//   | "chainId"
-//   | "balance"
-//   | "walletType"
-//   | "isConnected"
-//   | "isConnecting"
-//   | "connect"
-//   | "connectMetaMask"
-//   | "connectGoogle"
-//   | "connectEmail"
-//   | "connectPhone"
-//   | "connectPasskey"
-//   | "connectGuest"
-//   | "switchChain"
-//   | "disconnect"
-//   | "signer"
-//   | "provider"
-//   | "displayCurrency"
-//   | "setDisplayCurrency"
-//   | "formattedBalance"
-//   | "balanceInUSDT"
-//   | "balanceInCELO"
-//   | "balanceInFiat"
-// >;
+export interface ConnectionStep {
+  id: string;
+  title: string;
+  description: string;
+  status: "pending" | "active" | "completed" | "error";
+  error?: string;
+}
 
-// export function useWallet(): UseWalletHook {
-//   const ctx = useContext(WalletContext);
-//   if (!ctx) throw new Error("useWallet must be used within a WalletProvider");
+export function useWalletConnection() {
+  const wallet = useWallet();
+  const [connectionSteps, setConnectionSteps] = useState<ConnectionStep[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-//   const {
-//     account,
-//     chainId,
-//     balance,
-//     walletType,
-//     isConnected,
-//     isConnecting,
-//     connect: defaultConnect,
-//     connectMetaMask,
-//     connectGoogle,
-//     connectEmail: ctxConnectEmail,
-//     connectPhone: ctxConnectPhone,
-//     connectPasskey,
-//     connectGuest,
-//     switchChain,
-//     disconnect,
-//     signer,
-//     provider,
-//     displayCurrency,
-//     setDisplayCurrency,
-//     formattedBalance,
-//     balanceInUSDT,
-//     balanceInCELO,
-//     balanceInFiat,
-//   } = ctx;
+  const updateStep = useCallback(
+    (stepId: string, updates: Partial<ConnectionStep>) => {
+      setConnectionSteps((prev) =>
+        prev.map((step) =>
+          step.id === stepId ? { ...step, ...updates } : step
+        )
+      );
+    },
+    []
+  );
 
-//   const connect = useCallback((): Promise<
-//     | string
-//     | {
-//         address: string;
-//         preAuth?: boolean;
-//         type?: string;
-//       }
-//   > => {
-//     return defaultConnect();
-//   }, [defaultConnect]);
+  const connectWallet = useCallback(
+    async (walletType: string) => {
+      const steps: ConnectionStep[] = [
+        {
+          id: "initialize",
+          title: "Initialize Connection",
+          description: "Preparing wallet connection...",
+          status: "active",
+        },
+        {
+          id: "authenticate",
+          title: "Authenticate",
+          description: "Please confirm in your wallet",
+          status: "pending",
+        },
+        {
+          id: "complete",
+          title: "Complete Setup",
+          description: "Finalizing connection...",
+          status: "pending",
+        },
+      ];
 
-//   const connectEmail = useCallback(
-//     (email: string, code?: string) => ctxConnectEmail(email, code),
-//     [ctxConnectEmail]
-//   );
+      setConnectionSteps(steps);
+      setIsModalOpen(true);
 
-//   const connectPhone = useCallback(
-//     (phone: string, code?: string) => ctxConnectPhone(phone, code),
-//     [ctxConnectPhone]
-//   );
+      try {
+        updateStep("initialize", { status: "completed" });
+        updateStep("authenticate", { status: "active" });
 
-//   return useMemo(
-//     () => ({
-//       account,
-//       chainId,
-//       balance,
-//       walletType,
-//       isConnected,
-//       isConnecting,
-//       connect,
-//       connectMetaMask,
-//       connectGoogle,
-//       connectEmail,
-//       connectPhone,
-//       connectPasskey,
-//       connectGuest,
-//       switchChain,
-//       disconnect,
-//       signer,
-//       provider,
-//       displayCurrency,
-//       setDisplayCurrency,
-//       formattedBalance,
-//       balanceInUSDT,
-//       balanceInCELO,
-//       balanceInFiat,
-//     }),
-//     [
-//       account,
-//       chainId,
-//       balance,
-//       walletType,
-//       isConnected,
-//       isConnecting,
-//       connect,
-//       connectMetaMask,
-//       connectGoogle,
-//       connectEmail,
-//       connectPhone,
-//       connectPasskey,
-//       connectGuest,
-//       switchChain,
-//       disconnect,
-//       signer,
-//       provider,
-//       displayCurrency,
-//       setDisplayCurrency,
-//       formattedBalance,
-//       balanceInUSDT,
-//       balanceInCELO,
-//       balanceInFiat,
-//     ]
-//   );
-// }
+        const result = await wallet.connect(walletType);
+
+        updateStep("authenticate", { status: "completed" });
+        updateStep("complete", { status: "active" });
+
+        // Small delay for UX
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        updateStep("complete", { status: "completed" });
+
+        // Close modal after success
+        setTimeout(() => {
+          setIsModalOpen(false);
+          setConnectionSteps([]);
+        }, 1500);
+
+        return result;
+      } catch (error: any) {
+        const activeStep = steps.find((s) => s.status === "active");
+        if (activeStep) {
+          updateStep(activeStep.id, {
+            status: "error",
+            error: error.message,
+          });
+        }
+        throw error;
+      }
+    },
+    [wallet, updateStep]
+  );
+
+  return {
+    connectionSteps,
+    isModalOpen,
+    setIsModalOpen,
+    connectWallet,
+    updateStep,
+  };
+}
