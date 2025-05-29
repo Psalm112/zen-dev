@@ -61,7 +61,7 @@ const CurrencyDropdown = memo(
     setDisplayCurrency: (currency: "USDT" | "CELO" | "FIAT") => void;
     showCurrencyDropdown: boolean;
     setShowCurrencyDropdown: (show: boolean) => void;
-    currencyDropdownRef: React.RefObject<HTMLDivElement>;
+    currencyDropdownRef: React.RefObject<HTMLDivElement | null>;
   }) => {
     const currencies = useMemo(() => ["USDT", "CELO", "FIAT"] as const, []);
 
