@@ -16,7 +16,7 @@ import { useCurrencyConverter } from "../utils/hooks/useCurrencyConverter";
 
 export type WalletType = "eoa" | "smart" | "walletConnect" | "coinbase" | null;
 
-// Device and browser detection utilities
+// device and browser detection
 const isMobile = () => {
   if (typeof window === "undefined") return false;
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
@@ -49,7 +49,7 @@ const isTrustWallet = () => {
   return !!(window as any).ethereum?.isTrust;
 };
 
-// Deep link utilities for mobile wallets
+// deep link
 const WALLET_DEEP_LINKS = {
   metamask: {
     ios: "metamask://",
@@ -73,10 +73,8 @@ const WALLET_DEEP_LINKS = {
   },
 };
 
-// USDT Contract Address on Celo Alfajores Testnet
 const USDT_CONTRACT_ADDRESS = import.meta.env.VITE_USDT_CONTRACT_ADDRESS;
 
-// ERC20 ABI for balance checking
 const ERC20_ABI = [
   "function balanceOf(address owner) view returns (uint256)",
   "function decimals() view returns (uint8)",
@@ -104,7 +102,7 @@ const supportedChains = {
   }),
 };
 
-// Enhanced persistent storage with error handling
+// storage
 const walletStorage = {
   getItem: async (key: string) => {
     try {
@@ -346,7 +344,7 @@ export function WalletProvider({
     return wallets;
   }, [deviceInfo]);
 
-  // Enhanced inAppWallet with more auth options
+  // inAppWallet
   const smartWallet = useMemo(
     () =>
       inAppWallet({
@@ -372,7 +370,7 @@ export function WalletProvider({
     [deviceInfo.isMobile]
   );
 
-  // Enhanced retry utility with better error handling
+  // retry utility
   const withRetry = useCallback(
     async <T,>(
       fn: () => Promise<T>,
@@ -411,7 +409,7 @@ export function WalletProvider({
     []
   );
 
-  // Enhanced provider creation with fallback RPCs
+  // provider creation with fallback RPCs
   const createProvider = useCallback(
     async (rpcUrls: string[]): Promise<ethers.Provider> => {
       for (const rpc of rpcUrls) {
@@ -429,7 +427,7 @@ export function WalletProvider({
     []
   );
 
-  // Fetch USDT token balance with better error handling
+  // Fetch USDT token balance
   const fetchUSDTBalance = useCallback(
     async (addr: string, prov: ethers.Provider): Promise<string> => {
       try {
@@ -477,7 +475,6 @@ export function WalletProvider({
     []
   );
 
-  // Combined balance fetching function with retry
   const fetchBalances = useCallback(
     async (addr: string, prov: ethers.Provider) => {
       try {
@@ -604,7 +601,7 @@ export function WalletProvider({
     [deviceInfo.isMobile, availableWallets]
   );
 
-  // Enhanced MetaMask connection with mobile support
+  // MetaMask connection
   const connectMetaMask = useCallback(async (): Promise<string> => {
     setIsConnecting(true);
     try {
@@ -619,7 +616,7 @@ export function WalletProvider({
 
       const ethereum = (window as any).ethereum;
 
-      // Properly type the accounts response
+      // accounts response
       const accounts = (await withRetry(() =>
         ethereum.request({ method: "eth_requestAccounts" })
       )) as string[];
@@ -702,7 +699,7 @@ export function WalletProvider({
     }
   }, []);
 
-  // Initialize from localStorage with better error handling
+  // Initialize from localStorage
   useEffect(() => {
     (async () => {
       try {
@@ -723,7 +720,7 @@ export function WalletProvider({
             setSigner(signer);
             await fetchBalances(storedAccount, bp);
           } else if (storedWalletType === "smart") {
-            const rp = await createProvider(RPC_ENDPOINTS); // Use RPC array
+            const rp = await createProvider(RPC_ENDPOINTS);
             setProvider(rp);
             await fetchBalances(storedAccount, rp);
           }
@@ -737,7 +734,7 @@ export function WalletProvider({
     })();
   }, [defaultChainId, fetchBalances, createProvider, reset]);
 
-  // Enhanced MetaMask event handlers
+  // MetaMask event handlers
   useEffect(() => {
     if (walletType !== "eoa" || !(window as any).ethereum) return;
 
@@ -803,7 +800,7 @@ export function WalletProvider({
         }
 
         const wallet = await withRetry(() => smartWallet.connect(connOpts));
-        const rp = await createProvider(RPC_ENDPOINTS); // Use RPC array
+        const rp = await createProvider(RPC_ENDPOINTS);
 
         setProvider(rp);
         setSigner(wallet);
@@ -848,7 +845,7 @@ export function WalletProvider({
 
   const connectGuest = useCallback(() => smartConnect("guest"), [smartConnect]);
 
-  // Enhanced universal connect function
+  // universal connect
   const connect = useCallback(
     async (
       walletType?: string
@@ -882,7 +879,6 @@ export function WalletProvider({
         }
       }
 
-      // Auto-detect logic remains the same
       if (deviceInfo.isMobile) {
         if (deviceInfo.hasMetaMask) {
           return connectMetaMask();
@@ -912,7 +908,7 @@ export function WalletProvider({
     ]
   );
 
-  // Enhanced chain switching with better error handling
+  // chain switching
   const switchChain = useCallback(
     async (newChainId: number) => {
       if (!isConnected) {
@@ -967,7 +963,6 @@ export function WalletProvider({
     [walletType, isConnected, account, provider, fetchBalances]
   );
 
-  // Enhanced disconnect function
   const disconnect = useCallback(async () => {
     try {
       // Disconnect smart wallet if connected
@@ -978,8 +973,6 @@ export function WalletProvider({
       // Clear ethereum listeners if EOA wallet
       if (walletType === "eoa" && (window as any).ethereum) {
         const ethereum = (window as any).ethereum;
-        // Note: MetaMask doesn't have a programmatic disconnect method
-        // We just clear our local state
       }
     } catch (error) {
       console.error("Error during wallet disconnect:", error);
@@ -1095,12 +1088,12 @@ export function WalletProvider({
     ]
   );
 
-  // Loading state with better UX
+  // Loading
   if (!isInitialized) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="flex items-center justify-center h-screen bg-Dark">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-Red border-t-transparent mx-auto mb-4"></div>
           <p className="text-gray-600 font-medium">Initializing wallet...</p>
         </div>
       </div>
@@ -1120,7 +1113,7 @@ export function useWallet(): WalletContextType {
   return context;
 }
 
-// Utility hook for wallet recommendations
+// wallet recommendations
 export function useWalletRecommendations() {
   const { deviceInfo, availableWallets } = useWallet();
 
