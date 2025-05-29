@@ -13,7 +13,7 @@ export function useWalletConnection() {
   const wallet = useWallet();
   const [connectionSteps, setConnectionSteps] = useState<ConnectionStep[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const updateStep = useCallback(
     (stepId: string, updates: Partial<ConnectionStep>) => {
@@ -161,7 +161,10 @@ export function useWalletOperations() {
       account,
       resetState,
       executeOperation,
-      disconnect: () => executeOperation(disconnect),
+      disconnect: () =>
+        executeOperation(async () => {
+          disconnect();
+        }),
       connectMetaMask: () => executeOperation(connectMetaMask),
       connectGoogle: () => executeOperation(connectGoogle),
       connectEmail: (email: string, code?: string) =>
