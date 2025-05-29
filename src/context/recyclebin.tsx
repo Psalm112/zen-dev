@@ -11,7 +11,7 @@ import React, {
   useRef,
 } from "react";
 import { ethers } from "ethers";
-import { inAppWallet, createWallet } from "thirdweb/wallets";
+import { inAppWallet } from "thirdweb/wallets";
 import { createThirdwebClient, defineChain } from "thirdweb";
 import { EthereumProvider } from "@walletconnect/ethereum-provider";
 import { useBalanceManager } from "./BalanceContext";
@@ -844,4 +844,4 @@ function WalletProviderCore({
     const currentUrl = encodeURIComponent(window.location.href);
     let deepLinkUrl = "";
 
-    if (deviceInfo.isIOS) {
+    if (deviceInfo.isIOS)
