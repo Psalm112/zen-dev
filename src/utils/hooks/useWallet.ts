@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useMemo } from "react";
 import { useWallet } from "../../context/WalletContext";
 
 export interface ConnectionStep {
@@ -13,6 +13,7 @@ export function useWalletConnection() {
   const wallet = useWallet();
   const [connectionSteps, setConnectionSteps] = useState<ConnectionStep[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout>();
 
   const updateStep = useCallback(
     (stepId: string, updates: Partial<ConnectionStep>) => {
@@ -24,6 +25,14 @@ export function useWalletConnection() {
     },
     []
   );
+
+  const resetConnection = useCallback(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    setConnectionSteps([]);
+    setIsModalOpen(false);
+  }, []);
 
   const connectWallet = useCallback(
     async (walletType: string) => {
@@ -60,15 +69,11 @@ export function useWalletConnection() {
         updateStep("authenticate", { status: "completed" });
         updateStep("complete", { status: "active" });
 
-        // Small delay for UX
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
+        await new Promise((resolve) => setTimeout(resolve, 500));
         updateStep("complete", { status: "completed" });
 
-        // Close modal after success
-        setTimeout(() => {
-          setIsModalOpen(false);
-          setConnectionSteps([]);
+        timeoutRef.current = setTimeout(() => {
+          resetConnection();
         }, 1500);
 
         return result;
@@ -83,14 +88,103 @@ export function useWalletConnection() {
         throw error;
       }
     },
-    [wallet, updateStep]
+    [wallet.connect, updateStep, resetConnection]
   );
 
-  return {
-    connectionSteps,
-    isModalOpen,
-    setIsModalOpen,
-    connectWallet,
-    updateStep,
-  };
+  return useMemo(
+    () => ({
+      connectionSteps,
+      isModalOpen,
+      setIsModalOpen: resetConnection,
+      connectWallet,
+      updateStep,
+      resetConnection,
+    }),
+    [connectionSteps, isModalOpen, connectWallet, updateStep, resetConnection]
+  );
+}
+
+// Enhanced hook for wallet operations
+export function useWalletOperations() {
+  const {
+    isConnecting,
+    isConnected,
+    account,
+    disconnect,
+    connectMetaMask,
+    connectGoogle,
+    connectEmail,
+    connectPhone,
+    connectPasskey,
+    connectGuest,
+  } = useWallet();
+
+  const [operationState, setOperationState] = useState<{
+    loading: boolean;
+    error: string | null;
+    success: boolean;
+  }>({
+    loading: false,
+    error: null,
+    success: false,
+  });
+
+  const resetState = useCallback(() => {
+    setOperationState({ loading: false, error: null, success: false });
+  }, []);
+
+  const executeOperation = useCallback(
+    async <T>(operation: () => Promise<T>): Promise<T | null> => {
+      setOperationState({ loading: true, error: null, success: false });
+
+      try {
+        const result = await operation();
+        setOperationState({ loading: false, error: null, success: true });
+        return result;
+      } catch (error: any) {
+        setOperationState({
+          loading: false,
+          error: error.message || "Operation failed",
+          success: false,
+        });
+        return null;
+      }
+    },
+    []
+  );
+
+  return useMemo(
+    () => ({
+      ...operationState,
+      isConnecting,
+      isConnected,
+      account,
+      resetState,
+      executeOperation,
+      disconnect: () => executeOperation(disconnect),
+      connectMetaMask: () => executeOperation(connectMetaMask),
+      connectGoogle: () => executeOperation(connectGoogle),
+      connectEmail: (email: string, code?: string) =>
+        executeOperation(() => connectEmail(email, code)),
+      connectPhone: (phone: string, code?: string) =>
+        executeOperation(() => connectPhone(phone, code)),
+      connectPasskey: () => executeOperation(connectPasskey),
+      connectGuest: () => executeOperation(connectGuest),
+    }),
+    [
+      operationState,
+      isConnecting,
+      isConnected,
+      account,
+      resetState,
+      executeOperation,
+      disconnect,
+      connectMetaMask,
+      connectGoogle,
+      connectEmail,
+      connectPhone,
+      connectPasskey,
+      connectGuest,
+    ]
+  );
 }
