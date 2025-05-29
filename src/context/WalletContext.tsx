@@ -452,6 +452,30 @@ function WalletProviderCore({
 
   // Smart wallet instance with proper configuration
   const smartWallet = useMemo(() => {
+    type AuthOption =
+      | "apple"
+      | "google"
+      | "email"
+      | "phone"
+      | "passkey"
+      | "guest";
+
+    const baseAuthOptions: AuthOption[] = [
+      "google",
+      "email",
+      "phone",
+      "passkey",
+      "guest",
+    ];
+    const iosAuthOptions: AuthOption[] = [
+      "apple",
+      "google",
+      "email",
+      "phone",
+      "passkey",
+      "guest",
+    ];
+
     const baseConfig = {
       smartAccount: {
         chain:
@@ -461,19 +485,9 @@ function WalletProviderCore({
         sponsorGas: true,
       },
       auth: {
-        mode: deviceInfo.isMobile ? "redirect" : "popup",
-        options: ["google", "email", "phone", "passkey", "guest"] as const,
-        ...(deviceInfo.isIOS && {
-          options: [
-            "apple",
-            "google",
-            "email",
-            "phone",
-            "passkey",
-            "guest",
-          ] as const,
-        }),
-        defaultSmsCountryCode: "NG",
+        mode: deviceInfo.isMobile ? ("redirect" as const) : ("popup" as const),
+        options: deviceInfo.isIOS ? iosAuthOptions : baseAuthOptions,
+        defaultSmsCountryCode: "NG" as const,
         passkeyDomain:
           typeof window !== "undefined"
             ? window.location.hostname
@@ -825,6 +839,7 @@ function WalletProviderCore({
       type: WalletType,
       method: ConnectionMethod = "extension"
     ): Promise<string> => {
+      // Add explicit return type
       if (!type) {
         throw new Error("Wallet type is required");
       }
@@ -849,9 +864,9 @@ function WalletProviderCore({
           default:
             throw new Error(`Unsupported wallet type: ${type}`);
         }
-        // throw new Error("Invalid wallet type");
       } catch (error) {
         handleWalletError(error, `${type} connection`);
+        throw error;
       } finally {
         setIsConnecting(false);
       }
