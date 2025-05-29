@@ -18,6 +18,10 @@ import { useBalanceManager } from "./BalanceContext";
 import { useProviderPool } from "./ProviderPoolContext";
 import { WalletErrorBoundary } from "../components/WalletErrorBoundary";
 
+interface WalletError extends Error {
+  code?: number;
+}
+
 export type WalletType = "eoa" | "smart" | "walletConnect" | "coinbase" | null;
 
 // Device detection with memoization
@@ -216,12 +220,13 @@ function WalletProviderCore({
   // Debounced error handler
   const handleError = useCallback((error: Error, context: string) => {
     console.error(`Wallet error in ${context}:`, error);
+    const walletError = error as WalletError;
 
     // User-friendly error mapping
-    if (error.code === 4001) {
+    if (walletError.code === 4001) {
       throw new Error("Connection cancelled by user");
     }
-    if (error.code === -32002) {
+    if (walletError.code === -32002) {
       throw new Error("Connection request already pending");
     }
     if (error.message?.includes("User rejected")) {
@@ -350,9 +355,9 @@ function WalletProviderCore({
       }
 
       const ethereum = (window as any).ethereum;
-      const accounts = await ethereum.request({
+      const accounts = (await ethereum.request({
         method: "eth_requestAccounts",
-      });
+      })) as string[];
 
       if (!accounts || accounts.length === 0) {
         throw new Error("No accounts found");
@@ -405,9 +410,9 @@ function WalletProviderCore({
         throw new Error("Coinbase Wallet not installed");
       }
 
-      const accounts = await ethereum.request({
+      const accounts = (await ethereum.request({
         method: "eth_requestAccounts",
-      });
+      })) as string[];
       const browserProvider = new ethers.BrowserProvider(ethereum);
       const network = await browserProvider.getNetwork();
       const signer = await browserProvider.getSigner();
@@ -457,7 +462,9 @@ function WalletProviderCore({
       });
 
       await wcProvider.connect();
-      const accounts = await wcProvider.request({ method: "eth_accounts" });
+      const accounts = (await wcProvider.request({
+        method: "eth_accounts",
+      })) as string[];
 
       const ethersProvider = new ethers.BrowserProvider(wcProvider);
       const signer = await ethersProvider.getSigner();
@@ -522,10 +529,15 @@ function WalletProviderCore({
         const wallet = await smartWallet.connect(connOpts);
         const rpcProvider = await getProvider();
 
+        const ethersSigner = new ethers.JsonRpcSigner(
+          rpcProvider as ethers.JsonRpcApiProvider,
+          wallet.address
+        );
+
         providerRef.current = rpcProvider;
 
         setProvider(rpcProvider);
-        setSigner(wallet);
+        setSigner(ethersSigner);
         setAccount(wallet.address);
         setWalletType("smart");
         setIsConnected(true);

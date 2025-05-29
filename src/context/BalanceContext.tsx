@@ -58,6 +58,12 @@ const CELO_ALFAJORES_TOKENS = [
     name: "Celo Euro",
     decimals: 18,
   },
+  {
+    address: import.meta.env.VITE_USDT_CONTRACT_ADDRESS,
+    symbol: "USDT",
+    name: "Tether USD",
+    decimals: 6,
+  },
 ] as const;
 
 // ERC-20 ABI for balance queries
@@ -178,7 +184,10 @@ export function BalanceManagerProvider({
             if (result.status === "fulfilled") {
               return {
                 address: CELO_ALFAJORES_TOKENS[index].address,
-                ...result.value,
+                symbol: result.value.symbol,
+                name: result.value.name,
+                decimals: result.value.decimals,
+                balance: result.value.balance,
               };
             }
             return null;
