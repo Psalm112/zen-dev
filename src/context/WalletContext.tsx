@@ -45,6 +45,32 @@ export type ConnectionMethod =
   | "deeplink"
   | "embedded";
 
+interface WalletConfig {
+  name: string;
+  icon: string;
+  color: string;
+  supportedMethods: ConnectionMethod[];
+  deepLinks?: {
+    ios: string;
+    android: string;
+    universal: string;
+  };
+  downloads?: {
+    ios?: string;
+    android?: string;
+    chrome?: string;
+    firefox?: string;
+  };
+}
+
+declare global {
+  interface Window {
+    gtag?: (...args: any[]) => void;
+  }
+}
+
+const gtag = window.gtag;
+
 // Enhanced device detection with performance optimization
 const createDeviceInfo = () => {
   if (typeof window === "undefined") {
@@ -126,7 +152,11 @@ const WALLET_CONFIGS = {
         "https://chrome.google.com/webstore/detail/nkbihfbeogaeaoehlefnkodbefgpgknn",
       firefox: "https://addons.mozilla.org/firefox/addon/ether-metamask/",
     },
-    supportedMethods: ["extension", "mobile_app", "deeplink"],
+    supportedMethods: [
+      "extension",
+      "mobile_app",
+      "deeplink",
+    ] as ConnectionMethod[],
   },
   coinbase: {
     name: "Coinbase Wallet",
@@ -143,7 +173,12 @@ const WALLET_CONFIGS = {
       chrome:
         "https://chrome.google.com/webstore/detail/coinbase-wallet/hnfanknocfeofbddgcijnmhnfnkdnaad",
     },
-    supportedMethods: ["extension", "mobile_app", "qr_code", "deeplink"],
+    supportedMethods: [
+      "extension",
+      "mobile_app",
+      "qr_code",
+      "deeplink",
+    ] as ConnectionMethod[],
   },
   trust: {
     name: "Trust Wallet",
@@ -341,6 +376,7 @@ const SUPPORTED_CHAINS = {
     ],
   }),
 };
+const USDT_CONTRACT_ADDRESS = import.meta.env.VITE_USDT_CONTRACT_ADDRESS;
 
 const thirdwebClient = createThirdwebClient({
   clientId: import.meta.env.VITE_THIRDWEB_CLIENT_ID,
@@ -351,6 +387,13 @@ interface WalletProviderProps {
   defaultChainId?: number;
   enableAnalytics?: boolean;
 }
+
+const USDT_ABI = [
+  "function transfer(address to, uint256 amount) returns (bool)",
+  "function balanceOf(address account) view returns (uint256)",
+  "function decimals() view returns (uint8)",
+  "function symbol() view returns (string)",
+];
 
 function WalletProviderCore({
   children,
@@ -397,16 +440,16 @@ function WalletProviderCore({
       },
       auth: {
         mode: deviceInfo.isMobile ? "redirect" : "popup",
-        options: ["google", "email", "phone", "passkey", "guest"],
+        options: ["google", "email", "phone", "passkey", "guest"] as const,
         ...(deviceInfo.isIOS && {
           options: [
-            ...["apple"],
+            "apple",
             "google",
             "email",
             "phone",
             "passkey",
             "guest",
-          ],
+          ] as const,
         }),
         defaultSmsCountryCode: "NG",
         passkeyDomain:
@@ -531,6 +574,9 @@ function WalletProviderCore({
       newConnectionMethod: ConnectionMethod,
       newChainId?: number
     ) => {
+      if (!newWalletType) {
+        throw new Error("Wallet type cannot be null");
+      }
       // Clean up previous provider
       if (providerRef.current && providerRef.current !== newProvider) {
         releaseProvider(providerRef.current);
@@ -556,7 +602,6 @@ function WalletProviderCore({
         secureStorage.setItem("connectionMethod", newConnectionMethod),
         secureStorage.setItem("chainId", (newChainId || chainId).toString()),
       ]);
-
       // Refresh balances
       refreshBalances(newAccount, newProvider);
 
@@ -758,6 +803,9 @@ function WalletProviderCore({
       type: WalletType,
       method: ConnectionMethod = "extension"
     ): Promise<string> => {
+      if (!type) {
+        throw new Error("Wallet type is required");
+      }
       if (isConnecting) {
         throw new Error("Connection already in progress");
       }
@@ -851,43 +899,46 @@ function WalletProviderCore({
       if (!signer || !account) {
         throw new Error("Wallet not connected");
       }
-
-      // Convert amount to wei based on currency
+      let tx: ethers.TransactionResponse;
       let amountWei: bigint;
-      const amountFloat = parseFloat(request.amount);
 
-      switch (request.currency) {
-        case "CELO":
-          amountWei = ethers.parseEther(request.amount);
-          break;
-        case "USDT":
-          // Convert USDT to CELO, then to wei
-          const celoAmount = convertPrice(amountFloat, "USDT", "CELO");
-          amountWei = ethers.parseEther(celoAmount.toString());
-          break;
-        case "FIAT":
-          // Convert FIAT to CELO, then to wei
-          const celoFromFiat = convertPrice(amountFloat, "FIAT", "CELO");
-          amountWei = ethers.parseEther(celoFromFiat.toString());
-          break;
-        default:
-          amountWei = ethers.parseEther(request.amount);
+      if (request.currency === "USDT" && USDT_CONTRACT_ADDRESS) {
+        // USDT token transfer
+        const usdtContract = new ethers.Contract(
+          USDT_CONTRACT_ADDRESS,
+          USDT_ABI,
+          signer
+        );
+        const amountInUSDT = ethers.parseUnits(request.amount, 6); // USDT has 6 decimals
+        tx = await usdtContract.transfer(request.to, amountInUSDT);
+      } else {
+        // Native CELO transfer or convert other currencies to CELO
+        const amountFloat = parseFloat(request.amount);
+
+        switch (request.currency) {
+          case "CELO":
+            amountWei = ethers.parseEther(request.amount);
+            break;
+          case "FIAT":
+            const celoFromFiat = convertPrice(amountFloat, "FIAT", "CELO");
+            amountWei = ethers.parseEther(celoFromFiat.toString());
+            break;
+          default:
+            amountWei = ethers.parseEther(request.amount);
+        }
+
+        const txRequest: ethers.TransactionRequest = {
+          to: request.to,
+          value: amountWei,
+          data: request.data || "0x",
+          gasLimit: request.gasLimit,
+          gasPrice: request.gasPrice,
+          maxFeePerGas: request.maxFeePerGas,
+          maxPriorityFeePerGas: request.maxPriorityFeePerGas,
+        };
+
+        tx = await signer.sendTransaction(txRequest);
       }
-
-      const txRequest: ethers.TransactionRequest = {
-        to: request.to,
-        value: amountWei,
-        data: request.data || "0x",
-      };
-
-      // Add gas configuration if provided
-      if (request.gasLimit) txRequest.gasLimit = request.gasLimit;
-      if (request.gasPrice) txRequest.gasPrice = request.gasPrice;
-      if (request.maxFeePerGas) txRequest.maxFeePerGas = request.maxFeePerGas;
-      if (request.maxPriorityFeePerGas)
-        txRequest.maxPriorityFeePerGas = request.maxPriorityFeePerGas;
-
-      const tx = await signer.sendTransaction(txRequest);
       const receipt = await tx.wait();
 
       const result: PaymentResult = {
@@ -1426,32 +1477,67 @@ export function useWallet(): WalletContextType {
 // Additional utility hooks for specific use cases
 export function useWalletBalance() {
   const { account, provider } = useWallet();
-  const [balance, setBalance] = useState<string>("0");
+  const { convertPrice, formatPrice, selectedCurrency } =
+    useCurrencyConverter();
+  const [balances, setBalances] = useState({
+    celo: "0",
+    usdt: "0",
+    fiat: "0",
+  });
   const [isLoading, setIsLoading] = useState(false);
 
   const fetchBalance = useCallback(async () => {
     if (!account || !provider) {
-      setBalance("0");
+      setBalances({ celo: "0", usdt: "0", fiat: "0" });
       return;
     }
 
     setIsLoading(true);
     try {
-      const balanceWei = await provider.getBalance(account);
-      setBalance(ethers.formatEther(balanceWei));
+      // Fetch CELO balance
+      const celoBalanceWei = await provider.getBalance(account);
+      const celoBalance = ethers.formatEther(celoBalanceWei);
+
+      // Fetch USDT balance if contract exists
+      let usdtBalance = "0";
+      if (USDT_CONTRACT_ADDRESS) {
+        const usdtContract = new ethers.Contract(
+          USDT_CONTRACT_ADDRESS,
+          USDT_ABI,
+          provider
+        );
+        const usdtBalanceWei = await usdtContract.balanceOf(account);
+        usdtBalance = ethers.formatUnits(usdtBalanceWei, 6);
+      }
+
+      // Convert to fiat
+      const celoInFiat = convertPrice(parseFloat(celoBalance), "CELO", "FIAT");
+      const usdtInFiat = convertPrice(parseFloat(usdtBalance), "USDT", "FIAT");
+      const totalFiat = (celoInFiat + usdtInFiat).toString();
+
+      setBalances({
+        celo: celoBalance,
+        usdt: usdtBalance,
+        fiat: totalFiat,
+      });
     } catch (error) {
-      console.error("Failed to fetch balance:", error);
-      setBalance("0");
+      console.error("Failed to fetch balances:", error);
+      setBalances({ celo: "0", usdt: "0", fiat: "0" });
     } finally {
       setIsLoading(false);
     }
-  }, [account, provider]);
+  }, [account, provider, convertPrice]);
 
-  useEffect(() => {
-    fetchBalance();
-  }, [fetchBalance]);
-
-  return { balance, isLoading, refetch: fetchBalance };
+  return {
+    balances,
+    isLoading,
+    refetch: fetchBalance,
+    formatted: {
+      celo: formatPrice(parseFloat(balances.celo), "CELO"),
+      usdt: formatPrice(parseFloat(balances.usdt), "USDT"),
+      fiat: formatPrice(parseFloat(balances.fiat), "FIAT"),
+    },
+  };
 }
 
 export function useWalletNetwork() {
