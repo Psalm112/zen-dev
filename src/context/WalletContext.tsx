@@ -1,6 +1,6 @@
 "use client";
 
-import {
+import React, {
   createContext,
   useContext,
   useState,
@@ -83,17 +83,18 @@ const ERC20_ABI = [
   "function symbol() view returns (string)",
 ];
 
+const RPC_ENDPOINTS = [
+  "https://alfajores-forno.celo-testnet.org",
+  "https://celo-alfajores.infura.io/v3/" + import.meta.env.VITE_INFURA_KEY,
+  "https://alfajores-forno.celo-testnet.org",
+];
 // Chain definitions with fallback RPCs
 const supportedChains = {
   celoAlfajores: defineChain({
     id: 44787,
     name: "Celo Alfajores Testnet",
     nativeCurrency: { name: "Celo", symbol: "CELO", decimals: 18 },
-    rpc: [
-      "https://alfajores-forno.celo-testnet.org",
-      "https://celo-alfajores.infura.io/v3/" + import.meta.env.VITE_INFURA_KEY,
-      "https://alfajores-forno.celo-testnet.org",
-    ],
+    rpc: "https://alfajores-forno.celo-testnet.org",
     blockExplorers: [
       {
         name: "Celo Explorer",
@@ -199,7 +200,7 @@ export interface WalletContextType {
   openWalletApp: (walletName: string) => Promise<void>;
   switchChain: (chainId: number) => Promise<void>;
   disconnect: () => void;
-  connect: (walletType?: string) => Promise
+  connect: (walletType?: string) => Promise<
     | string
     | {
         address: string;
@@ -234,7 +235,7 @@ export function WalletProvider({
   const [isInitialized, setIsInitialized] = useState(false);
   const [provider, setProvider] = useState<ethers.Provider | null>(null);
   const [signer, setSigner] = useState<ethers.Signer | any>(null);
-  const [displayCurrency, setDisplayCurrency] = useState
+  const [displayCurrency, setDisplayCurrency] = useState<
     "USDT" | "CELO" | "FIAT"
   >("USDT");
   const { convertPrice, formatPrice } = useCurrencyConverter();
@@ -416,7 +417,6 @@ export function WalletProvider({
       for (const rpc of rpcUrls) {
         try {
           const provider = new ethers.JsonRpcProvider(rpc);
-          // Test the provider
           await provider.getBlockNumber();
           return provider;
         } catch (error) {
@@ -572,10 +572,14 @@ export function WalletProvider({
           deepLinkUrl = `${wallet.deepLink}${encodeURIComponent(currentUrl)}`;
           break;
         case "Trust Wallet":
-          deepLinkUrl = `${WALLET_DEEP_LINKS.trustwallet.universal}${encodeURIComponent(currentUrl)}`;
+          deepLinkUrl = `${
+            WALLET_DEEP_LINKS.trustwallet.universal
+          }${encodeURIComponent(currentUrl)}`;
           break;
         case "Coinbase Wallet":
-          deepLinkUrl = `${WALLET_DEEP_LINKS.coinbase.universal}${encodeURIComponent(currentUrl)}`;
+          deepLinkUrl = `${
+            WALLET_DEEP_LINKS.coinbase.universal
+          }${encodeURIComponent(currentUrl)}`;
           break;
         default:
           deepLinkUrl = wallet.deepLink;
@@ -583,7 +587,7 @@ export function WalletProvider({
 
       try {
         window.location.href = deepLinkUrl;
-        
+
         // Fallback to app store after a delay
         setTimeout(() => {
           if (wallet.downloadUrl) {
@@ -604,7 +608,6 @@ export function WalletProvider({
   const connectMetaMask = useCallback(async (): Promise<string> => {
     setIsConnecting(true);
     try {
-      // Mobile MetaMask detection and deep link
       if (deviceInfo.isMobile && !deviceInfo.hasMetaMask) {
         await openWalletApp("MetaMask");
         throw new Error("Please open MetaMask app and try again");
@@ -615,11 +618,11 @@ export function WalletProvider({
       }
 
       const ethereum = (window as any).ethereum;
-      
-      // Request account access
-      const accounts = await withRetry(() =>
+
+      // Properly type the accounts response
+      const accounts = (await withRetry(() =>
         ethereum.request({ method: "eth_requestAccounts" })
-      );
+      )) as string[];
 
       if (!accounts || accounts.length === 0) {
         throw new Error("No accounts found");
@@ -636,7 +639,6 @@ export function WalletProvider({
       setWalletType("eoa");
       setIsConnected(true);
 
-      // Persist connection
       await walletStorage.setItem("walletType", "eoa");
       await walletStorage.setItem("account", accounts[0]);
       await walletStorage.setItem("chainId", network.chainId.toString());
@@ -662,9 +664,9 @@ export function WalletProvider({
         throw new Error("Coinbase Wallet not installed");
       }
 
-      const accounts = await withRetry(() =>
+      const accounts = (await withRetry(() =>
         ethereum.request({ method: "eth_requestAccounts" })
-      );
+      )) as string[];
 
       const bp = new ethers.BrowserProvider(ethereum);
       const network = await bp.getNetwork();
@@ -714,7 +716,6 @@ export function WalletProvider({
           setChainId(storedChainId ? parseInt(storedChainId) : defaultChainId);
           setIsConnected(true);
 
-          // Reconnect based on wallet type
           if (storedWalletType === "eoa" && (window as any).ethereum) {
             const bp = new ethers.BrowserProvider((window as any).ethereum);
             const signer = await bp.getSigner();
@@ -722,8 +723,7 @@ export function WalletProvider({
             setSigner(signer);
             await fetchBalances(storedAccount, bp);
           } else if (storedWalletType === "smart") {
-            const chain = supportedChains.celoAlfajores;
-            const rp = await createProvider(chain.rpc);
+            const rp = await createProvider(RPC_ENDPOINTS); // Use RPC array
             setProvider(rp);
             await fetchBalances(storedAccount, rp);
           }
@@ -803,7 +803,7 @@ export function WalletProvider({
         }
 
         const wallet = await withRetry(() => smartWallet.connect(connOpts));
-        const rp = await createProvider(chainDef.rpc);
+        const rp = await createProvider(RPC_ENDPOINTS); // Use RPC array
 
         setProvider(rp);
         setSigner(wallet);
@@ -828,29 +828,33 @@ export function WalletProvider({
     () => smartConnect("google"),
     [smartConnect]
   );
-  
+
   const connectEmail = useCallback(
     (email: string, code?: string) =>
       smartConnect("email", { email, verificationCode: code }),
     [smartConnect]
   );
-  
+
   const connectPhone = useCallback(
     (phone: string, code?: string) =>
       smartConnect("phone", { phoneNumber: phone, verificationCode: code }),
     [smartConnect]
   );
-  
+
   const connectPasskey = useCallback(
     () => smartConnect("passkey"),
     [smartConnect]
   );
-  
+
   const connectGuest = useCallback(() => smartConnect("guest"), [smartConnect]);
 
   // Enhanced universal connect function
   const connect = useCallback(
-    async (walletType?: string) => {
+    async (
+      walletType?: string
+    ): Promise<
+      string | { address: string; preAuth?: boolean; type?: string }
+    > => {
       if (walletType) {
         switch (walletType) {
           case "metamask":
@@ -859,355 +863,350 @@ export function WalletProvider({
             return connectCoinbaseWallet();
           case "walletconnect":
             return connectWalletConnect();
-         case "google":
-           return connectGoogle();
-         case "email":
-           return connectEmail;
-         case "phone":
-           return connectPhone;
-         case "passkey":
-           return connectPasskey();
-         case "guest":
-           return connectGuest();
-         default:
-           throw new Error(`Unsupported wallet type: ${walletType}`);
-       }
-     }
+          case "google":
+            return connectGoogle();
+          case "email":
+            throw new Error(
+              "Email connection requires email parameter. Use connectEmail directly."
+            );
+          case "phone":
+            throw new Error(
+              "Phone connection requires phone parameter. Use connectPhone directly."
+            );
+          case "passkey":
+            return connectPasskey();
+          case "guest":
+            return connectGuest();
+          default:
+            throw new Error(`Unsupported wallet type: ${walletType}`);
+        }
+      }
 
-     // Auto-detect best connection method based on device
-     if (deviceInfo.isMobile) {
-       // On mobile, prefer installed wallet apps or smart wallet
-       if (deviceInfo.hasMetaMask) {
-         return connectMetaMask();
-       } else if (deviceInfo.hasCoinbaseWallet) {
-         return connectCoinbaseWallet();
-       } else {
-         // Fallback to guest smart wallet for mobile users
-         return connectGuest();
-       }
-     } else {
-       // On desktop, prefer browser extension wallets
-       if (deviceInfo.hasMetaMask) {
-         return connectMetaMask();
-       } else if (deviceInfo.hasCoinbaseWallet) {
-         return connectCoinbaseWallet();
-       } else {
-         // Fallback to smart wallet for desktop users without extensions
-         return connectGuest();
-       }
-     }
-   },
-   [
-     deviceInfo,
-     connectMetaMask,
-     connectCoinbaseWallet,
-     connectWalletConnect,
-     connectGoogle,
-     connectEmail,
-     connectPhone,
-     connectPasskey,
-     connectGuest,
-   ]
- );
+      // Auto-detect logic remains the same
+      if (deviceInfo.isMobile) {
+        if (deviceInfo.hasMetaMask) {
+          return connectMetaMask();
+        } else if (deviceInfo.hasCoinbaseWallet) {
+          return connectCoinbaseWallet();
+        } else {
+          return connectGuest();
+        }
+      } else {
+        if (deviceInfo.hasMetaMask) {
+          return connectMetaMask();
+        } else if (deviceInfo.hasCoinbaseWallet) {
+          return connectCoinbaseWallet();
+        } else {
+          return connectGuest();
+        }
+      }
+    },
+    [
+      deviceInfo,
+      connectMetaMask,
+      connectCoinbaseWallet,
+      connectWalletConnect,
+      connectGoogle,
+      connectPasskey,
+      connectGuest,
+    ]
+  );
 
- // Enhanced chain switching with better error handling
- const switchChain = useCallback(
-   async (newChainId: number) => {
-     if (!isConnected) {
-       throw new Error("Wallet not connected");
-     }
+  // Enhanced chain switching with better error handling
+  const switchChain = useCallback(
+    async (newChainId: number) => {
+      if (!isConnected) {
+        throw new Error("Wallet not connected");
+      }
 
-     try {
-       if (walletType === "eoa" && (window as any).ethereum) {
-         const ethereum = (window as any).ethereum;
-         const hexChainId = `0x${newChainId.toString(16)}`;
+      try {
+        if (walletType === "eoa" && (window as any).ethereum) {
+          const ethereum = (window as any).ethereum;
+          const hexChainId = `0x${newChainId.toString(16)}`;
 
-         try {
-           // Try to switch to the chain
-           await ethereum.request({
-             method: "wallet_switchEthereumChain",
-             params: [{ chainId: hexChainId }],
-           });
-         } catch (switchError: any) {
-           // Chain not added to wallet
-           if (switchError.code === 4902) {
-             const chainConfig = supportedChains.celoAlfajores;
-             
-             await ethereum.request({
-               method: "wallet_addEthereumChain",
-               params: [
-                 {
-                   chainId: hexChainId,
-                   chainName: chainConfig.name,
-                   nativeCurrency: chainConfig.nativeCurrency,
-                   rpcUrls: chainConfig.rpc,
-                   blockExplorerUrls: chainConfig.blockExplorers?.map(
-                     (explorer) => explorer.url
-                   ),
-                 },
-               ],
-             });
-           } else {
-             throw switchError;
-           }
-         }
-       }
+          try {
+            await ethereum.request({
+              method: "wallet_switchEthereumChain",
+              params: [{ chainId: hexChainId }],
+            });
+          } catch (switchError: any) {
+            if (switchError.code === 4902) {
+              const chainConfig = supportedChains.celoAlfajores;
 
-       setChainId(newChainId);
-       await walletStorage.setItem("chainId", newChainId.toString());
+              await ethereum.request({
+                method: "wallet_addEthereumChain",
+                params: [
+                  {
+                    chainId: hexChainId,
+                    chainName: chainConfig.name,
+                    nativeCurrency: chainConfig.nativeCurrency,
+                    rpcUrls: RPC_ENDPOINTS, // Use RPC array
+                    blockExplorerUrls: chainConfig.blockExplorers?.map(
+                      (explorer) => explorer.url
+                    ),
+                  },
+                ],
+              });
+            } else {
+              throw switchError;
+            }
+          }
+        }
 
-       // Refresh balances after chain switch
-       if (account && provider) {
-         await fetchBalances(account, provider);
-       }
-     } catch (error) {
-       console.error("Failed to switch chain:", error);
-       throw error;
-     }
-   },
-   [walletType, isConnected, account, provider, fetchBalances]
- );
+        setChainId(newChainId);
+        await walletStorage.setItem("chainId", newChainId.toString());
 
- // Enhanced disconnect function
- const disconnect = useCallback(async () => {
-   try {
-     // Disconnect smart wallet if connected
-     if (walletType === "smart") {
-       await smartWallet.disconnect();
-     }
+        if (account && provider) {
+          await fetchBalances(account, provider);
+        }
+      } catch (error) {
+        console.error("Failed to switch chain:", error);
+        throw error;
+      }
+    },
+    [walletType, isConnected, account, provider, fetchBalances]
+  );
 
-     // Clear ethereum listeners if EOA wallet
-     if (walletType === "eoa" && (window as any).ethereum) {
-       const ethereum = (window as any).ethereum;
-       // Note: MetaMask doesn't have a programmatic disconnect method
-       // We just clear our local state
-     }
-   } catch (error) {
-     console.error("Error during wallet disconnect:", error);
-   } finally {
-     reset();
-     setIsConnecting(false);
-   }
- }, [walletType, smartWallet, reset]);
+  // Enhanced disconnect function
+  const disconnect = useCallback(async () => {
+    try {
+      // Disconnect smart wallet if connected
+      if (walletType === "smart") {
+        await smartWallet.disconnect();
+      }
 
- // Auto-refresh balances periodically
- useEffect(() => {
-   if (!isConnected || !account || !provider) return;
+      // Clear ethereum listeners if EOA wallet
+      if (walletType === "eoa" && (window as any).ethereum) {
+        const ethereum = (window as any).ethereum;
+        // Note: MetaMask doesn't have a programmatic disconnect method
+        // We just clear our local state
+      }
+    } catch (error) {
+      console.error("Error during wallet disconnect:", error);
+    } finally {
+      reset();
+      setIsConnecting(false);
+    }
+  }, [walletType, smartWallet, reset]);
 
-   const refreshBalances = async () => {
-     try {
-       await fetchBalances(account, provider);
-     } catch (error) {
-       console.error("Failed to refresh balances:", error);
-     }
-   };
+  // Auto-refresh balances periodically
+  useEffect(() => {
+    if (!isConnected || !account || !provider) return;
 
-   // Refresh balances every 30 seconds
-   const interval = setInterval(refreshBalances, 30000);
+    const refreshBalances = async () => {
+      try {
+        await fetchBalances(account, provider);
+      } catch (error) {
+        console.error("Failed to refresh balances:", error);
+      }
+    };
 
-   return () => clearInterval(interval);
- }, [isConnected, account, provider, fetchBalances]);
+    // Refresh balances every 30 seconds
+    const interval = setInterval(refreshBalances, 30000);
 
- // Network connectivity check
- useEffect(() => {
-   const handleOnline = () => {
-     if (isConnected && account && provider) {
-       fetchBalances(account, provider);
-     }
-   };
+    return () => clearInterval(interval);
+  }, [isConnected, account, provider, fetchBalances]);
 
-   const handleOffline = () => {
-     console.warn("Network connection lost");
-   };
+  // Network connectivity check
+  useEffect(() => {
+    const handleOnline = () => {
+      if (isConnected && account && provider) {
+        fetchBalances(account, provider);
+      }
+    };
 
-   window.addEventListener("online", handleOnline);
-   window.addEventListener("offline", handleOffline);
+    const handleOffline = () => {
+      console.warn("Network connection lost");
+    };
 
-   return () => {
-     window.removeEventListener("online", handleOnline);
-     window.removeEventListener("offline", handleOffline);
-   };
- }, [isConnected, account, provider, fetchBalances]);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
 
- // Context value
- const value = useMemo(
-   () => ({
-     account,
-     chainId,
-     balance,
-     celoBalance,
-     usdtBalance,
-     walletType,
-     isConnected,
-     isConnecting,
-     provider,
-     signer,
-     displayCurrency,
-     setDisplayCurrency,
-     formattedBalance,
-     balanceInUSDT,
-     balanceInCELO,
-     balanceInFiat,
-     availableWallets,
-     deviceInfo,
-     connectMetaMask,
-     connectCoinbaseWallet,
-     connectWalletConnect,
-     connectEmail,
-     connectPhone,
-     connectGoogle,
-     connectPasskey,
-     connectGuest,
-     openWalletApp,
-     switchChain,
-     disconnect,
-     connect,
-   }),
-   [
-     account,
-     chainId,
-     balance,
-     celoBalance,
-     usdtBalance,
-     walletType,
-     isConnected,
-     isConnecting,
-     provider,
-     signer,
-     displayCurrency,
-     formattedBalance,
-     balanceInUSDT,
-     balanceInCELO,
-     balanceInFiat,
-     availableWallets,
-     deviceInfo,
-     connectMetaMask,
-     connectCoinbaseWallet,
-     connectWalletConnect,
-     connectEmail,
-     connectPhone,
-     connectGoogle,
-     connectPasskey,
-     connectGuest,
-     openWalletApp,
-     switchChain,
-     disconnect,
-     connect,
-   ]
- );
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, [isConnected, account, provider, fetchBalances]);
 
- // Loading state with better UX
- if (!isInitialized) {
-   return (
-     <div className="flex items-center justify-center h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-       <div className="text-center">
-         <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent mx-auto mb-4"></div>
-         <p className="text-gray-600 font-medium">Initializing wallet...</p>
-       </div>
-     </div>
-   );
- }
+  // Context value
+  const value = useMemo(
+    () => ({
+      account,
+      chainId,
+      balance,
+      celoBalance,
+      usdtBalance,
+      walletType,
+      isConnected,
+      isConnecting,
+      provider,
+      signer,
+      displayCurrency,
+      setDisplayCurrency,
+      formattedBalance,
+      balanceInUSDT,
+      balanceInCELO,
+      balanceInFiat,
+      availableWallets,
+      deviceInfo,
+      connectMetaMask,
+      connectCoinbaseWallet,
+      connectWalletConnect,
+      connectEmail,
+      connectPhone,
+      connectGoogle,
+      connectPasskey,
+      connectGuest,
+      openWalletApp,
+      switchChain,
+      disconnect,
+      connect,
+    }),
+    [
+      account,
+      chainId,
+      balance,
+      celoBalance,
+      usdtBalance,
+      walletType,
+      isConnected,
+      isConnecting,
+      provider,
+      signer,
+      displayCurrency,
+      formattedBalance,
+      balanceInUSDT,
+      balanceInCELO,
+      balanceInFiat,
+      availableWallets,
+      deviceInfo,
+      connectMetaMask,
+      connectCoinbaseWallet,
+      connectWalletConnect,
+      connectEmail,
+      connectPhone,
+      connectGoogle,
+      connectPasskey,
+      connectGuest,
+      openWalletApp,
+      switchChain,
+      disconnect,
+      connect,
+    ]
+  );
 
- return (
-   <WalletContext.Provider value={value}>{children}</WalletContext.Provider>
- );
+  // Loading state with better UX
+  if (!isInitialized) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">Initializing wallet...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <WalletContext.Provider value={value}>{children}</WalletContext.Provider>
+  );
 }
 
 export function useWallet(): WalletContextType {
- const context = useContext(WalletContext);
- if (!context) {
-   throw new Error("useWallet must be used within WalletProvider");
- }
- return context;
+  const context = useContext(WalletContext);
+  if (!context) {
+    throw new Error("useWallet must be used within WalletProvider");
+  }
+  return context;
 }
 
 // Utility hook for wallet recommendations
 export function useWalletRecommendations() {
- const { deviceInfo, availableWallets } = useWallet();
+  const { deviceInfo, availableWallets } = useWallet();
 
- const getRecommendedWallets = useCallback(() => {
-   const installed = availableWallets.filter((w) => w.installed);
-   const notInstalled = availableWallets.filter((w) => !w.installed);
+  const getRecommendedWallets = useCallback(() => {
+    const installed = availableWallets.filter((w) => w.installed);
+    const notInstalled = availableWallets.filter((w) => !w.installed);
 
-   // Prioritize installed wallets
-   const recommendations = [...installed, ...notInstalled];
+    // Prioritize installed wallets
+    const recommendations = [...installed, ...notInstalled];
 
-   // Smart wallet options for users without any wallet
-   if (installed.length === 0) {
-     const smartWalletOptions = [
-       { name: "Email", type: "email", icon: "/icons/email.svg" },
-       { name: "Google", type: "google", icon: "/icons/google.svg" },
-       { name: "Phone", type: "phone", icon: "/icons/phone.svg" },
-     ];
+    // Smart wallet options for users without any wallet
+    if (installed.length === 0) {
+      const smartWalletOptions = [
+        { name: "Email", type: "email", icon: "/icons/email.svg" },
+        { name: "Google", type: "google", icon: "/icons/google.svg" },
+        { name: "Phone", type: "phone", icon: "/icons/phone.svg" },
+      ];
 
-     if (deviceInfo.isMobile) {
-       smartWalletOptions.push({
-         name: "Passkey",
-         type: "passkey",
-         icon: "/icons/passkey.svg",
-       });
-     }
+      if (deviceInfo.isMobile) {
+        smartWalletOptions.push({
+          name: "Passkey",
+          type: "passkey",
+          icon: "/icons/passkey.svg",
+        });
+      }
 
-     return {
-       wallets: recommendations,
-       smartWalletOptions,
-       hasInstalledWallets: false,
-     };
-   }
+      return {
+        wallets: recommendations,
+        smartWalletOptions,
+        hasInstalledWallets: false,
+      };
+    }
 
-   return {
-     wallets: recommendations,
-     smartWalletOptions: [],
-     hasInstalledWallets: true,
-   };
- }, [availableWallets, deviceInfo]);
+    return {
+      wallets: recommendations,
+      smartWalletOptions: [],
+      hasInstalledWallets: true,
+    };
+  }, [availableWallets, deviceInfo]);
 
- return { getRecommendedWallets };
+  return { getRecommendedWallets };
 }
 
 // Error boundary for wallet operations
-export class WalletErrorBoundary extends React.Component
- { children: ReactNode; fallback?: ReactNode },
- { hasError: boolean; error?: Error }
+export class WalletErrorBoundary extends React.Component<
+  { children: ReactNode; fallback?: ReactNode },
+  { hasError: boolean; error?: Error }
 > {
- constructor(props: { children: ReactNode; fallback?: ReactNode }) {
-   super(props);
-   this.state = { hasError: false };
- }
+  constructor(props: { children: ReactNode; fallback?: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
 
- static getDerivedStateFromError(error: Error) {
-   return { hasError: true, error };
- }
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
 
- componentDidCatch(error: Error, errorInfo: any) {
-   console.error("Wallet error:", error, errorInfo);
- }
+  componentDidCatch(error: Error, errorInfo: any) {
+    console.error("Wallet error:", error, errorInfo);
+  }
 
- render() {
-   if (this.state.hasError) {
-     return (
-       this.props.fallback || (
-         <div className="flex items-center justify-center p-8">
-           <div className="text-center">
-             <div className="text-red-500 text-6xl mb-4">⚠️</div>
-             <h3 className="text-lg font-semibold text-gray-900 mb-2">
-               Wallet Connection Error
-             </h3>
-             <p className="text-gray-600 mb-4">
-               Something went wrong with the wallet connection.
-             </p>
-             <button
-               onClick={() => window.location.reload()}
-               className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-             >
-               Reload Page
-             </button>
-           </div>
-         </div>
-       )
-     );
-   }
+  render() {
+    if (this.state.hasError) {
+      return (
+        this.props.fallback || (
+          <div className="flex items-center justify-center p-8">
+            <div className="text-center">
+              <div className="text-red-500 text-6xl mb-4">⚠️</div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Wallet Connection Error
+              </h3>
+              <p className="text-gray-600 mb-4">
+                Something went wrong with the wallet connection.
+              </p>
+              <button
+                onClick={() => window.location.reload()}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+              >
+                Reload Page
+              </button>
+            </div>
+          </div>
+        )
+      );
+    }
 
-   return this.props.children;
- }
+    return this.props.children;
+  }
 }
