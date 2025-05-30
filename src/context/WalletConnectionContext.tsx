@@ -50,6 +50,14 @@ export function ConnectionProvider({
 }) {
   const [state, setState] = useState<ConnectionState>(INITIAL_STATE);
 
+  useEffect(() => {
+    return () => {
+      if (state.provider?.removeAllListeners) {
+        state.provider.removeAllListeners();
+      }
+    };
+  }, [state.provider]);
+
   const setConnectionState = useCallback(
     (updates: Partial<ConnectionState>) => {
       setState((prev) => {
@@ -262,13 +270,17 @@ export function ConnectionProvider({
       disconnect,
     }),
     [
-      state,
-      setConnectionState,
-      clearError,
-      reset,
-      reconnect,
-      switchNetwork,
-      disconnect,
+      //   state,
+      //   setConnectionState,
+      //   clearError,
+      //   reset,
+      //   reconnect,
+      //   switchNetwork,
+      //   disconnect,
+      state.account,
+      state.isConnected,
+      state.isConnecting,
+      state.error,
     ]
   );
 
