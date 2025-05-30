@@ -425,7 +425,7 @@ export class WalletErrorBoundary extends Component<Props, State> {
               <summary className="cursor-pointer text-sm text-white/90 hover:text-white">
                 🔧 Technical Details
               </summary>
-              <div className="mt-3 p-3 bg-gray-50 rounded-lg text-xs font-mono text-white/79 max-h-32 overflow-auto">
+              <div className="mt-3 p-3 rounded-lg text-xs font-mono text-white/80 max-h-32 overflow-auto">
                 <div className="mb-2">
                   <strong>Error Type:</strong> {this.state.errorType}
                 </div>
@@ -440,7 +440,7 @@ export class WalletErrorBoundary extends Component<Props, State> {
                   this.state.error?.stack && (
                     <div>
                       <strong>Stack Trace:</strong>
-                      <pre className="whitespace-pre-wrap text-xs mt-1 p-2 bg-gray-100 rounded max-h-24 overflow-auto">
+                      <pre className="whitespace-pre-wrap text-xs mt-1 p-2 bg-whitegit  rounded max-h-24 overflow-auto">
                         {this.state.error.stack}
                       </pre>
                     </div>
