@@ -3,27 +3,22 @@ import { useState, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { IoChevronDown } from "react-icons/io5";
 import WalletOption from "./ui/WalletOption";
-import { useWallet } from "../../context/WalletContext";
+import { useWallet, useWalletStatus } from "../../context/WalletContext";
 import { WalletType } from "../../utils/types/wallet.types";
 import { useWalletInfo } from "../../utils/hooks/useWalletInfo";
 
-interface EnhancedWalletOptionsProps {
-  onConnect: () => Promise<void>;
-  isConnecting: boolean;
+interface WalletOptionsProps {
   deviceInfo: any;
-  walletInfo: any;
   showAlternatives: boolean;
 }
 
-const EnhancedWalletOptions = ({
-  onConnect,
-  isConnecting,
+const WalletOptions = ({
   deviceInfo,
-  walletInfo,
   showAlternatives,
-}: EnhancedWalletOptionsProps) => {
+}: WalletOptionsProps) => {
   const [expandedOptions, setExpandedOptions] = useState(false);
-
+  const { connectWallet, connectWithFallback } = useWallet();
+  const { isConnecting } = useWalletStatus();
   const { availableWallets, openWalletWithFallback } = useWalletInfo();
 
   const handleWalletConnect = useCallback(
@@ -37,19 +32,20 @@ const EnhancedWalletOptions = ({
           return;
         }
 
-        await walletInfo.connectWallet(walletType);
+        // Use connectWithFallback for better compatibility
+        await connectWithFallback(walletType);
       } catch (error: any) {
         console.error(`Failed to connect ${walletType}:`, error);
       }
     },
-    [deviceInfo, availableWallets, openWalletWithFallback, walletInfo]
+    [deviceInfo, availableWallets, openWalletWithFallback, connectWithFallback]
   );
 
   const displayWallets = useMemo(() => {
     return expandedOptions ? availableWallets : availableWallets.slice(0, 3);
   }, [availableWallets, expandedOptions]);
 
-  if (!showAlternatives) return null;
+  if (!showAlternatives || !availableWallets.length) return null;
 
   return (
     <motion.div
@@ -113,4 +109,4 @@ const EnhancedWalletOptions = ({
   );
 };
 
-export default EnhancedWalletOptions;
+export default WalletOptions;

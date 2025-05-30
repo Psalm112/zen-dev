@@ -1,6 +1,6 @@
 "use client";
 import { FC, useState } from "react";
-import { useWallet, useWalletStatus } from "../../context/WalletContext";
+import { useWalletStatus } from "../../context/WalletContext";
 import { pendingTransactionProps } from "../../utils/types";
 import TransactionConfirmation from "../trade/TransactionConfirmation";
 import ConfirmDelivery from "../trade/ConfirmDelivery";
