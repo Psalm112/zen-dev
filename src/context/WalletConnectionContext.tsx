@@ -270,17 +270,17 @@ export function ConnectionProvider({
       disconnect,
     }),
     [
-      //   state,
+      state,
       //   setConnectionState,
       //   clearError,
       //   reset,
       //   reconnect,
       //   switchNetwork,
       //   disconnect,
-      state.account,
-      state.isConnected,
-      state.isConnecting,
-      state.error,
+      //   state.account,
+      //   state.isConnected,
+      //   state.isConnecting,
+      //   state.error,
     ]
   );
 
