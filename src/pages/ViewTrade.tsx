@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Container from "../components/common/Container";
 import Title from "../components/common/Title";
@@ -6,18 +6,19 @@ import { TradeTab } from "../utils/types";
 import ProductListingSkeleton from "../components/trade/ProductListingSkeleton";
 import ActiveTradeCard from "../components/trade/view/ActiveTradeCard";
 import CompletedTradeCard from "../components/trade/view/CompletedTradeCard";
-import ConnectWallet from "../components/trade/ConnectWallet";
+import ConnectWallet from "../components/wallet";
 import Tab from "../components/trade/Tab";
 import EmptyState from "../components/trade/view/EmptyState";
 import { useNavigate } from "react-router-dom";
-import { useWallet } from "../context/WalletContext";
+import { useWallet, useWalletStatus } from "../context/WalletContext";
 import { useOrderData } from "../utils/hooks/useOrder";
 
 const ViewTrade = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TradeTab>("active");
   const [isLoading, setIsLoading] = useState(true);
-  const { isConnected } = useWallet();
+  const { clearError } = useWallet();
+  const { isConnected, isConnecting, error } = useWalletStatus();
   const {
     activeTrades,
     completedTrades,
@@ -26,40 +27,97 @@ const ViewTrade = () => {
     loading: orderLoading,
   } = useOrderData();
 
-  // Fetch orders when component mounts and wallet is connected
-  useEffect(() => {
-    let isMounted = true;
+  // Memoized filtered trades to prevent unnecessary re-renders
+  const filteredActiveTrades = useMemo(() => {
+    return activeTrades?.filter((trade) => trade && trade.product) || [];
+  }, [activeTrades]);
 
-    const loadOrders = async () => {
+  const filteredCompletedTrades = useMemo(() => {
+    return completedTrades?.filter((trade) => trade && trade.product) || [];
+  }, [completedTrades]);
+
+  // Tab change handler
+  const handleTabChange = useCallback((tab: TradeTab) => {
+    setActiveTab(tab);
+  }, []);
+
+  // Trade click handler with proper navigation
+  const handleTradeClick = useCallback(
+    (tradeId: string) => {
+      navigate(`/orders/${tradeId}`, { replace: false });
+    },
+    [navigate]
+  );
+
+  // Optimized order loading function
+  const loadOrders = useCallback(
+    async (silent = false) => {
       if (!isConnected) return;
 
-      setIsLoading(true);
       try {
-        // Fetch both buyer and seller orders
-        await Promise.all([
-          fetchBuyerOrders(false, true),
-          fetchMerchantOrders(false, true),
+        if (!silent) {
+          setIsLoading(true);
+        }
+
+        // Fetch both buyer and seller orders in parallel
+        const [buyerResult, merchantResult] = await Promise.allSettled([
+          fetchBuyerOrders(false, silent),
+          fetchMerchantOrders(false, silent),
         ]);
+
+        // Log any errors for debugging without throwing
+        if (buyerResult.status === "rejected") {
+          console.warn("Failed to fetch buyer orders:", buyerResult.reason);
+        }
+        if (merchantResult.status === "rejected") {
+          console.warn(
+            "Failed to fetch merchant orders:",
+            merchantResult.reason
+          );
+        }
       } catch (error) {
         console.error("Failed to load orders:", error);
       } finally {
-        if (isMounted) {
-          // Add a minimum loading time for smooth UX
+        if (!silent) {
+          // Add minimum loading time for smooth UX
           setTimeout(() => {
             setIsLoading(false);
           }, 600);
         }
       }
+    },
+    [isConnected, fetchBuyerOrders, fetchMerchantOrders]
+  );
+
+  // Initial data fetch effect
+  useEffect(() => {
+    let isMounted = true;
+
+    const initializeOrders = async () => {
+      if (!isConnected) return;
+
+      await loadOrders(false);
+
+      if (isMounted) {
+        // Set up periodic refresh for active trades
+        const refreshInterval = setInterval(() => {
+          if (activeTab === "active") {
+            loadOrders(true);
+          }
+        }, 30000); // Refresh every 30 seconds for active trades
+
+        return () => clearInterval(refreshInterval);
+      }
     };
 
-    loadOrders();
+    initializeOrders();
 
     return () => {
       isMounted = false;
     };
-  }, [isConnected, fetchBuyerOrders, fetchMerchantOrders]);
+  }, [isConnected, loadOrders, activeTab]);
 
-  // Update loading state when order loading changes
+  // Handle order loading state changes
   useEffect(() => {
     if (!orderLoading && isConnected) {
       const timer = setTimeout(() => {
@@ -69,14 +127,15 @@ const ViewTrade = () => {
     }
   }, [orderLoading, isConnected]);
 
-  // const handleTradeClick = (tradeId: string, status: string) => {
-  //   navigate(`/trades/viewtrades/${tradeId}?status=${status}`);
-  // };
-  const handleTradeClick = (tradeId: string) => {
-    navigate(`/orders/${tradeId}`);
-  };
+  // Clear wallet errors when component mounts
+  useEffect(() => {
+    if (error) {
+      clearError();
+    }
+  }, [error, clearError]);
 
-  if (!isConnected) {
+  // Show wallet connection UI if not connected
+  if (!isConnected && !isConnecting) {
     return (
       <div className="bg-Dark min-h-screen text-white">
         <Container>
@@ -87,9 +146,7 @@ const ViewTrade = () => {
           >
             <Title text="Trade" className="text-center my-8 text-3xl" />
           </motion.div>
-          <ConnectWallet
-          // showAlternatives={true}
-          />
+          <ConnectWallet />
         </Container>
       </div>
     );
@@ -112,15 +169,15 @@ const ViewTrade = () => {
             <Tab
               text="Active Trades"
               isActive={activeTab === "active"}
-              onClick={() => setActiveTab("active")}
-              count={activeTrades?.length || 0}
+              onClick={() => handleTabChange("active")}
+              count={filteredActiveTrades.length}
               className="w-full"
             />
             <Tab
               text="Completed"
               isActive={activeTab === "completed"}
-              onClick={() => setActiveTab("completed")}
-              count={completedTrades?.length || 0}
+              onClick={() => handleTabChange("completed")}
+              count={filteredCompletedTrades.length}
               className="w-full"
             />
           </div>
@@ -141,18 +198,16 @@ const ViewTrade = () => {
                 >
                   {activeTab === "active" && (
                     <>
-                      {activeTrades && activeTrades.length > 0 ? (
-                        activeTrades
-                          .filter((trade) => trade && trade.product) // Add this filter
-                          .map((trade) => (
-                            <div
-                              key={trade._id}
-                              onClick={() => handleTradeClick(trade._id)}
-                              className="cursor-pointer"
-                            >
-                              <ActiveTradeCard trade={trade} />
-                            </div>
-                          ))
+                      {filteredActiveTrades.length > 0 ? (
+                        filteredActiveTrades.map((trade) => (
+                          <div
+                            key={trade._id}
+                            onClick={() => handleTradeClick(trade._id)}
+                            className="cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                          >
+                            <ActiveTradeCard trade={trade} />
+                          </div>
+                        ))
                       ) : (
                         <EmptyState
                           title="No Active Trades"
@@ -164,18 +219,16 @@ const ViewTrade = () => {
 
                   {activeTab === "completed" && (
                     <>
-                      {completedTrades && completedTrades.length > 0 ? (
-                        completedTrades
-                          .filter((trade) => trade && trade.product) // Add this filter
-                          .map((trade) => (
-                            <div
-                              key={trade._id}
-                              onClick={() => handleTradeClick(trade._id)}
-                              className="cursor-pointer"
-                            >
-                              <CompletedTradeCard trade={trade} />
-                            </div>
-                          ))
+                      {filteredCompletedTrades.length > 0 ? (
+                        filteredCompletedTrades.map((trade) => (
+                          <div
+                            key={trade._id}
+                            onClick={() => handleTradeClick(trade._id)}
+                            className="cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                          >
+                            <CompletedTradeCard trade={trade} />
+                          </div>
+                        ))
                       ) : (
                         <EmptyState
                           title="No Completed Trades"

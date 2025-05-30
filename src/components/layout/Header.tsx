@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { HiOutlineBell } from "react-icons/hi";
 import { BiLogIn, BiWallet } from "react-icons/bi";
 import { FullLogo, Logo } from "../../pages";
@@ -9,48 +9,84 @@ import NotificationBadge from "../notifications/NotificationBadge";
 import { useAuth } from "../../context/AuthContext";
 import Button from "../common/Button";
 import Modal from "../common/Modal";
-import ConnectWallet from "../trade/ConnectWallet";
+import ConnectWallet from "../wallet";
 import { useChat } from "../../utils/hooks/useChat";
 import CurrencyToggle from "../common/CurrencyToggle";
-import { useWallet } from "../../context/WalletContext";
+import { useWallet, useWalletStatus } from "../../context/WalletContext";
 
 const NavList = [
   { title: "Home", path: "/" },
   { title: "Product", path: "/product" },
   { title: "Trade", path: "/trades" },
-  // { title: "Chat", path: "/chat" },
   { title: "Community", path: "/community" },
-];
+] as const;
 
 const Header = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
-  const { isConnected, account, disconnect } = useWallet();
+  const { account, disconnect } = useWallet();
+  const { isConnected, isConnecting } = useWalletStatus();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showWallet, setShowWallet] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const { unreadCount, fetchUserUnreadCount } = useNotifications();
   const { loadConversations, totalUnreadMessages } = useChat();
 
-  // Shortened address for wallet display
-  const shortenedAddress = account
-    ? `${account.slice(0, 4)}...${account.slice(-3)}`
-    : "";
+  // Memoized shortened address for performance
+  const shortenedAddress = useMemo(() => {
+    if (!account) return "";
+    return `${account.slice(0, 4)}...${account.slice(-3)}`;
+  }, [account]);
 
+  // Memoized wallet button content
+  const walletButtonContent = useMemo(() => {
+    if (isConnecting) return "Connecting...";
+    return isConnected ? shortenedAddress : "Connect";
+  }, [isConnected, isConnecting, shortenedAddress]);
+
+  // Optimized data fetching with proper error handling
+  const fetchData = useCallback(
+    async (silent = false) => {
+      try {
+        await Promise.allSettled([
+          fetchUserUnreadCount(false, silent),
+          loadConversations(false, silent),
+        ]);
+      } catch (error) {
+        if (!silent) {
+          console.error("Failed to fetch header data:", error);
+        }
+      }
+    },
+    [fetchUserUnreadCount, loadConversations]
+  );
+
+  // Initial data fetch and periodic updates
   useEffect(() => {
-    const fetchData = (silent = false) => {
-      fetchUserUnreadCount(false, silent);
-      loadConversations(false, silent);
+    let mounted = true;
+    let intervalId: NodeJS.Timeout;
+
+    const initializeFetch = async () => {
+      if (!mounted) return;
+      await fetchData();
+
+      // Set up polling only if component is still mounted
+      if (mounted) {
+        intervalId = setInterval(() => fetchData(true), 30000);
+      }
     };
 
-    // Initial load
-    fetchData();
+    initializeFetch();
 
-    const interval = setInterval(() => fetchData(true), 30000);
+    return () => {
+      mounted = false;
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [fetchData]);
 
-    return () => clearInterval(interval);
-  }, [fetchUserUnreadCount, loadConversations]);
-
+  // Click outside handler for user menu
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -61,20 +97,50 @@ const Header = () => {
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    if (showUserMenu) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [showUserMenu]);
+
+  // Optimized logout handler with proper error handling
+  const handleLogout = useCallback(async () => {
+    try {
+      setShowUserMenu(false);
+
+      // Disconnect wallet if connected
+      if (isConnected) {
+        await disconnect();
+      }
+
+      logout();
+      navigate("/", { replace: true });
+    } catch (error) {
+      console.error("Error during logout:", error);
+      // Still logout from auth even if wallet disconnect fails
+      logout();
+      navigate("/", { replace: true });
+    }
+  }, [disconnect, logout, navigate, isConnected]);
+
+  // Wallet button click handler
+  const handleWalletClick = useCallback(() => {
+    if (!isConnecting) {
+      setShowWallet(true);
+    }
+  }, [isConnecting]);
+
+  // User menu toggle handler
+  const handleUserMenuToggle = useCallback(() => {
+    setShowUserMenu((prev) => !prev);
   }, []);
 
-  const handleLogout = async () => {
-    try {
-      await disconnect();
-      logout();
-      navigate("/");
-      setShowUserMenu(false);
-    } catch (err) {
-      console.error("Error during logout:", err);
-    }
-  };
+  // Profile navigation handler
+  const handleProfileNavigation = useCallback(() => {
+    setShowUserMenu(false);
+    navigate("/account");
+  }, [navigate]);
 
   return (
     <header className="w-full py-2 md:py-3 bg-[#212428] shadow-md sticky top-0 z-50">
@@ -90,11 +156,13 @@ const Header = () => {
               src={FullLogo}
               className="w-full md:hidden transition-transform group-hover:scale-110 object-cover object-[25%_25%]"
               alt="dezenmart logo"
+              loading="eager"
             />
             <img
               src={Logo}
               className="w-full hidden md:block transition-transform group-hover:scale-110 object-cover object-[25%_25%]"
               alt="dezenmart logo"
+              loading="eager"
             />
           </div>
           <span className="ml-2 text-white font-medium hidden md:inline transition-opacity group-hover:opacity-90">
@@ -102,7 +170,7 @@ const Header = () => {
           </span>
         </Link>
 
-        {/* Desktop Navigation - more responsive breakpoints */}
+        {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center max-lg:gap-4 lg:gap-8 xl:gap-10">
           {NavList.map(({ title, path }) => (
             <NavLink
@@ -117,31 +185,36 @@ const Header = () => {
               }
             >
               {title}
-              {title === "Chat" && totalUnreadMessages > 0 && (
+              {/* {title === "Chat" && totalUnreadMessages > 0 && (
                 <span
                   className="absolute -top-2 -right-4 bg-Red text-white text-xs rounded-full h-5 w-5 flex items-center justify-center"
                   aria-label={`${totalUnreadMessages} unread messages`}
                 >
                   {totalUnreadMessages > 9 ? "9+" : totalUnreadMessages}
                 </span>
-              )}
+              )} */}
             </NavLink>
           ))}
         </nav>
 
-        {/* Right Actions - more responsive */}
+        {/* Right Actions */}
         <div className="flex items-center gap-2 md:gap-3">
           <CurrencyToggle />
 
-          {/* Wallet button - simplified on smaller screens */}
+          {/* Wallet button */}
           <button
-            onClick={() => setShowWallet(true)}
-            className="flex items-center gap-1 md:gap-1.5 bg-[#292B30] text-white px-2 md:px-3 py-1.5 rounded-md hover:bg-[#33363b] transition-all"
+            onClick={handleWalletClick}
+            disabled={isConnecting}
+            className={`flex items-center gap-1 md:gap-1.5 bg-[#292B30] text-white px-2 md:px-3 py-1.5 rounded-md transition-all ${
+              isConnecting
+                ? "opacity-70 cursor-not-allowed"
+                : "hover:bg-[#33363b] active:scale-95"
+            }`}
             aria-label={isConnected ? "Wallet connected" : "Connect wallet"}
           >
             <BiWallet className="text-lg" />
             <span className="text-xs md:text-sm font-medium hidden xs:inline">
-              {isConnected ? shortenedAddress : "Connect"}
+              {walletButtonContent}
             </span>
           </button>
 
@@ -151,7 +224,7 @@ const Header = () => {
                 aria-label={`Notifications ${
                   unreadCount > 0 ? ", " + unreadCount + " unread" : ""
                 }`}
-                className="p-1.5 rounded-full hover:bg-[#292B30] transition-colors relative"
+                className="p-1.5 rounded-full hover:bg-[#292B30] transition-colors relative active:scale-95"
                 onClick={() => navigate("/notifications")}
               >
                 <HiOutlineBell className="text-xl text-white" />
@@ -161,8 +234,8 @@ const Header = () => {
               {/* User menu dropdown */}
               <div className="relative" ref={userMenuRef}>
                 <button
-                  onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="focus:outline-none focus:ring-2 focus:ring-Red focus:ring-opacity-50 rounded-full"
+                  onClick={handleUserMenuToggle}
+                  className="focus:outline-none focus:ring-2 focus:ring-Red focus:ring-opacity-50 rounded-full active:scale-95"
                   aria-expanded={showUserMenu}
                   aria-haspopup="true"
                   aria-label="User menu"
@@ -170,13 +243,14 @@ const Header = () => {
                   <img
                     src={
                       typeof user?.profileImage === "string"
-                        ? user?.profileImage
+                        ? user.profileImage
                         : `https://avatar.iran.liara.run/username?username=[${
                             user?.name?.split(" ")[0] || ""
                           }+${user?.name?.split(" ")[1] || ""}]`
                     }
                     alt=""
                     className="w-8 h-8 rounded-full ring-2 ring-[#292B30] hover:ring-Red transition-all"
+                    loading="lazy"
                   />
                 </button>
 
@@ -186,17 +260,16 @@ const Header = () => {
                     role="menu"
                     aria-orientation="vertical"
                   >
-                    <Link
-                      to="/account"
-                      className="block px-4 py-2 text-sm text-white hover:bg-[#292B30]"
-                      onClick={() => setShowUserMenu(false)}
+                    <button
+                      onClick={handleProfileNavigation}
+                      className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-[#292B30] transition-colors"
                       role="menuitem"
                     >
                       My Account
-                    </Link>
+                    </button>
                     <button
                       onClick={handleLogout}
-                      className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-[#292B30]"
+                      className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-[#292B30] transition-colors"
                       role="menuitem"
                     >
                       Sign Out
@@ -208,7 +281,7 @@ const Header = () => {
           ) : (
             <Button
               title="Sign In"
-              className="bg-Red text-white px-2 md:pl-2 md:pr-3 py-1.5 md:py-2 rounded-md hover:bg-opacity-90 transition-all"
+              className="bg-Red text-white px-2 md:pl-2 md:pr-3 py-1.5 md:py-2 rounded-md hover:bg-opacity-90 transition-all active:scale-95"
               onClick={() => navigate("/login")}
               icon={<BiLogIn className="text-lg" />}
               iconPosition="start"
@@ -221,9 +294,7 @@ const Header = () => {
       {/* Connect wallet modal */}
       {showWallet && (
         <Modal onClose={() => setShowWallet(false)} isOpen>
-          <ConnectWallet
-          // showAlternatives
-          />
+          <ConnectWallet />
         </Modal>
       )}
     </header>
