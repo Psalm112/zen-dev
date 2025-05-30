@@ -7,9 +7,8 @@ import React, {
   useMemo,
   useCallback,
 } from "react";
-import { ConnectionProvider } from "./WalletConnectionContext";
+import { ConnectionProvider, useConnection } from "./WalletConnectionContext";
 import { WalletErrorBoundary } from "../components/WalletErrorBoundary";
-import { useConnection } from "./WalletConnectionContext";
 import { useWalletInfo } from "../utils/hooks/useWalletInfo";
 import { useMetaMaskConnection } from "../utils/hooks/useMetaMaskConnection";
 import { useSmartWalletConnection } from "../utils/hooks/useSmartWalletConnection";
