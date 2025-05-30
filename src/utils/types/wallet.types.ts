@@ -16,11 +16,29 @@ export type ConnectionMethod =
   | "mobile_app"
   | "qr_code"
   | "deeplink"
-  | "embedded";
+  | "embedded"
+  | "walletconnect";
 
-export interface WalletError extends Error {
-  code?: number;
-  data?: any;
+export enum WalletErrorCode {
+  USER_REJECTED = 4001,
+  UNAUTHORIZED = 4100,
+  UNSUPPORTED_METHOD = 4200,
+  DISCONNECTED = 4900,
+  CHAIN_DISCONNECTED = 4901,
+  NETWORK_ERROR = -32000,
+  CONNECTION_TIMEOUT = -32001,
+  WALLET_NOT_FOUND = -32002,
+}
+
+export class WalletError extends Error {
+  constructor(
+    message: string,
+    public code: WalletErrorCode,
+    public data?: any
+  ) {
+    super(message);
+    this.name = "WalletError";
+  }
 }
 
 export interface PaymentRequest {
@@ -32,6 +50,8 @@ export interface PaymentRequest {
   gasPrice?: string;
   maxFeePerGas?: string;
   maxPriorityFeePerGas?: string;
+  orderId?: string;
+  isEscrow?: boolean;
 }
 
 export interface PaymentResult {
@@ -44,6 +64,8 @@ export interface PaymentResult {
   effectiveGasPrice?: string;
   blockNumber?: number;
   timestamp?: number;
+  isEscrow?: boolean;
+  orderId?: string;
 }
 
 export interface WalletInfo {
@@ -58,6 +80,7 @@ export interface WalletInfo {
   requiresDownload: boolean;
   downloadUrl?: string;
   deepLink?: string;
+  priority: number;
 }
 
 export interface DeviceInfo {
@@ -70,4 +93,28 @@ export interface DeviceInfo {
   supportsBiometrics: boolean;
   preferredConnection: ConnectionMethod;
   availableWallets: string[];
+  userAgent: string;
+}
+
+export interface ConnectionState {
+  account: string | null;
+  chainId: number;
+  walletType: WalletType;
+  connectionMethod: ConnectionMethod | null;
+  isConnected: boolean;
+  isConnecting: boolean;
+  isReconnecting: boolean;
+  provider: any;
+  signer: any;
+  error: string | null;
+  lastConnected?: number;
+  connectionUri?: string;
+}
+
+export interface EscrowTransaction {
+  orderId: string;
+  buyerAddress: string;
+  amount: string;
+  currency: Currency;
+  status: "pending" | "completed" | "cancelled";
 }
