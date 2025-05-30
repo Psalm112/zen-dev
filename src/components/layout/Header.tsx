@@ -9,7 +9,7 @@ import NotificationBadge from "../notifications/NotificationBadge";
 import { useAuth } from "../../context/AuthContext";
 import Button from "../common/Button";
 import Modal from "../common/Modal";
-import ConnectWallet from "../wallet";
+import ConnectWallet from "../wallet/ConnectWallet";
 import { useChat } from "../../utils/hooks/useChat";
 import CurrencyToggle from "../common/CurrencyToggle";
 import { useWallet, useWalletStatus } from "../../context/WalletContext";

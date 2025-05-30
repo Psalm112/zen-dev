@@ -333,8 +333,8 @@ export class WalletErrorBoundary extends Component<Props, State> {
         this.props.enableRetry !== false;
 
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-8">
-          <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-6 text-center">
+        <div className="min-h-screen flex items-center justify-center bg-Dark px-4 py-8">
+          <div className="max-w-md w-full bg-black/30 rounded-xl shadow-lg p-6 text-center">
             {/* Error Icon */}
             <div className="mb-6">
               <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
@@ -353,11 +353,9 @@ export class WalletErrorBoundary extends Component<Props, State> {
                 </svg>
               </div>
 
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                {title}
-              </h2>
+              <h2 className="text-xl font-semibold text-white mb-2">{title}</h2>
 
-              <p className="text-gray-600 mb-4 leading-relaxed">
+              <p className="text-white/80 mb-4 leading-relaxed">
                 {description}
               </p>
             </div>
@@ -368,7 +366,7 @@ export class WalletErrorBoundary extends Component<Props, State> {
                 <button
                   onClick={this.handleManualRetry}
                   disabled={this.state.isRetrying}
-                  className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center space-x-2"
+                  className="w-full bg-Red text-white py-3 px-4 rounded-lg hover:bg-Red/80 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center space-x-2"
                 >
                   {this.state.isRetrying ? (
                     <>
@@ -409,10 +407,10 @@ export class WalletErrorBoundary extends Component<Props, State> {
 
             {/* Troubleshooting Tips */}
             <details className="text-left mb-4">
-              <summary className="cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900 mb-2">
+              <summary className="cursor-pointer text-sm font-medium text-white/90 hover:text-white mb-2">
                 💡 Troubleshooting Tips
               </summary>
-              <ul className="text-sm text-gray-600 space-y-1 pl-4">
+              <ul className="text-sm text-white/80 space-y-1 pl-4">
                 {actions.map((action, index) => (
                   <li key={index} className="flex items-start space-x-2">
                     <span className="text-blue-500 mt-1">•</span>
@@ -424,10 +422,10 @@ export class WalletErrorBoundary extends Component<Props, State> {
 
             {/* Technical Details */}
             <details className="text-left">
-              <summary className="cursor-pointer text-sm text-gray-500 hover:text-gray-700">
+              <summary className="cursor-pointer text-sm text-white/90 hover:text-white">
                 🔧 Technical Details
               </summary>
-              <div className="mt-3 p-3 bg-gray-50 rounded-lg text-xs font-mono text-gray-700 max-h-32 overflow-auto">
+              <div className="mt-3 p-3 bg-gray-50 rounded-lg text-xs font-mono text-white/79 max-h-32 overflow-auto">
                 <div className="mb-2">
                   <strong>Error Type:</strong> {this.state.errorType}
                 </div>

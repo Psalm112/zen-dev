@@ -6,7 +6,7 @@ import { TradeTab } from "../utils/types";
 import ProductListingSkeleton from "../components/trade/ProductListingSkeleton";
 import ActiveTradeCard from "../components/trade/view/ActiveTradeCard";
 import CompletedTradeCard from "../components/trade/view/CompletedTradeCard";
-import ConnectWallet from "../components/wallet";
+import ConnectWallet from "../components/wallet/ConnectWallet";
 import Tab from "../components/trade/Tab";
 import EmptyState from "../components/trade/view/EmptyState";
 import { useNavigate } from "react-router-dom";

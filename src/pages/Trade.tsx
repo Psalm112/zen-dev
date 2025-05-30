@@ -15,7 +15,7 @@ import BannerCarousel from "../components/common/BannerCarousel";
 import { Pen, Pen2 } from ".";
 import { Product, TradeTab } from "../utils/types";
 import ProductListingSkeleton from "../components/trade/ProductListingSkeleton";
-import ConnectWallet from "../components/wallet";
+import ConnectWallet from "../components/wallet/ConnectWallet";
 import Tab from "../components/trade/Tab";
 import LazyFloatingButton from "../components/common/LazyFloatingButton";
 import { useWallet, useWalletStatus } from "../context/WalletContext";

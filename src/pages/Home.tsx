@@ -5,7 +5,7 @@ import Container from "../components/common/Container";
 import ProductList from "../components/product/ProductList";
 import BannerCarousel from "../components/common/BannerCarousel";
 import { useState, useMemo, useCallback } from "react";
-import ConnectWallet from "../components/wallet";
+import ConnectWallet from "../components/wallet/ConnectWallet";
 import Modal from "../components/common/Modal";
 import { useAuth } from "../context/AuthContext";
 
