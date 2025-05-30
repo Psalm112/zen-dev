@@ -11,7 +11,7 @@ import { BsShieldExclamation } from "react-icons/bs";
 import { toast } from "react-toastify";
 import { useContract } from "../../../utils/hooks/useContract";
 import Modal from "../../common/Modal";
-import ConnectWallet from "../ConnectWallet";
+import ConnectWallet from "../../wallet";
 // import { useWallet } from "../../../utils/hooks/useWallet";
 import { motion } from "framer-motion";
 import { useWallet } from "../../../context/WalletContext";

@@ -11,7 +11,7 @@ import { BsShieldExclamation } from "react-icons/bs";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import Modal from "../../common/Modal";
-import ConnectWallet from "../ConnectWallet";
+import ConnectWallet from "../../wallet";
 import { motion } from "framer-motion";
 import { useWallet } from "../../../context/WalletContext";
 import { FiEdit2 } from "react-icons/fi";
@@ -69,7 +69,7 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     quantity: number;
     logisticsProviderAddress: string;
   } | null>(null);
-  const { isConnected, balanceInUSDT, balanceInCELO } = useWallet();
+  const { isConnected, balances } = useWallet();
   const { buyTrade } = useContract();
 
   // Order update state
@@ -121,13 +121,13 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     );
     const requiredAmount = totalAmount * 1.02;
 
-    const cleanBalance = (balanceInUSDT || "0")
+    const cleanBalance = (balances.usdt || "0")
       .replace(/[^\d.,]/g, "")
       .replace(/,/g, "");
 
     const userBalance = parseFloat(cleanBalance) || 0;
 
-    console.log(userBalance, requiredAmount, balanceInUSDT, "balance check");
+    console.log(userBalance, requiredAmount, balances.usdt, "balance check");
     return userBalance >= requiredAmount;
   };
 
