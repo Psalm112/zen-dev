@@ -16,6 +16,8 @@ import ErrorBoundary from "./components/error/ErrorBoundary.tsx";
 import { setupGlobalErrorHandling } from "./utils/errorHandling";
 import ReferralHandler from "./components/referrals/ReferralHandler.tsx";
 import { CurrencyProvider } from "./context/CurrencyContext.tsx";
+import { ProviderPoolProvider } from "./context/ProviderPoolContext.tsx";
+import { SUPPORTED_CHAINS } from "./utils/config/wallet.config.ts";
 
 // import GoogleCallback from "./pages/GoogleCallback.tsx";
 
@@ -43,20 +45,26 @@ const RouterLayout = () => {
   return (
     <Configuration>
       <Provider store={store}>
-        <WalletProvider>
-          <AuthProvider>
-            <SnackbarProvider>
-              <CurrencyProvider>
-                <Layout>
-                  <Suspense fallback={<Loadscreen />}>
-                    <Outlet />
-                  </Suspense>
-                  <ReferralHandler />
-                </Layout>
-              </CurrencyProvider>
-            </SnackbarProvider>
-          </AuthProvider>
-        </WalletProvider>
+        <ProviderPoolProvider
+          chainId={SUPPORTED_CHAINS.celoAlfajores.id}
+          autoHealthCheck={true}
+          enableMetrics={true}
+        >
+          <WalletProvider>
+            <AuthProvider>
+              <SnackbarProvider>
+                <CurrencyProvider>
+                  <Layout>
+                    <Suspense fallback={<Loadscreen />}>
+                      <Outlet />
+                    </Suspense>
+                    <ReferralHandler />
+                  </Layout>
+                </CurrencyProvider>
+              </SnackbarProvider>
+            </AuthProvider>
+          </WalletProvider>
+        </ProviderPoolProvider>
       </Provider>
     </Configuration>
   );

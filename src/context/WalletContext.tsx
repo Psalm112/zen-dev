@@ -546,17 +546,10 @@ export function WalletProvider({
   autoConnect = true,
   ...props
 }: WalletProviderProps) {
-  // Create reset keys for error boundary
-  const resetKeys = useMemo(
-    () => [defaultChainId, autoConnect ? 1 : 0],
-    [defaultChainId, autoConnect]
-  );
-
   return (
     <WalletErrorBoundary
       enableRetry={true}
       maxRetries={3}
-      resetKeys={resetKeys}
       onError={(error) => {
         // Log to analytics service in production
         if (process.env.NODE_ENV === "production" && enableAnalytics) {
