@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import QuantitySelector from "./QuantitySelector";
 import { useCurrency } from "../../../context/CurrencyContext";
 import LogisticsSelector, { LogisticsProvider } from "./LogisticsSelector";
+import { useAuth } from "../../../context/AuthContext";
 
 interface PurchaseSectionProps {
   product?: Product;
@@ -23,14 +24,9 @@ const PurchaseSection = ({
   const [error, setError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const { secondaryCurrency } = useCurrency();
-  const {
-    isConnected,
-    connectMetaMask,
-    account,
-    formattedBalance,
-    balanceInCELO,
-    setDisplayCurrency,
-  } = useWallet();
+  const { isAuthenticated } = useAuth();
+  const { isConnected, account, balances, connectWallet, refreshBalance } =
+    useWallet();
   const [selectedLogistics, setSelectedLogistics] =
     useState<LogisticsProvider | null>(null);
 
@@ -44,7 +40,8 @@ const PurchaseSection = ({
     setError(null);
 
     try {
-      await connectMetaMask();
+      await connectWallet("metamask");
+      await refreshBalance();
     } catch (err: any) {
       console.error("Error connecting wallet:", err);
       setError(`Failed to connect wallet: ${err.message || "Unknown error"}`);
@@ -58,6 +55,12 @@ const PurchaseSection = ({
   };
 
   const handlePurchase = async () => {
+    // Check if user is authenticated
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
+    }
+
     if (!product) return;
     if (!selectedLogistics) {
       setError("Please select a delivery method");
@@ -83,14 +86,6 @@ const PurchaseSection = ({
         product: product._id,
         quantity: quantity,
         logisticsProviderWalletAddress: selectedLogistics.walletAddress,
-        // seller:
-        //   typeof product.seller === "object"
-        //     ? product.seller._id
-        //     : product.seller,
-        // amount: (product.price * quantity).toString(),
-        // type: selectedVariant,
-        // quantity: quantity,
-        // variantInfo,
       });
 
       if (order && order._id) {
@@ -109,15 +104,32 @@ const PurchaseSection = ({
     setQuantity(newQuantity);
   };
 
-  const balance = useMemo(() => {
-    setDisplayCurrency(secondaryCurrency);
-    return formattedBalance;
-  }, [secondaryCurrency, formattedBalance, setDisplayCurrency]);
+  // Format balances for display
+  const formattedUsdtBalance = useMemo(() => {
+    return `${parseFloat(balances?.usdt || "0").toFixed(2)} USDT`;
+  }, [balances?.usdt]);
+
+  const formattedCeloBalance = useMemo(() => {
+    return `${parseFloat(balances?.celo || "0").toFixed(4)} CELO`;
+  }, [balances?.celo]);
 
   const isOutOfStock = selectedVariant && selectedVariant.quantity <= 0;
   const availableQuantity = selectedVariant
     ? selectedVariant.quantity
     : product?.stock || 99;
+
+  const handleButtonClick = () => {
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
+    }
+
+    if (isConnected) {
+      handlePurchase();
+    } else {
+      handleConnectWallet();
+    }
+  };
 
   return (
     <div className="bg-[#212428] p-4 md:p-6 space-y-4">
@@ -154,7 +166,7 @@ const PurchaseSection = ({
       <div className="flex gap-3 w-full">
         <button
           className="bg-Red text-white py-3 px-6 md:px-10 font-bold flex-1 rounded-md transition-all hover:bg-[#d52a33] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:bg-Red flex items-center justify-center gap-2"
-          onClick={isConnected ? handlePurchase : handleConnectWallet}
+          onClick={handleButtonClick}
           disabled={isProcessing || !product || isOutOfStock}
         >
           {isProcessing ? (
@@ -168,6 +180,8 @@ const PurchaseSection = ({
               <span>
                 {isOutOfStock
                   ? "Out of Stock"
+                  : !isAuthenticated
+                  ? "Login to buy"
                   : isConnected
                   ? "Buy Now"
                   : "Connect wallet to buy"}
@@ -179,8 +193,8 @@ const PurchaseSection = ({
 
       {isConnected && (
         <div className="text-center text-xs text-gray-400">
-          {formattedBalance && balanceInCELO
-            ? `Balance: ${balanceInCELO}  ·  ${balance}`
+          {formattedCeloBalance && formattedUsdtBalance
+            ? `Balance: ${formattedCeloBalance}  ·  ${formattedUsdtBalance}`
             : "Checking balance..."}
           <br />
           {account

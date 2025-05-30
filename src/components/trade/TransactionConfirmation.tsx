@@ -27,7 +27,7 @@ const TransactionConfirmation: FC<TransactionConfirmationProps> = ({
   onComplete,
 }) => {
   const { buyTrade } = useContract();
-  const { balanceInUSDT, balanceInCELO } = useWallet();
+  const { balances } = useWallet();
   const { convertPrice, formatPrice } = useCurrencyConverter();
 
   const [status, setStatus] = useState<"pending" | "success" | "error">(
@@ -43,7 +43,7 @@ const TransactionConfirmation: FC<TransactionConfirmationProps> = ({
 
       try {
         const userUSDTBalance = parseFloat(
-          (balanceInUSDT || "0").replace(/[^\d.,]/g, "").replace(/,/g, "") ||
+          (balances.usdt || "0").replace(/[^\d.,]/g, "").replace(/,/g, "") ||
             "0"
         );
         const requiredAmount = parseFloat(amount);
@@ -65,7 +65,7 @@ const TransactionConfirmation: FC<TransactionConfirmationProps> = ({
         }
 
         const userCELOBalance = parseFloat(
-          balanceInCELO?.replace(/[^\d.-]/g, "") || "0"
+          balances.celo?.replace(/[^\d.-]/g, "") || "0"
         );
 
         if (userCELOBalance < 0.001) {
@@ -121,8 +121,7 @@ const TransactionConfirmation: FC<TransactionConfirmationProps> = ({
     quantity,
     logisticsProviderAddress,
     buyTrade,
-    balanceInUSDT,
-    balanceInCELO,
+    balances,
     formatPrice,
     onComplete,
   ]);
