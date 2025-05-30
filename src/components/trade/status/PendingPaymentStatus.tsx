@@ -12,7 +12,6 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import Modal from "../../common/Modal";
 import ConnectWallet from "../../wallet";
-import { motion } from "framer-motion";
 import { useWallet } from "../../../context/WalletContext";
 import { FiEdit2 } from "react-icons/fi";
 import LogisticsSelector from "../../product/singleProduct/LogisticsSelector";
