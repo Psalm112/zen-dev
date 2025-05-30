@@ -101,8 +101,9 @@ const RPC_ENDPOINTS: Record<number, ProviderEndpoint[]> = {
       successCount: 0,
     },
     {
-      url:
-        "https://celo-mainnet.infura.io/v3/" + import.meta.env.VITE_INFURA_KEY,
+      url: `https://celo-alfajores.infura.io/v3/${
+        import.meta.env.VITE_INFURA_KEY
+      }`,
       priority: 2,
       weight: 80,
       isHealthy: true,
