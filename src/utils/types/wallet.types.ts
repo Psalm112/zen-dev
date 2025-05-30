@@ -1,43 +1,73 @@
-export interface WalletConnection {
-  isConnected: boolean;
-  isConnecting: boolean;
-  account: string | null;
-  walletType: string | null;
-  chainId: number | null;
-  error: string | null;
+import { Currency } from "../hooks/useCurrencyConverter";
+
+export type WalletType =
+  | "metamask"
+  | "coinbase"
+  | "walletconnect"
+  | "trust"
+  | "rainbow"
+  | "smart"
+  | "embedded"
+  | "injected"
+  | null;
+
+export type ConnectionMethod =
+  | "extension"
+  | "mobile_app"
+  | "qr_code"
+  | "deeplink"
+  | "embedded";
+
+export interface WalletError extends Error {
+  code?: number;
+  data?: any;
 }
 
-export interface WalletBalance {
-  usdt: string;
-  celo: string;
-  fiat: string;
-}
-
-export interface TransactionData {
-  type: "escrow" | "delivery";
-  amount?: string;
-  recipient?: string;
-  gasEstimate?: string;
-}
-
-export interface ConnectWalletProps {
-  onTransactionStart?: () => void;
-  onTransactionComplete?: (hash: string) => void;
-  onTransactionError?: (error: string) => void;
-  showTransactionModal?: boolean;
-  transactionData?: TransactionData;
-  onTransactionModalClose?: () => void;
-}
-
-export interface EscrowDetails {
-  id: string;
-  buyer: string;
-  seller: string;
+export interface PaymentRequest {
+  to: string;
   amount: string;
   currency: Currency;
-  status: "pending" | "completed" | "disputed" | "released" | "refunded";
-  createdAt: number;
-  releaseTime?: number;
-  disputeResolver?: string;
-  metadata?: string;
+  data?: string;
+  gasLimit?: string;
+  gasPrice?: string;
+  maxFeePerGas?: string;
+  maxPriorityFeePerGas?: string;
+}
+
+export interface PaymentResult {
+  hash: string;
+  from: string;
+  to: string;
+  amount: string;
+  currency: Currency;
+  gasUsed?: string;
+  effectiveGasPrice?: string;
+  blockNumber?: number;
+  timestamp?: number;
+}
+
+export interface WalletInfo {
+  type: WalletType;
+  name: string;
+  icon: string;
+  color: string;
+  installed: boolean;
+  available: boolean;
+  recommended: boolean;
+  supportedMethods: ConnectionMethod[];
+  requiresDownload: boolean;
+  downloadUrl?: string;
+  deepLink?: string;
+}
+
+export interface DeviceInfo {
+  isMobile: boolean;
+  isIOS: boolean;
+  isAndroid: boolean;
+  isTouchDevice: boolean;
+  isStandalone: boolean;
+  hasWebAuthn: boolean;
+  supportsBiometrics: boolean;
+  preferredConnection: ConnectionMethod;
+  availableWallets: string[];
 }
