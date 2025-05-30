@@ -217,7 +217,9 @@ const Home = () => {
 
       {showWallet && (
         <Modal onClose={() => setShowWallet(false)} isOpen>
-          <ConnectWallet />
+          <ConnectWallet
+          // showAlternatives
+          />
         </Modal>
       )}
     </div>

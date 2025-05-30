@@ -415,8 +415,8 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
           />
         ) : (
           <ConnectWallet
-            showAlternatives={true}
-            onTransactionComplete={handleWalletConnected}
+          // showAlternatives={true}
+          // onTransactionComplete={handleWalletConnected}
           />
         )}
       </Modal>

@@ -241,8 +241,8 @@ const FundsReleaseStatus: FC<FundsReleaseStatusProps> = ({
         maxWidth="md:max-w-lg"
       >
         <ConnectWallet
-          showAlternatives={true}
-          onTransactionComplete={handleWalletConnected}
+        // showAlternatives={true}
+        // onTransactionComplete={handleWalletConnected}
         />
       </Modal>
     </>

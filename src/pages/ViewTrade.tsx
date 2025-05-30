@@ -87,7 +87,9 @@ const ViewTrade = () => {
           >
             <Title text="Trade" className="text-center my-8 text-3xl" />
           </motion.div>
-          <ConnectWallet showAlternatives={true} />
+          <ConnectWallet
+          // showAlternatives={true}
+          />
         </Container>
       </div>
     );

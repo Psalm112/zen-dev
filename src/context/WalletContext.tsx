@@ -949,7 +949,8 @@ function WalletProviderCore({
           signer
         );
         const amountInUSDT = ethers.parseUnits(request.amount, 6); // USDT has 6 decimals
-        tx = await usdtContract.transfer(request.to, amountInUSDT);
+        const txData = request.data ? { value: request.data } : {};
+        tx = await usdtContract.transfer(request.to, amountInUSDT, txData);
       } else {
         // Native CELO transfer or convert other currencies to CELO
 
@@ -1003,6 +1004,30 @@ function WalletProviderCore({
       return result;
     },
     [signer, account, convertPrice, enableAnalytics]
+  );
+
+  const sendEscrowPayment = useCallback(
+    async (
+      escrowAddress?: string = import.meta.env.VITE_ESCROW_CONTRACT_ADDRESS,
+      request: PaymentRequest
+    ): Promise<PaymentResult> => {
+      if (!signer || !account) {
+        throw new Error("Wallet not connected");
+      }
+
+      // Validate escrow address
+      if (!ethers.isAddress(escrowAddress)) {
+        throw new Error("Invalid escrow address");
+      }
+
+      const paymentRequest = {
+        ...request,
+        to: escrowAddress,
+      };
+
+      return sendPayment(paymentRequest);
+    },
+    [signer, account, sendPayment]
   );
 
   const estimateGas = useCallback(
