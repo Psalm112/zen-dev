@@ -157,7 +157,7 @@ const watchlistSlice = createSlice({
           // Update isWatchlist object
           const newIsWatchlist: { [productId: string]: boolean } = {};
           action.payload.forEach((item) => {
-            newIsWatchlist[item.product._id] = true;
+            newIsWatchlist[item.product?._id] = true;
           });
           state.isWatchlist = newIsWatchlist;
         }
