@@ -4,13 +4,13 @@ import { coinbaseWallet, metaMask, walletConnect } from "wagmi/connectors";
 
 // Celo USDT Contract Addresses
 export const USDT_ADDRESSES = {
-  [celo.id]: process.env.VITE_USDT_CONTRACT_ADDRESS_MAINNET!,
-  [celoAlfajores.id]: process.env.VITE_USDT_CONTRACT_ADDRESS_TESTNET!,
+  [celo.id]: import.meta.env.VITE_USDT_CONTRACT_ADDRESS_MAINNET!,
+  [celoAlfajores.id]: import.meta.env.VITE_USDT_CONTRACT_ADDRESS_TESTNET!,
 } as const;
 
 export const ESCROW_ADDRESSES = {
-  [celo.id]: process.env.VITE_ESCROW_CONTRACT_MAINNET!,
-  [celoAlfajores.id]: process.env.VITE_ESCROW_CONTRACT_TESTNET!,
+  [celo.id]: import.meta.env.VITE_ESCROW_CONTRACT_MAINNET!,
+  [celoAlfajores.id]: import.meta.env.VITE_ESCROW_CONTRACT_TESTNET!,
 } as const;
 
 // export const TARGET_CHAIN =
@@ -29,11 +29,10 @@ export const wagmiConfig = createConfig({
       appName: "Dezenmart",
       appLogoUrl: `${window.location.origin}/images/logo-full.png`,
     }),
-    // Only include WalletConnect if project ID is available
-    ...(process.env.VITE_WALLETCONNECT_PROJECT_ID
+    ...(import.meta.env.VITE_WALLETCONNECT_PROJECT_ID
       ? [
           walletConnect({
-            projectId: process.env.VITE_WALLETCONNECT_PROJECT_ID,
+            projectId: import.meta.env.VITE_WALLETCONNECT_PROJECT_ID,
             metadata: {
               name: "Dezenmart",
               description:

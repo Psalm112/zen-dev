@@ -80,7 +80,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           <h3 className="text-white text-lg sm:text-xl my-2">{email}</h3>
           <MdOutlineCheckCircleOutline className="text-[#1FBE42] text-2xl" />
         </motion.div>
-        <motion.button
+        {/* <motion.button
           className="flex items-center justify-center gap-1 cursor-pointer"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -90,7 +90,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
         >
           <span className="text-gray-400 text-xs sm:text-sm">{id}</span>
           <FiCopy size={18} className="text-gray-400" />
-        </motion.button>
+        </motion.button> */}
       </motion.div>
     </>
   );

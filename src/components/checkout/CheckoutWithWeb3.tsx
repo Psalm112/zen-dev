@@ -71,7 +71,7 @@ const CheckoutWithWeb3: React.FC<CheckoutWithWeb3Props> = ({
         onClose={() => setShowPaymentModal(false)}
         orderDetails={{
           ...orderData,
-          escrowAddress: process.env.VITE_ESCROW_CONTRACT_MAINNET!, // Use your escrow address
+          escrowAddress: import.meta.env.VITE_ESCROW_CONTRACT_MAINNET!,
         }}
         onPaymentSuccess={handlePaymentSuccess}
       />

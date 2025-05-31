@@ -157,9 +157,9 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
   };
 
   const getEscrowAddress = () => {
-    // Use testnet for development, mainnet for production
-    const chainId = process.env.NODE_ENV === "production" ? 42220 : 44787;
-    return ESCROW_ADDRESSES[chainId as keyof typeof ESCROW_ADDRESSES];
+    // const chainId = process.env.NODE_ENV === "production" ? 42220 : 44787;
+    // return ESCROW_ADDRESSES[chainId as keyof typeof ESCROW_ADDRESSES];
+    return ESCROW_ADDRESSES[44787];
   };
 
   return (
