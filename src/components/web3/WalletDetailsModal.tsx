@@ -136,13 +136,13 @@ const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
               )}
             </div>
 
-            {/* ETH Balance for gas */}
+            {/* CELO Balance for gas */}
             <div className="flex justify-between items-center p-3 bg-[#292B30] rounded-lg">
               <span className="text-gray-300">ETH (for gas fees)</span>
               <span className="font-mono text-white">
                 {wallet.balance
-                  ? `${parseFloat(wallet.balance).toFixed(4)} ETH`
-                  : "0.0000 ETH"}
+                  ? `${parseFloat(wallet.balance).toFixed(4)} CELO`
+                  : "0.0000 CELO"}
               </span>
             </div>
           </div>
