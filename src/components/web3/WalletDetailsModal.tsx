@@ -26,8 +26,13 @@ const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
   onClose,
 }) => {
   const { showSnackbar } = useSnackbar();
-  const { wallet, disconnectWallet, isCorrectNetwork, switchToCorrectNetwork } =
-    useWeb3();
+  const {
+    wallet,
+    disconnectWallet,
+    isCorrectNetwork,
+    switchToCorrectNetwork,
+    getUSDTBalance,
+  } = useWeb3();
 
   const [balanceMode, setBalanceMode] = useState<BalanceDisplayMode>("USDT");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -73,6 +78,7 @@ const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
 
   const getBalanceDisplay = () => {
     if (!wallet.usdtBalance) return "$0.00";
+    console.log(getUSDTBalance());
     console.log("balance", wallet.usdtBalance);
     switch (balanceMode) {
       case "USDT":
