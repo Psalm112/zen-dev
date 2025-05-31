@@ -103,59 +103,6 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
       refetchInterval: 30000,
     },
   });
-  // converted USDT balances
-  const convertedUSDTBalances = useMemo(() => {
-    if (!usdtBalance || usdtError) return undefined;
-
-    try {
-      // USDT has 6 decimals, so format accordingly
-      const rawBalance = formatUnits(usdtBalance as bigint, 6);
-      const numericBalance = parseFloat(rawBalance);
-
-      if (isNaN(numericBalance)) return undefined;
-
-      // Format with appropriate decimal places
-      const formatWithDecimals = (value: number, decimals: number = 2) => {
-        return value.toFixed(decimals).replace(/\.?0+$/, "");
-      };
-
-      return {
-        raw: rawBalance,
-        usdt: `${formatWithDecimals(numericBalance)} USDT`,
-        celo: formatPrice(convertPrice(numericBalance, "USDT", "CELO"), "CELO"),
-        fiat: `$${formatWithDecimals(numericBalance)}`,
-      };
-    } catch (error) {
-      console.error("Error formatting USDT balance:", error);
-      return undefined;
-    }
-  }, [usdtBalance, usdtError, convertPrice, formatPrice]);
-
-  // Update wallet state
-  useEffect(() => {
-    setWallet((prev) => ({
-      ...prev,
-      isConnected,
-      address,
-      chainId: chain?.id,
-      balance: celoBalance
-        ? formatUnits(celoBalance.value, celoBalance.decimals)
-        : undefined,
-      error: connectError?.message || usdtError?.message,
-      isConnecting: isConnecting || isLoadingUSDT,
-      usdtBalance: convertedUSDTBalances,
-    }));
-  }, [
-    isConnected,
-    address,
-    chain,
-    celoBalance,
-    connectError,
-    usdtError,
-    isConnecting,
-    isLoadingUSDT,
-    convertedUSDTBalances,
-  ]);
 
   // Auto-refresh balances
   useEffect(() => {
@@ -204,23 +151,99 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [switchChain, showSnackbar]);
 
+  // get USDT decimals
+  const { data: usdtDecimals } = useReadContract({
+    address: usdtContractAddress,
+    abi: erc20Abi,
+    functionName: "decimals",
+    query: {
+      enabled: !!usdtContractAddress && isCorrectNetwork,
+      staleTime: Infinity,
+    },
+  });
+
   const getUSDTBalance = useCallback(async (): Promise<string> => {
     try {
       const result = await refetchUSDTBalance();
-      if (result.data) {
-        console.log(
-          formatUnits(result.data as bigint, 6),
-          "getUSDTBalance",
-          result
-        );
-        return formatUnits(result.data as bigint, 6);
+      if (result.data && usdtDecimals !== undefined) {
+        const balanceBigInt = result.data as bigint;
+        const decimals = Number(usdtDecimals);
+
+        const formattedBalance = formatUnits(balanceBigInt, decimals);
+        const numericBalance = parseFloat(formattedBalance);
+
+        // Format with proper localization and precision
+        const cleanBalance = numericBalance.toLocaleString("en-US", {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: Math.min(decimals, 6),
+        });
+
+        return cleanBalance;
       }
       return "0";
     } catch (error) {
       console.error("Failed to fetch USDT balance:", error);
       return "0";
     }
-  }, [refetchUSDTBalance]);
+  }, [refetchUSDTBalance, usdtDecimals]);
+
+  // converted USDT balances
+  const convertedUSDTBalances = useMemo(() => {
+    if (!usdtBalance || usdtError || usdtDecimals === undefined)
+      return undefined;
+
+    try {
+      const decimals = Number(usdtDecimals);
+      const rawBalance = formatUnits(usdtBalance as bigint, decimals);
+      const numericBalance = parseFloat(rawBalance);
+
+      if (isNaN(numericBalance)) return undefined;
+
+      const formatWithDecimals = (value: number, maxDecimals: number = 2) => {
+        return value.toLocaleString("en-US", {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: maxDecimals,
+          useGrouping: true,
+        });
+      };
+
+      return {
+        raw: rawBalance,
+        usdt: `${formatWithDecimals(numericBalance, 6)} USDT`,
+        celo: formatPrice(convertPrice(numericBalance, "USDT", "CELO"), "CELO"),
+        fiat: `$${formatWithDecimals(numericBalance, 2)}`,
+      };
+    } catch (error) {
+      console.error("Error formatting USDT balance:", error);
+      return undefined;
+    }
+  }, [usdtBalance, usdtError, usdtDecimals, convertPrice, formatPrice]);
+
+  // Update wallet state
+  useEffect(() => {
+    setWallet((prev) => ({
+      ...prev,
+      isConnected,
+      address,
+      chainId: chain?.id,
+      balance: celoBalance
+        ? formatUnits(celoBalance.value, celoBalance.decimals)
+        : undefined,
+      error: connectError?.message || usdtError?.message,
+      isConnecting: isConnecting || isLoadingUSDT,
+      usdtBalance: convertedUSDTBalances,
+    }));
+  }, [
+    isConnected,
+    address,
+    chain,
+    celoBalance,
+    connectError,
+    usdtError,
+    isConnecting,
+    isLoadingUSDT,
+    convertedUSDTBalances,
+  ]);
 
   const sendPayment = useCallback(
     async (params: PaymentParams): Promise<PaymentTransaction> => {
