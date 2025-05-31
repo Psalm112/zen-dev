@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import React from "react";
 import {
   HiArrowTopRightOnSquare,
   HiClipboardDocument,
@@ -24,34 +23,8 @@ const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
   onClose,
 }) => {
   const { showSnackbar } = useSnackbar();
-  const {
-    wallet,
-    disconnectWallet,
-    getUSDTBalance,
-    isCorrectNetwork,
-    switchToCorrectNetwork,
-  } = useWeb3();
-  const [usdtBalance, setUsdtBalance] = useState<string>("0");
-  const [isLoadingBalance, setIsLoadingBalance] = useState(false);
-
-  useEffect(() => {
-    if (isOpen && wallet.isConnected) {
-      loadUSDTBalance();
-    }
-  }, [isOpen, wallet.isConnected]);
-
-  const loadUSDTBalance = async () => {
-    try {
-      setIsLoadingBalance(true);
-      const balance = await getUSDTBalance();
-      setUsdtBalance(balance);
-    } catch (error) {
-      console.error("Failed to load USDT balance:", error);
-      setUsdtBalance("0");
-    } finally {
-      setIsLoadingBalance(false);
-    }
-  };
+  const { wallet, disconnectWallet, isCorrectNetwork, switchToCorrectNetwork } =
+    useWeb3();
 
   const handleCopyAddress = () => {
     if (wallet.address) {
@@ -68,7 +41,6 @@ const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
   const handleSwitchNetwork = async () => {
     try {
       await switchToCorrectNetwork();
-      await loadUSDTBalance();
     } catch (error) {
       // Error already handled in context
     }
@@ -146,25 +118,31 @@ const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
         <div className="space-y-3">
           <h3 className="text-lg font-medium text-white">Balances</h3>
           <div className="space-y-2">
-            {/* USDT Balance */}
-            <div className="flex justify-between items-center p-3 bg-[#292B30] rounded-lg">
-              <span className="text-gray-300">USDT</span>
-              <span className="font-mono text-white">
-                {isLoadingBalance ? (
-                  <div className="w-4 h-4 border-2 border-Red/20 border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  `$${parseFloat(usdtBalance).toFixed(2)}`
-                )}
-              </span>
+            {/* USDT Balance with conversions */}
+            <div className="p-3 bg-[#292B30] rounded-lg space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-300">USDT</span>
+                <span className="font-mono text-white">
+                  {wallet.usdtBalance?.usdt || "$0.00"}
+                </span>
+              </div>
+              {wallet.usdtBalance && (
+                <div className="text-xs text-gray-500 space-y-1">
+                  <div className="flex justify-between">
+                    <span>≈ {wallet.usdtBalance.celo}</span>
+                    <span>≈ {wallet.usdtBalance.fiat}</span>
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* CELO Balance for gas */}
+            {/* ETH Balance for gas */}
             <div className="flex justify-between items-center p-3 bg-[#292B30] rounded-lg">
-              <span className="text-gray-300">CELO (for gas fees)</span>
+              <span className="text-gray-300">ETH (for gas fees)</span>
               <span className="font-mono text-white">
                 {wallet.balance
-                  ? `${parseFloat(wallet.balance).toFixed(4)} CELO`
-                  : "0.0000 CELO"}
+                  ? `${parseFloat(wallet.balance).toFixed(4)} ETH`
+                  : "0.0000 ETH"}
               </span>
             </div>
           </div>

@@ -11,7 +11,7 @@ import { BsShieldExclamation } from "react-icons/bs";
 import { toast } from "react-toastify";
 import { useContract } from "../../../utils/hooks/useContract";
 import Modal from "../../common/Modal";
-import ConnectWallet from "../../wallet/ConnectWallet";
+// import ConnectWallet from "../../wallet/ConnectWallet";
 // import { useWallet } from "../../../utils/hooks/useWallet";
 import { motion } from "framer-motion";
 import { useWeb3 } from "../../../context/Web3Context";
@@ -234,7 +234,7 @@ const FundsReleaseStatus: FC<FundsReleaseStatusProps> = ({
           </motion.div>
         </form>
       </Modal>
-      <Modal
+      {/* <Modal
         isOpen={isWalletModalOpen}
         onClose={() => setIsWalletModalOpen(false)}
         title="Connect Wallet"
@@ -244,7 +244,7 @@ const FundsReleaseStatus: FC<FundsReleaseStatusProps> = ({
         // showAlternatives={true}
         // onTransactionComplete={handleWalletConnected}
         />
-      </Modal>
+      </Modal> */}
     </>
   );
 };

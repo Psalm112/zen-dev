@@ -11,16 +11,13 @@ import { BsShieldExclamation } from "react-icons/bs";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import Modal from "../../common/Modal";
-import ConnectWallet from "../../wallet/ConnectWallet";
-import { useWallet } from "../../../context/WalletContext";
 import { FiEdit2 } from "react-icons/fi";
 import LogisticsSelector from "../../product/singleProduct/LogisticsSelector";
-import { useContract } from "../../../utils/hooks/useContract";
-import TransactionConfirmation from "../TransactionConfirmation";
 import { useSnackbar } from "../../../context/SnackbarContext";
-
-const ESCROW_CONTRACT_ADDRESS =
-  import.meta.env.VITE_ESCROW_CONTRACT_ADDRESS || "";
+import { useWeb3 } from "../../../context/Web3Context";
+import { useWalletBalance } from "../../../utils/hooks/useWalletBalance";
+import { ESCROW_ADDRESSES } from "../../../utils/config/web3.config";
+import PaymentModal from "../../web3/PaymentModal";
 
 interface PendingPaymentStatusProps {
   tradeDetails?: TradeDetails;
@@ -39,8 +36,6 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
   tradeDetails,
   orderDetails,
   transactionInfo,
-  // onContactSeller,
-  // onOrderDispute,
   onReleaseNow,
   navigatePath,
   orderId,
@@ -48,28 +43,17 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
   onUpdateOrder,
 }) => {
   const navigate = useNavigate();
+  const { showSnackbar } = useSnackbar();
+  const { wallet, connectWallet } = useWeb3();
+  const { usdtBalance, refetch: refetchBalance } = useWalletBalance();
+
   const [timeRemaining, setTimeRemaining] = useState({
     minutes: 9,
     seconds: 59,
   });
-  const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
-  const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-
-  const { showSnackbar } = useSnackbar();
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [pendingTransactionData, setPendingTransactionData] = useState<{
-    contractAddress: string;
-    amount: string;
-    isUSDT: boolean;
-    usdtAddress?: string;
-    tradeId: string;
-    quantity: number;
-    logisticsProviderAddress: string;
-  } | null>(null);
-  const { isConnected, balances } = useWallet();
-  const { buyTrade } = useContract();
 
   // Order update state
   const [quantity, setQuantity] = useState<number>(orderDetails?.quantity || 1);
@@ -96,6 +80,8 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
   }, [quantity, selectedLogisticsProvider, orderDetails]);
 
   useEffect(() => {
+    if (!showTimer) return;
+
     const timer = setInterval(() => {
       setTimeRemaining((prev) => {
         if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 };
@@ -105,98 +91,47 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [showTimer]);
 
   // Check if user has sufficient balance
   const checkSufficientBalance = () => {
     if (!orderDetails?.product?.price) return false;
 
     const totalAmount = orderDetails.product.price * quantity;
-    console.log(
-      totalAmount,
-      orderDetails.product.price,
-      quantity,
-      "totalAmount"
-    );
-    const requiredAmount = totalAmount * 1.02;
+    const requiredAmount = totalAmount * 1.02; // 2% buffer for gas
 
-    const cleanBalance = (balances.usdt || "0")
-      .replace(/[^\d.,]/g, "")
-      .replace(/,/g, "");
-
-    const userBalance = parseFloat(cleanBalance) || 0;
-
-    console.log(userBalance, requiredAmount, balances.usdt, "balance check");
+    const userBalance = parseFloat(usdtBalance) || 0;
     return userBalance >= requiredAmount;
   };
 
-  const handleShowConfirmationModal = () => {
-    if (!isConnected) {
-      setIsWalletModalOpen(true);
+  const handlePayNow = async () => {
+    if (!wallet.isConnected) {
+      try {
+        await connectWallet();
+        await refetchBalance();
+      } catch (error) {
+        showSnackbar("Failed to connect wallet", "error");
+        return;
+      }
+    }
+
+    if (!checkSufficientBalance()) {
+      showSnackbar("Insufficient USDT balance for this transaction", "error");
       return;
     }
 
-    setIsConfirmationModalOpen(true);
+    setIsPaymentModalOpen(true);
   };
 
-  const processPayment = async () => {
-    setIsProcessing(true);
+  const handlePaymentSuccess = (transaction: any) => {
+    setIsPaymentModalOpen(false);
+    showSnackbar("Payment completed successfully!", "success");
 
-    try {
-      if (
-        !orderDetails?.product?.tradeId ||
-        !(
-          selectedLogisticsProvider?.walletAddress ||
-          orderDetails?.logisticsProviderWalletAddress
-        )
-      ) {
-        ("Missing trade information. Please refresh and try again.");
-        setIsProcessing(false);
-        return;
-      }
-
-      // Check for sufficient balance before proceeding
-      if (!checkSufficientBalance()) {
-        showSnackbar("Insufficient balance for this transaction", "error");
-        setIsProcessing(false);
-        return;
-      }
-
-      // Create transaction data for confirmation modal
-      setPendingTransactionData({
-        contractAddress: ESCROW_CONTRACT_ADDRESS,
-        amount: (orderDetails.product.price * quantity).toString(),
-        // isUSDT: (orderDetails.product.currency || "CELO") !== "CELO",
-        isUSDT: true,
-        tradeId: orderDetails.product.tradeId,
-        quantity: quantity,
-        logisticsProviderAddress:
-          selectedLogisticsProvider?.walletAddress ||
-          orderDetails.logisticsProviderWalletAddress,
-      });
-
-      setIsConfirmationModalOpen(false);
-      setIsWalletModalOpen(true);
-    } catch (error: any) {
-      console.error("Error preparing payment:", error);
-      toast.error(error.message || "Failed to prepare transaction");
-      setIsProcessing(false);
-    }
-  };
-
-  const handleWalletConnected = (success: boolean) => {
-    setIsWalletModalOpen(false);
-    setIsProcessing(false);
-
-    if (success) {
-      showSnackbar("Payment completed successfully!", "success");
-
-      // Navigate to the specified path or call the onReleaseNow callback
-      if (navigatePath) {
-        navigate(navigatePath, { replace: true });
-      } else if (onReleaseNow) {
-        onReleaseNow();
-      }
+    // Navigate to the specified path or call the onReleaseNow callback
+    if (navigatePath) {
+      navigate(navigatePath, { replace: true });
+    } else if (onReleaseNow) {
+      onReleaseNow();
     }
   };
 
@@ -221,8 +156,11 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     }
   };
 
-  // Get the currency with fallback to CELO
-  // const getProductCurrency = () => orderDetails?.product?.currency || "CELO";
+  const getEscrowAddress = () => {
+    // Use testnet for development, mainnet for production
+    const chainId = process.env.NODE_ENV === "production" ? 42220 : 44787;
+    return ESCROW_ADDRESSES[chainId as keyof typeof ESCROW_ADDRESSES];
+  };
 
   return (
     <>
@@ -252,95 +190,20 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
               }
               className="bg-transparent hover:bg-gray-700 text-white text-sm px-6 py-3 border border-gray-600 rounded transition-colors"
               onClick={() => setIsEditModalOpen(true)}
-              disabled={isProcessing}
             />
 
             <Button
               title={
-                isProcessing ? (
-                  <div className="flex items-center">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                    Processing...
-                  </div>
-                ) : (
-                  "Pay Now"
-                )
+                wallet.isConnected
+                  ? `Pay ${(orderDetails?.product?.price || 0) * quantity} USDT`
+                  : "Connect Wallet to Pay"
               }
-              className={`bg-Red hover:bg-[#e02d37] text-white text-sm px-6 py-3 rounded transition-colors ${
-                isProcessing ? "opacity-70 cursor-not-allowed" : ""
-              }`}
-              onClick={handleShowConfirmationModal}
-              disabled={isProcessing}
+              className="bg-Red hover:bg-[#e02d37] text-white text-sm px-6 py-3 rounded transition-colors"
+              onClick={handlePayNow}
             />
           </div>
         }
       />
-
-      {/* Confirmation Modal */}
-      <Modal
-        isOpen={isConfirmationModalOpen}
-        onClose={() => setIsConfirmationModalOpen(false)}
-        title="Confirm Payment"
-        maxWidth="md:max-w-lg"
-      >
-        <div className="p-4">
-          <div className="mb-6 text-center">
-            <div className="bg-amber-500/10 text-amber-400 p-4 rounded-lg border border-amber-500/20 mb-4">
-              <p className="text-sm">
-                By proceeding, funds will be held in escrow until the order is
-                completed. The seller will not receive the funds until delivery
-                is confirmed.
-              </p>
-            </div>
-
-            <h3 className="text-lg font-medium text-white mb-2">
-              Payment Summary
-            </h3>
-
-            <div className="bg-[#2A2D35] p-4 rounded-lg mb-3 text-left">
-              <div className="flex justify-between mb-2">
-                <span className="text-gray-400">Item Price:</span>
-                <span className="text-white">
-                  {orderDetails?.product?.price} USDT
-                </span>
-              </div>
-              <div className="flex justify-between mb-2">
-                <span className="text-gray-400">Quantity:</span>
-                <span className="text-white">{quantity}</span>
-              </div>
-              <div className="flex justify-between font-medium">
-                <span className="text-gray-300">Total Amount:</span>
-                <span className="text-white">
-                  {(orderDetails?.product?.price || 0) * quantity} USDT
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-3">
-            <Button
-              title="Cancel"
-              className="bg-transparent hover:bg-gray-700 text-white text-sm px-6 py-3 border border-gray-600 rounded transition-colors"
-              onClick={() => setIsConfirmationModalOpen(false)}
-            />
-            <Button
-              title={
-                isProcessing ? (
-                  <div className="flex items-center">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                    Processing...
-                  </div>
-                ) : (
-                  "Proceed to Payment"
-                )
-              }
-              className="bg-Red hover:bg-[#e02d37] text-white text-sm px-6 py-3 rounded transition-colors"
-              onClick={processPayment}
-              disabled={isProcessing}
-            />
-          </div>
-        </div>
-      </Modal>
 
       {/* Edit Order Modal */}
       <Modal
@@ -389,36 +252,26 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
         </div>
       </Modal>
 
-      {/* Wallet Connection Modal */}
-      <Modal
-        isOpen={isWalletModalOpen}
-        onClose={() => {
-          setIsWalletModalOpen(false);
-          setIsProcessing(false);
-        }}
-        title="Transaction Confirmation"
-        maxWidth="md:max-w-lg"
-      >
-        {pendingTransactionData ? (
-          <TransactionConfirmation
-            contractAddress={pendingTransactionData.contractAddress}
-            amount={pendingTransactionData.amount}
-            isUSDT={pendingTransactionData.isUSDT}
-            usdtAddress={pendingTransactionData.usdtAddress}
-            tradeId={pendingTransactionData.tradeId}
-            quantity={pendingTransactionData.quantity}
-            logisticsProviderAddress={
-              pendingTransactionData.logisticsProviderAddress
-            }
-            onComplete={handleWalletConnected}
-          />
-        ) : (
-          <ConnectWallet
-          // showAlternatives={true}
-          // onTransactionComplete={handleWalletConnected}
-          />
-        )}
-      </Modal>
+      {/* Payment Modal */}
+      {orderDetails && (
+        <PaymentModal
+          isOpen={isPaymentModalOpen}
+          onClose={() => setIsPaymentModalOpen(false)}
+          orderDetails={{
+            id: orderDetails._id || orderId || "",
+            amount: ((orderDetails.product?.price || 0) * quantity).toString(),
+            items: [
+              {
+                name: orderDetails.product?.name || "Product",
+                quantity: quantity,
+                price: (orderDetails.product?.price || 0).toString(),
+              },
+            ],
+            escrowAddress: getEscrowAddress(),
+          }}
+          onPaymentSuccess={handlePaymentSuccess}
+        />
+      )}
     </>
   );
 };

@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState, useEffect } from "react";
 import { FaWallet, FaSpinner } from "react-icons/fa";
 import { Product, ProductVariant } from "../../../utils/types";
-// import { useWallet } from "../../../context/WalletContext";
+import { useWeb3 } from "../../../context/Web3Context";
 import { useOrderData } from "../../../utils/hooks/useOrder";
 import { useNavigate } from "react-router-dom";
 import QuantitySelector from "./QuantitySelector";
@@ -25,8 +25,7 @@ const PurchaseSection = ({
   const [quantity, setQuantity] = useState(1);
   const { secondaryCurrency } = useCurrency();
   const { isAuthenticated } = useAuth();
-  const { isConnected, account, balances, connectWallet, refreshBalance } =
-    useWallet();
+  const { wallet, connectWallet, isCorrectNetwork } = useWeb3();
   const [selectedLogistics, setSelectedLogistics] =
     useState<LogisticsProvider | null>(null);
 
@@ -40,8 +39,7 @@ const PurchaseSection = ({
     setError(null);
 
     try {
-      await connectWallet("metamask");
-      await refreshBalance();
+      await connectWallet();
     } catch (err: any) {
       console.error("Error connecting wallet:", err);
       setError(`Failed to connect wallet: ${err.message || "Unknown error"}`);
@@ -55,7 +53,6 @@ const PurchaseSection = ({
   };
 
   const handlePurchase = async () => {
-    // Check if user is authenticated
     if (!isAuthenticated) {
       navigate("/login");
       return;
@@ -71,17 +68,6 @@ const PurchaseSection = ({
     setError(null);
 
     try {
-      const variantInfo = selectedVariant
-        ? {
-            variantId: selectedVariant.id,
-            variantProperties: Object.fromEntries(
-              Object.entries(selectedVariant).filter(
-                ([key]) => key !== "quantity"
-              )
-            ),
-          }
-        : undefined;
-
       const order = await placeOrder({
         product: product._id,
         quantity: quantity,
@@ -104,15 +90,6 @@ const PurchaseSection = ({
     setQuantity(newQuantity);
   };
 
-  // Format balances for display
-  const formattedUsdtBalance = useMemo(() => {
-    return `${parseFloat(balances?.usdt || "0").toFixed(2)} USDT`;
-  }, [balances?.usdt]);
-
-  const formattedCeloBalance = useMemo(() => {
-    return `${parseFloat(balances?.celo || "0").toFixed(4)} CELO`;
-  }, [balances?.celo]);
-
   const isOutOfStock = selectedVariant && selectedVariant.quantity <= 0;
   const availableQuantity = selectedVariant
     ? selectedVariant.quantity
@@ -124,7 +101,7 @@ const PurchaseSection = ({
       return;
     }
 
-    if (isConnected) {
+    if (wallet.isConnected) {
       handlePurchase();
     } else {
       handleConnectWallet();
@@ -182,7 +159,7 @@ const PurchaseSection = ({
                   ? "Out of Stock"
                   : !isAuthenticated
                   ? "Login to buy"
-                  : isConnected
+                  : wallet.isConnected
                   ? "Buy Now"
                   : "Connect wallet to buy"}
               </span>
@@ -191,15 +168,25 @@ const PurchaseSection = ({
         </button>
       </div>
 
-      {isConnected && (
+      {wallet.isConnected && (
         <div className="text-center text-xs text-gray-400">
-          {formattedCeloBalance && formattedUsdtBalance
-            ? `Balance: ${formattedCeloBalance}  ·  ${formattedUsdtBalance}`
-            : "Checking balance..."}
+          {wallet.usdtBalance ? (
+            <>
+              {wallet.usdtBalance.celo} · {wallet.usdtBalance.usdt} ·{" "}
+              {wallet.usdtBalance.fiat}
+              <br />
+              ETH:{" "}
+              {wallet.balance
+                ? `${parseFloat(wallet.balance).toFixed(4)}`
+                : "0.0000"}
+            </>
+          ) : (
+            "Loading balances..."
+          )}
           <br />
-          {account
-            ? `${account.substring(0, 6)}...${account.substring(
-                account.length - 4
+          {wallet.address
+            ? `${wallet.address.substring(0, 6)}...${wallet.address.substring(
+                wallet.address.length - 4
               )}`
             : ""}
         </div>

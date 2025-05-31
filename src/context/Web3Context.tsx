@@ -4,6 +4,7 @@ import React, {
   useEffect,
   useState,
   useCallback,
+  useMemo,
 } from "react";
 import {
   useAccount,
@@ -26,8 +27,26 @@ import {
 } from "../utils/types/web3.types";
 import { TARGET_CHAIN, USDT_ADDRESSES } from "../utils/config/web3.config";
 import { useSnackbar } from "./SnackbarContext";
+import { useCurrencyConverter } from "../utils/hooks/useCurrencyConverter";
 
-const Web3Context = createContext<Web3ContextType | undefined>(undefined);
+// Extended wallet state to include converted balances
+interface ExtendedWalletState extends WalletState {
+  usdtBalance?: {
+    raw: string;
+    usdt: string;
+    celo: string;
+    fiat: string;
+  };
+}
+
+// Extended context type
+interface ExtendedWeb3ContextType extends Omit<Web3ContextType, "wallet"> {
+  wallet: ExtendedWalletState;
+}
+
+const Web3Context = createContext<ExtendedWeb3ContextType | undefined>(
+  undefined
+);
 
 export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -43,8 +62,9 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
   const { disconnect } = useDisconnect();
   const { switchChain } = useSwitchChain();
   const { writeContractAsync } = useWriteContract();
+  const { convertPrice, formatPrice } = useCurrencyConverter();
 
-  const [wallet, setWallet] = useState<WalletState>({
+  const [wallet, setWallet] = useState<ExtendedWalletState>({
     isConnected: false,
     isConnecting: false,
   });
@@ -57,15 +77,37 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
     query: { enabled: !!address },
   });
 
-  // Get USDT balance
+  // Get USDT contract address with proper typing
+  const usdtContractAddress = useMemo(() => {
+    if (!address || !chain?.id) return undefined;
+    const contractAddr =
+      USDT_ADDRESSES[chain.id as keyof typeof USDT_ADDRESSES];
+    return contractAddr as `0x${string}` | undefined;
+  }, [address, chain?.id]);
+
+  // Get USDT balance with fixed typing
   const { data: usdtBalance, refetch: refetchUSDTBalance } = useReadContract({
-    address:
-      address && USDT_ADDRESSES[chain?.id as keyof typeof USDT_ADDRESSES],
+    address: usdtContractAddress,
     abi: erc20Abi,
     functionName: "balanceOf",
     args: address ? [address] : undefined,
-    query: { enabled: !!address && !!chain?.id },
+    query: { enabled: !!address && !!usdtContractAddress },
   });
+
+  // Memoized converted USDT balances
+  const convertedUSDTBalances = useMemo(() => {
+    if (!usdtBalance) return undefined;
+
+    const rawBalance = formatUnits(usdtBalance as bigint, 6);
+    const numericBalance = parseFloat(rawBalance);
+
+    return {
+      raw: rawBalance,
+      usdt: formatPrice(numericBalance, "USDT"),
+      celo: formatPrice(convertPrice(numericBalance, "USDT", "CELO"), "CELO"),
+      fiat: formatPrice(convertPrice(numericBalance, "USDT", "FIAT"), "FIAT"),
+    };
+  }, [usdtBalance, convertPrice, formatPrice]);
 
   // Update wallet state when account changes
   useEffect(() => {
@@ -79,12 +121,20 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
         : undefined,
       error: connectError?.message,
       isConnecting,
+      usdtBalance: convertedUSDTBalances,
     }));
-  }, [isConnected, address, chain, ethBalance, connectError, isConnecting]);
+  }, [
+    isConnected,
+    address,
+    chain,
+    ethBalance,
+    connectError,
+    isConnecting,
+    convertedUSDTBalances,
+  ]);
 
   const connectWallet = useCallback(async () => {
     try {
-      // Auto-connect to the first available connector (usually MetaMask)
       const connector =
         connectors.find((c) => c.name === "MetaMask") || connectors[0];
       if (connector) {
@@ -94,12 +144,12 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
       console.error("Failed to connect wallet:", error);
       showSnackbar("Failed to connect wallet. Please try again.", "error");
     }
-  }, [connect, connectors]);
+  }, [connect, connectors, showSnackbar]);
 
   const disconnectWallet = useCallback(() => {
     disconnect();
     showSnackbar("Wallet disconnected", "success");
-  }, [disconnect]);
+  }, [disconnect, showSnackbar]);
 
   const switchToCorrectNetwork = useCallback(async () => {
     try {
@@ -110,15 +160,12 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
       showSnackbar(`Failed to switch to ${TARGET_CHAIN.name}`, "error");
       throw error;
     }
-  }, [switchChain]);
+  }, [switchChain, showSnackbar]);
 
   const getUSDTBalance = useCallback(async (): Promise<string> => {
     await refetchUSDTBalance();
-    if (usdtBalance) {
-      return formatUnits(usdtBalance as bigint, 6);
-    }
-    return "0";
-  }, [usdtBalance, refetchUSDTBalance]);
+    return convertedUSDTBalances?.raw || "0";
+  }, [refetchUSDTBalance, convertedUSDTBalances]);
 
   const sendPayment = useCallback(
     async (params: PaymentParams): Promise<PaymentTransaction> => {
@@ -140,7 +187,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
         const amount = parseUnits(params.amount, 6);
 
         const hash = await writeContractAsync({
-          address: usdtAddress,
+          address: usdtAddress as `0x${string}`,
           abi: erc20Abi,
           functionName: "transfer",
           args: [params.to as `0x${string}`, amount],
@@ -170,10 +217,11 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
       isCorrectNetwork,
       switchToCorrectNetwork,
       writeContractAsync,
+      showSnackbar,
     ]
   );
 
-  const value: Web3ContextType = {
+  const value: ExtendedWeb3ContextType = {
     wallet,
     connectWallet,
     disconnectWallet,
