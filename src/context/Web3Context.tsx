@@ -210,7 +210,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
       if (result.data) {
         console.log("getUSDTBalance", result);
         return formatUnits(result.data as bigint, 6);
-      }=
+      }
       return "0";
     } catch (error) {
       console.error("Failed to fetch USDT balance:", error);
