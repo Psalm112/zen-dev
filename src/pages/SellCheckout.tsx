@@ -37,6 +37,8 @@ const SellCheckout = () => {
           updatedAt: "2025-04-23T00:08:26.519Z",
           type: [],
           stock: 100,
+          logisticsCost: [],
+          logisticsProviders: [],
         };
 
         setProduct(productData);
