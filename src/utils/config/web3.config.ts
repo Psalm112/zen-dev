@@ -16,7 +16,6 @@ export const ESCROW_ADDRESSES = {
 // export const TARGET_CHAIN =
 //   process.env.NODE_ENV === "production" ? celo : celoAlfajores;
 export const TARGET_CHAIN = celoAlfajores;
-
 export const wagmiConfig = createConfig({
   chains: [celo, celoAlfajores],
   connectors: [
@@ -30,15 +29,22 @@ export const wagmiConfig = createConfig({
       appName: "Dezenmart",
       appLogoUrl: `${window.location.origin}/images/logo-full.png`,
     }),
-    walletConnect({
-      projectId: process.env.VITE_WALLETCONNECT_PROJECT_ID!,
-      metadata: {
-        name: "Dezenmart",
-        description: "Decentralized marketplace",
-        url: window.location.origin,
-        icons: [`${window.location.origin}/images/logo-full.png`],
-      },
-    }),
+    // Only include WalletConnect if project ID is available
+    ...(process.env.VITE_WALLETCONNECT_PROJECT_ID
+      ? [
+          walletConnect({
+            projectId: process.env.VITE_WALLETCONNECT_PROJECT_ID,
+            metadata: {
+              name: "Dezenmart",
+              description:
+                "Decentralized marketplace for secure crypto payments",
+              url: window.location.origin,
+              icons: [`${window.location.origin}/images/logo-full.png`],
+            },
+            showQrModal: true,
+          }),
+        ]
+      : []),
   ],
   transports: {
     [celo.id]: http(),

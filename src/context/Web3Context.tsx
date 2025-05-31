@@ -72,12 +72,15 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
   const isCorrectNetwork = chain?.id === TARGET_CHAIN.id;
 
   // Get CELO balance for gas fees
-  const { data: celoBalance } = useBalance({
+  const { data: celoBalance, refetch: refetchCeloBalance } = useBalance({
     address,
-    query: { enabled: !!address },
+    query: {
+      enabled: !!address && isCorrectNetwork,
+      refetchInterval: 30000, // Refetch every 30 seconds
+    },
   });
 
-  // Get USDT contract address with proper typing
+  // Get USDT contract address
   const usdtContractAddress = useMemo(() => {
     if (!address || !chain?.id) return undefined;
     const contractAddr =
@@ -85,31 +88,54 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
     return contractAddr as `0x${string}` | undefined;
   }, [address, chain?.id]);
 
-  // Get USDT balance with fixed typing
-  const { data: usdtBalance, refetch: refetchUSDTBalance } = useReadContract({
+  const {
+    data: usdtBalance,
+    refetch: refetchUSDTBalance,
+    isLoading: isLoadingUSDT,
+    error: usdtError,
+  } = useReadContract({
     address: usdtContractAddress,
     abi: erc20Abi,
     functionName: "balanceOf",
     args: address ? [address] : undefined,
-    query: { enabled: !!address && !!usdtContractAddress },
+    query: {
+      enabled: !!address && !!usdtContractAddress && isCorrectNetwork,
+      refetchInterval: 30000,
+    },
   });
 
-  // Memoized converted USDT balances
+  // Get USDT balance with fixed typing
+  // const { data: usdtBalance, refetch: refetchUSDTBalance } = useReadContract({
+  //   address: usdtContractAddress,
+  //   abi: erc20Abi,
+  //   functionName: "balanceOf",
+  //   args: address ? [address] : undefined,
+  //   query: { enabled: !!address && !!usdtContractAddress },
+  // });
+
+  // converted USDT balances
   const convertedUSDTBalances = useMemo(() => {
-    if (!usdtBalance) return undefined;
+    if (!usdtBalance || usdtError) return undefined;
 
-    const rawBalance = formatUnits(usdtBalance as bigint, 6);
-    const numericBalance = parseFloat(rawBalance);
-    console.log(rawBalance, numericBalance, usdtContractAddress, usdtBalance);
-    return {
-      raw: rawBalance,
-      usdt: formatPrice(numericBalance, "USDT"),
-      celo: formatPrice(convertPrice(numericBalance, "USDT", "CELO"), "CELO"),
-      fiat: formatPrice(convertPrice(numericBalance, "USDT", "FIAT"), "FIAT"),
-    };
-  }, [usdtBalance, convertPrice, formatPrice]);
+    try {
+      const rawBalance = formatUnits(usdtBalance as bigint, 6);
+      const numericBalance = parseFloat(rawBalance);
 
-  // Update wallet state when account changes
+      if (isNaN(numericBalance)) return undefined;
+
+      return {
+        raw: rawBalance,
+        usdt: formatPrice(numericBalance, "USDT"),
+        celo: formatPrice(convertPrice(numericBalance, "USDT", "CELO"), "CELO"),
+        fiat: formatPrice(convertPrice(numericBalance, "USDT", "FIAT"), "FIAT"),
+      };
+    } catch (error) {
+      console.error("Error formatting USDT balance:", error);
+      return undefined;
+    }
+  }, [usdtBalance, usdtError, convertPrice, formatPrice]);
+
+  // Update wallet state
   useEffect(() => {
     setWallet((prev) => ({
       ...prev,
@@ -119,8 +145,8 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
       balance: celoBalance
         ? formatUnits(celoBalance.value, celoBalance.decimals)
         : undefined,
-      error: connectError?.message,
-      isConnecting,
+      error: connectError?.message || usdtError?.message,
+      isConnecting: isConnecting || isLoadingUSDT,
       usdtBalance: convertedUSDTBalances,
     }));
   }, [
@@ -129,19 +155,30 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
     chain,
     celoBalance,
     connectError,
+    usdtError,
     isConnecting,
+    isLoadingUSDT,
     convertedUSDTBalances,
   ]);
 
+  // Auto-refresh balances
   useEffect(() => {
     if (isConnected && address && isCorrectNetwork) {
       const interval = setInterval(() => {
         refetchUSDTBalance();
-      }, 30000); // Refresh every 30 seconds
+        refetchCeloBalance();
+      }, 30000);
 
       return () => clearInterval(interval);
     }
-  }, [isConnected, address, isCorrectNetwork, refetchUSDTBalance]);
+  }, [
+    isConnected,
+    address,
+    isCorrectNetwork,
+    refetchUSDTBalance,
+    refetchCeloBalance,
+  ]);
+
   const connectWallet = useCallback(async () => {
     try {
       const connector =
@@ -172,9 +209,17 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
   }, [switchChain, showSnackbar]);
 
   const getUSDTBalance = useCallback(async (): Promise<string> => {
-    await refetchUSDTBalance();
-    return convertedUSDTBalances?.raw || "0";
-  }, [refetchUSDTBalance, convertedUSDTBalances]);
+    try {
+      const result = await refetchUSDTBalance();
+      if (result.data) {
+        return formatUnits(result.data as bigint, 6);
+      }
+      return "0";
+    } catch (error) {
+      console.error("Failed to fetch USDT balance:", error);
+      return "0";
+    }
+  }, [refetchUSDTBalance]);
 
   const sendPayment = useCallback(
     async (params: PaymentParams): Promise<PaymentTransaction> => {

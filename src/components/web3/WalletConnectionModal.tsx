@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useConnect } from "wagmi";
 import { SiCoinbase } from "react-icons/si";
@@ -29,7 +29,15 @@ const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
   const [showEducation, setShowEducation] = useState(false);
   const [connectingWallet, setConnectingWallet] = useState<string | null>(null);
 
-  const handleCLose = () => {
+  const availableConnectors = useMemo(() => {
+    return connectors.filter((connector) => {
+      if (connector.name.toLowerCase().includes("walletconnect")) {
+        return !!process.env.VITE_WALLETCONNECT_PROJECT_ID;
+      }
+      return true;
+    });
+  }, [connectors]);
+  const handleClose = () => {
     setConnectingWallet(null);
     onClose();
   };
@@ -38,14 +46,15 @@ const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
     try {
       setConnectingWallet(connector.name);
       await connect({ connector });
-      handleCLose();
-      if (wallet.isConnected) {
-        showSnackbar("Wallet connected successfully!", "success");
-      }
+      handleClose();
+      showSnackbar("Wallet connected successfully!", "success");
     } catch (error: any) {
       console.error("Connection failed:", error);
-      if (error.message.includes("User rejected")) {
-        showSnackbar("Connection cancelled", "error");
+
+      if (error.message?.includes("User rejected")) {
+        showSnackbar("Connection cancelled", "info");
+      } else if (error.message?.includes("Project ID")) {
+        showSnackbar("Wallet service temporarily unavailable", "error");
       } else {
         showSnackbar("Failed to connect wallet. Please try again.", "error");
       }

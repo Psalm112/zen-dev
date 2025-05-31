@@ -173,18 +173,25 @@ const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
               <div className="flex justify-between items-center">
                 <span className="text-gray-300">USDT</span>
                 <div className="relative" ref={dropdownRef}>
-                  <button
-                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className="flex items-center gap-2 font-mono text-white hover:text-gray-300 transition-colors bg-[#212428] hover:bg-[#212428]/70 px-3 py-1.5 rounded-md"
-                    disabled={!wallet.usdtBalance}
-                  >
-                    <span className="min-w-0">{getBalanceDisplay()}</span>
-                    <HiChevronDown
-                      className={`w-4 h-4 transition-transform flex-shrink-0 ${
-                        isDropdownOpen ? "rotate-180" : ""
-                      }`}
-                    />
-                  </button>
+                  {wallet.isConnecting ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                      <span className="text-gray-400">Loading...</span>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                      className="flex items-center gap-2 font-mono text-white hover:text-gray-300 transition-colors bg-[#212428] hover:bg-[#212428]/70 px-3 py-1.5 rounded-md"
+                      disabled={!wallet.usdtBalance}
+                    >
+                      <span className="min-w-0">{getBalanceDisplay()}</span>
+                      <HiChevronDown
+                        className={`w-4 h-4 transition-transform flex-shrink-0 ${
+                          isDropdownOpen ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+                  )}
 
                   {isDropdownOpen && wallet.usdtBalance && (
                     <div className="absolute right-0 top-full mt-1 bg-[#1a1c20] border border-gray-600 rounded-lg shadow-xl z-20 min-w-[140px] overflow-hidden">
