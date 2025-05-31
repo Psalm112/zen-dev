@@ -72,7 +72,7 @@ export const useWatchlist = () => {
   const addProductToWatchlist = useCallback(
     async (productId: string, showNotifications = true) => {
       try {
-        const result = await dispatch(addToWatchlist(productId)).unwrap();
+        await dispatch(addToWatchlist(productId)).unwrap();
         if (showNotifications) {
           showSnackbar("Product added to watchlist", "success");
         }

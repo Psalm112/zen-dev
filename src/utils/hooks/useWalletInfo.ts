@@ -135,7 +135,7 @@ export function useWalletInfo(): {
 
   const availableWallets = useMemo((): WalletInfo[] => {
     const wallets: WalletInfo[] = [];
-    let priorityCounter = 0;
+    // const priorityCounter = 0;
 
     Object.entries(WALLET_CONFIGS).forEach(([type, config]) => {
       // Smart wallet is always available

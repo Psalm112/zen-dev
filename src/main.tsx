@@ -16,8 +16,8 @@ import ErrorBoundary from "./components/error/ErrorBoundary.tsx";
 import { setupGlobalErrorHandling } from "./utils/errorHandling";
 import ReferralHandler from "./components/referrals/ReferralHandler.tsx";
 import { CurrencyProvider } from "./context/CurrencyContext.tsx";
-import { ProviderPoolProvider } from "./context/ProviderPoolContext.tsx";
-import { SUPPORTED_CHAINS } from "./utils/config/wallet.config.ts";
+// import { ProviderPoolProvider } from "./context/ProviderPoolContext.tsx";
+// import { SUPPORTED_CHAINS } from "./utils/config/wallet.config.ts";
 import { WagmiProvider } from "wagmi";
 import { Web3Provider } from "./context/Web3Context.tsx";
 import { wagmiConfig } from "./utils/config/web3.config.ts";
@@ -47,17 +47,17 @@ setupGlobalErrorHandling();
 const RouterLayout = () => {
   return (
     <Configuration>
-      <Provider store={store}>
-        {/* <ProviderPoolProvider
+      <SnackbarProvider>
+        <Provider store={store}>
+          {/* <ProviderPoolProvider
           chainId={SUPPORTED_CHAINS.celoAlfajores.id}
           autoHealthCheck={true}
           enableMetrics={true}
         > */}
-        <WagmiProvider config={wagmiConfig}>
-          {/* <WalletProvider> */}
-          <Web3Provider>
-            <AuthProvider>
-              <SnackbarProvider>
+          <WagmiProvider config={wagmiConfig}>
+            {/* <WalletProvider> */}
+            <Web3Provider>
+              <AuthProvider>
                 <CurrencyProvider>
                   <Layout>
                     <Suspense fallback={<Loadscreen />}>
@@ -66,13 +66,13 @@ const RouterLayout = () => {
                     <ReferralHandler />
                   </Layout>
                 </CurrencyProvider>
-              </SnackbarProvider>
-            </AuthProvider>
-          </Web3Provider>
-          {/* </WalletProvider> */}
-        </WagmiProvider>
-        {/* </ProviderPoolProvider> */}
-      </Provider>
+              </AuthProvider>
+            </Web3Provider>
+            {/* </WalletProvider> */}
+          </WagmiProvider>
+          {/* </ProviderPoolProvider> */}
+        </Provider>
+      </SnackbarProvider>
     </Configuration>
   );
 };
