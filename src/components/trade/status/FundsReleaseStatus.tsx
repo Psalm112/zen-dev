@@ -14,7 +14,7 @@ import Modal from "../../common/Modal";
 import ConnectWallet from "../../wallet/ConnectWallet";
 // import { useWallet } from "../../../utils/hooks/useWallet";
 import { motion } from "framer-motion";
-import { useWallet } from "../../../context/WalletContext";
+import { useWeb3 } from "../../../context/Web3Context";
 
 interface FundsReleaseStatusProps {
   tradeDetails?: TradeDetails;
@@ -46,7 +46,7 @@ const FundsReleaseStatus: FC<FundsReleaseStatusProps> = ({
   const [dispute, setDispute] = useState("");
   const [loading, setLoading] = useState(false);
   const { confirmDelivery } = useContract();
-  const { isConnected } = useWallet();
+  const { wallet } = useWeb3();
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -61,7 +61,7 @@ const FundsReleaseStatus: FC<FundsReleaseStatusProps> = ({
   }, []);
 
   const handleConfirmDelivery = async () => {
-    if (!isConnected) {
+    if (!wallet.isConnected) {
       setIsWalletModalOpen(true);
       return;
     }

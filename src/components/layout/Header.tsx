@@ -8,12 +8,10 @@ import { useNotifications } from "../../utils/hooks/useNotifications";
 import NotificationBadge from "../notifications/NotificationBadge";
 import { useAuth } from "../../context/AuthContext";
 import Button from "../common/Button";
-import Modal from "../common/Modal";
-import ConnectWallet from "../wallet/ConnectWallet";
 import { useChat } from "../../utils/hooks/useChat";
 import CurrencyToggle from "../common/CurrencyToggle";
-import { useWallet, useWalletStatus } from "../../context/WalletContext";
 import WalletConnectButton from "../web3/WalletConnectButton";
+import { useWeb3 } from "../../context/Web3Context";
 
 const NavList = [
   { title: "Home", path: "/" },
@@ -25,25 +23,12 @@ const NavList = [
 const Header = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
-  const { account, disconnect } = useWallet();
-  const { isConnected, isConnecting } = useWalletStatus();
+  const { wallet, disconnectWallet } = useWeb3();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showWallet, setShowWallet] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const { unreadCount, fetchUserUnreadCount } = useNotifications();
   const { loadConversations, totalUnreadMessages } = useChat();
-
-  // Memoized shortened address for performance
-  const shortenedAddress = useMemo(() => {
-    if (!account) return "";
-    return `${account.slice(0, 4)}...${account.slice(-3)}`;
-  }, [account]);
-
-  // Memoized wallet button content
-  const walletButtonContent = useMemo(() => {
-    if (isConnecting) return "Connecting...";
-    return isConnected ? shortenedAddress : "Connect";
-  }, [isConnected, isConnecting, shortenedAddress]);
 
   // Optimized data fetching with proper error handling
   const fetchData = useCallback(
@@ -111,8 +96,8 @@ const Header = () => {
       setShowUserMenu(false);
 
       // Disconnect wallet if connected
-      if (isConnected) {
-        await disconnect();
+      if (wallet.isConnected) {
+        await disconnectWallet();
       }
 
       logout();
@@ -123,14 +108,7 @@ const Header = () => {
       logout();
       navigate("/", { replace: true });
     }
-  }, [disconnect, logout, navigate, isConnected]);
-
-  // Wallet button click handler
-  const handleWalletClick = useCallback(() => {
-    if (!isConnecting) {
-      setShowWallet(true);
-    }
-  }, [isConnecting]);
+  }, [disconnectWallet, logout, navigate, wallet.isConnected]);
 
   // User menu toggle handler
   const handleUserMenuToggle = useCallback(() => {
@@ -292,13 +270,6 @@ const Header = () => {
           )}
         </div>
       </Container>
-
-      {/* Connect wallet modal */}
-      {showWallet && (
-        <Modal onClose={() => setShowWallet(false)} isOpen>
-          <ConnectWallet />
-        </Modal>
-      )}
     </header>
   );
 };

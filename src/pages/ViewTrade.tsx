@@ -6,19 +6,20 @@ import { TradeTab } from "../utils/types";
 import ProductListingSkeleton from "../components/trade/ProductListingSkeleton";
 import ActiveTradeCard from "../components/trade/view/ActiveTradeCard";
 import CompletedTradeCard from "../components/trade/view/CompletedTradeCard";
-import ConnectWallet from "../components/wallet/ConnectWallet";
 import Tab from "../components/trade/Tab";
 import EmptyState from "../components/trade/view/EmptyState";
 import { useNavigate } from "react-router-dom";
-import { useWallet, useWalletStatus } from "../context/WalletContext";
 import { useOrderData } from "../utils/hooks/useOrder";
+import { useWeb3 } from "../context/Web3Context";
 
 const ViewTrade = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TradeTab>("active");
   const [isLoading, setIsLoading] = useState(true);
-  const { clearError } = useWallet();
-  const { isConnected, isConnecting, error } = useWalletStatus();
+  const [showConnectionModal, setShowConnectionModal] = useState(false);
+  const { wallet } = useWeb3();
+  // const { clearError } = useWallet();
+  // const { isConnected, isConnecting, error } = useWalletStatus();
   const {
     activeTrades,
     completedTrades,
@@ -52,7 +53,7 @@ const ViewTrade = () => {
   // Optimized order loading function
   const loadOrders = useCallback(
     async (silent = false) => {
-      if (!isConnected) return;
+      if (!wallet.isConnected) return;
 
       try {
         if (!silent) {
@@ -86,7 +87,7 @@ const ViewTrade = () => {
         }
       }
     },
-    [isConnected, fetchBuyerOrders, fetchMerchantOrders]
+    [wallet.isConnected, fetchBuyerOrders, fetchMerchantOrders]
   );
 
   // Initial data fetch effect
@@ -94,7 +95,7 @@ const ViewTrade = () => {
     let isMounted = true;
 
     const initializeOrders = async () => {
-      if (!isConnected) return;
+      if (!wallet.isConnected) return;
 
       await loadOrders(false);
 
@@ -115,24 +116,24 @@ const ViewTrade = () => {
     return () => {
       isMounted = false;
     };
-  }, [isConnected, loadOrders, activeTab]);
+  }, [wallet.isConnected, loadOrders, activeTab]);
 
   // Handle order loading state changes
   useEffect(() => {
-    if (!orderLoading && isConnected) {
+    if (!orderLoading && wallet.isConnected) {
       const timer = setTimeout(() => {
         setIsLoading(false);
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, [orderLoading, isConnected]);
+  }, [orderLoading, wallet.isConnected]);
 
   // Clear wallet errors when component mounts
-  useEffect(() => {
-    if (error) {
-      clearError();
-    }
-  }, [error, clearError]);
+  // useEffect(() => {
+  //   if (error) {
+  //     clearError();
+  //   }
+  // }, [error, clearError]);
 
   // Show wallet connection UI if not connected
   if (!isConnected && !isConnecting) {

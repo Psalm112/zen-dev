@@ -14,7 +14,7 @@ export const ESCROW_ADDRESSES = {
 } as const;
 
 export const TARGET_CHAIN =
-  process.env.NODE_ENV === "production" ? celo : celoAlfajores;
+  process.env.NODE_ENV !== "production" ? celo : celoAlfajores;
 
 export const wagmiConfig = createConfig({
   chains: [celo, celoAlfajores],

@@ -29,12 +29,19 @@ const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
   const [showEducation, setShowEducation] = useState(false);
   const [connectingWallet, setConnectingWallet] = useState<string | null>(null);
 
+  const handleCLose = () => {
+    setConnectingWallet(null);
+    onClose();
+  };
+
   const handleConnect = async (connector: any) => {
     try {
       setConnectingWallet(connector.name);
       await connect({ connector });
-      showSnackbar("Wallet connected successfully!", "success");
-      onClose();
+      handleCLose();
+      if (wallet.isConnected) {
+        showSnackbar("Wallet connected successfully!", "success");
+      }
     } catch (error: any) {
       console.error("Connection failed:", error);
       if (error.message.includes("User rejected")) {
@@ -140,7 +147,7 @@ const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
             title="New to wallets? Learn the basics"
             icon={<HiQuestionMarkCircle className="w-4 h-4" />}
             onClick={() => setShowEducation(true)}
-            className="w-full bg-transparent border border-gray-600 text-gray-300 hover:bg-gray-700/30"
+            className="flex items-center justify-center w-full bg-transparent border border-gray-600 text-gray-300 hover:bg-gray-700/30"
           />
 
           <p className="text-xs text-gray-500 text-center">

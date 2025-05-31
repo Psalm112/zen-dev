@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState, useEffect } from "react";
 import { FaWallet, FaSpinner } from "react-icons/fa";
 import { Product, ProductVariant } from "../../../utils/types";
-import { useWallet } from "../../../context/WalletContext";
+// import { useWallet } from "../../../context/WalletContext";
 import { useOrderData } from "../../../utils/hooks/useOrder";
 import { useNavigate } from "react-router-dom";
 import QuantitySelector from "./QuantitySelector";

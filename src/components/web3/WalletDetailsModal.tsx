@@ -68,7 +68,7 @@ const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
   const handleSwitchNetwork = async () => {
     try {
       await switchToCorrectNetwork();
-      await loadUSDTBalance(); // Reload balance after network switch
+      await loadUSDTBalance();
     } catch (error) {
       // Error already handled in context
     }
@@ -146,25 +146,25 @@ const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
         <div className="space-y-3">
           <h3 className="text-lg font-medium text-white">Balances</h3>
           <div className="space-y-2">
-            {/* CELO Balance for gas */}
-            <div className="flex justify-between items-center p-3 bg-[#292B30] rounded-lg">
-              <span className="text-gray-300">CELO (for fees)</span>
-              <span className="font-mono text-white">
-                {wallet.balance
-                  ? `${parseFloat(wallet.balance).toFixed(4)} CELO`
-                  : "0.0000 CELO"}
-              </span>
-            </div>
-
             {/* USDT Balance */}
             <div className="flex justify-between items-center p-3 bg-[#292B30] rounded-lg">
               <span className="text-gray-300">USDT</span>
               <span className="font-mono text-white">
                 {isLoadingBalance ? (
-                  <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-Red/20 border-t-transparent rounded-full animate-spin" />
                 ) : (
                   `$${parseFloat(usdtBalance).toFixed(2)}`
                 )}
+              </span>
+            </div>
+
+            {/* CELO Balance for gas */}
+            <div className="flex justify-between items-center p-3 bg-[#292B30] rounded-lg">
+              <span className="text-gray-300">CELO (for gas fees)</span>
+              <span className="font-mono text-white">
+                {wallet.balance
+                  ? `${parseFloat(wallet.balance).toFixed(4)} CELO`
+                  : "0.0000 CELO"}
               </span>
             </div>
           </div>
@@ -176,7 +176,7 @@ const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
             title="Disconnect Wallet"
             icon={<FiLogOut className="w-4 h-4" />}
             onClick={handleDisconnect}
-            className="w-full bg-red-600 hover:bg-red-700 text-white"
+            className="flex items-center justify-center w-full bg-red-600 hover:bg-red-700 text-white"
           />
         </div>
       </div>

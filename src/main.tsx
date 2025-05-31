@@ -17,13 +17,9 @@ import ErrorBoundary from "./components/error/ErrorBoundary.tsx";
 import { setupGlobalErrorHandling } from "./utils/errorHandling";
 import ReferralHandler from "./components/referrals/ReferralHandler.tsx";
 import { CurrencyProvider } from "./context/CurrencyContext.tsx";
-// import { ProviderPoolProvider } from "./context/ProviderPoolContext.tsx";
-import { SUPPORTED_CHAINS } from "./utils/config/wallet.config.ts";
 import { WagmiProvider } from "wagmi";
 import { Web3Provider } from "./context/Web3Context.tsx";
 import { wagmiConfig } from "./utils/config/web3.config.ts";
-import { WalletProvider } from "./context/WalletContext.tsx";
-import { ProviderPoolProvider } from "./context/ProviderPoolContext.tsx";
 
 // import GoogleCallback from "./pages/GoogleCallback.tsx";
 
@@ -61,30 +57,22 @@ const RouterLayout = () => {
     <Configuration>
       <SnackbarProvider>
         <Provider store={store}>
-          <ProviderPoolProvider
-            chainId={SUPPORTED_CHAINS.celoAlfajores.id}
-            autoHealthCheck={true}
-            enableMetrics={true}
-          >
-            <WagmiProvider config={wagmiConfig}>
-              <QueryClientProvider client={queryClient}>
-                <WalletProvider>
-                  <Web3Provider>
-                    <AuthProvider>
-                      <CurrencyProvider>
-                        <Layout>
-                          <Suspense fallback={<Loadscreen />}>
-                            <Outlet />
-                          </Suspense>
-                          <ReferralHandler />
-                        </Layout>
-                      </CurrencyProvider>
-                    </AuthProvider>
-                  </Web3Provider>
-                </WalletProvider>
-              </QueryClientProvider>
-            </WagmiProvider>
-          </ProviderPoolProvider>
+          <WagmiProvider config={wagmiConfig}>
+            <QueryClientProvider client={queryClient}>
+              <Web3Provider>
+                <AuthProvider>
+                  <CurrencyProvider>
+                    <Layout>
+                      <Suspense fallback={<Loadscreen />}>
+                        <Outlet />
+                      </Suspense>
+                      <ReferralHandler />
+                    </Layout>
+                  </CurrencyProvider>
+                </AuthProvider>
+              </Web3Provider>
+            </QueryClientProvider>
+          </WagmiProvider>
         </Provider>
       </SnackbarProvider>
     </Configuration>

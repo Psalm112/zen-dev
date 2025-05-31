@@ -24,21 +24,21 @@ const educationSteps: WalletEducationStep[] = [
     title: "What is a Crypto Wallet?",
     description:
       "A crypto wallet is like a digital bank account that lets you store, send, and receive digital money. Think of it as your personal vault that only you can access.",
-    icon: <HiWallet className="w-12 h-12 text-blue-500" />,
+    icon: <HiWallet className="w-12 h-12 text-Red/20" />,
   },
   {
     id: "why-secure",
     title: "Why Are Wallets Secure?",
     description:
       "Your wallet uses advanced encryption - like having a secret key that only you know. No one else, including us, can access your funds without your permission.",
-    icon: <HiShieldCheck className="w-12 h-12 text-green-500" />,
+    icon: <HiShieldCheck className="w-12 h-12 text-Red/20" />,
   },
   {
     id: "how-payments-work",
     title: "How Do Crypto Payments Work?",
     description:
       "When you buy something, your wallet sends digital dollars (USDT) directly to our secure escrow. It's like paying with a debit card, but even more secure.",
-    icon: <HiCurrencyDollar className="w-12 h-12 text-yellow-500" />,
+    icon: <HiCurrencyDollar className="w-12 h-12 text-Red/20" />,
   },
 ];
 
@@ -78,7 +78,7 @@ const WalletEducationModal: React.FC<WalletEducationModalProps> = ({
             <div
               key={index}
               className={`flex-1 h-2 rounded-full transition-colors duration-300 ${
-                index <= currentStep ? "bg-blue-500" : "bg-gray-700"
+                index <= currentStep ? "bg-Red/40" : "bg-gray-700"
               }`}
             />
           ))}
@@ -135,16 +135,16 @@ const WalletEducationModal: React.FC<WalletEducationModalProps> = ({
               title="Next"
               icon={<HiArrowRight className="w-4 h-4" />}
               onClick={nextStep}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-Red hover:bg-Red/40 text-white"
             />
           )}
         </div>
 
         {/* Quick Tips */}
         <div className="border-t border-gray-700/50 pt-4">
-          <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
-            <h4 className="font-medium text-blue-400 mb-2">💡 Pro Tip</h4>
-            <p className="text-sm text-blue-300/80">
+          <div className="bg-Red/20 border border-blue-Red/40 rounded-lg p-4">
+            <h4 className="font-medium text-Red/90 mb-2">💡 Pro Tip</h4>
+            <p className="text-sm text-Red/60">
               {currentStep === 0 &&
                 "Most people already have a wallet app on their phone - like MetaMask or Coinbase Wallet."}
               {currentStep === 1 &&

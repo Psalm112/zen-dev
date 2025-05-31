@@ -15,10 +15,10 @@ import BannerCarousel from "../components/common/BannerCarousel";
 import { Pen, Pen2 } from ".";
 import { Product, TradeTab } from "../utils/types";
 import ProductListingSkeleton from "../components/trade/ProductListingSkeleton";
-import ConnectWallet from "../components/wallet/ConnectWallet";
 import Tab from "../components/trade/Tab";
 import LazyFloatingButton from "../components/common/LazyFloatingButton";
-import { useWallet, useWalletStatus } from "../context/WalletContext";
+import { useWeb3 } from "../context/Web3Context";
+import WalletConnectionModal from "../components/web3/WalletConnectionModal";
 
 // Lazy load components for better performance
 const ProductCard = lazy(() => import("../components/trade/ProductCard"));
@@ -168,8 +168,8 @@ const Trade = () => {
   const [activeTab, setActiveTab] = useState<TradeTab>("buy");
   const [isLoading, setIsLoading] = useState(true);
   const [isComponentMounted, setIsComponentMounted] = useState(false);
-  const { clearError } = useWallet();
-  const { isConnected, isConnecting, error } = useWalletStatus();
+  const [showConnectionModal, setShowConnectionModal] = useState(false);
+  const { wallet } = useWeb3();
 
   // Memoized products data
   const products = useMemo(() => SAMPLE_PRODUCTS, []);
@@ -208,25 +208,21 @@ const Trade = () => {
   }, []);
 
   // Clear wallet errors when component mounts
-  useEffect(() => {
-    if (error) {
-      clearError();
-    }
-  }, [error, clearError]);
+  // useEffect(() => {
+  //   if (error) {
+  //     clearError();
+  //   }
+  // }, [error, clearError]);
 
   // Show wallet connection UI if not connected
-  if (!isConnected && !isConnecting) {
+  if (!wallet.isConnected && !wallet.isConnecting) {
     return (
       <div className="bg-Dark min-h-screen text-white">
         <Container>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-          >
-            <Title text="P2P Trading" className="text-center my-8 text-3xl" />
-          </motion.div>
-          <ConnectWallet />
+          <WalletConnectionModal
+            isOpen={showConnectionModal}
+            onClose={() => setShowConnectionModal(false)}
+          />
         </Container>
       </div>
     );
