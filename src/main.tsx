@@ -11,7 +11,8 @@ import ProtectedRoute from "./components/auth/ProtectedRoute.tsx";
 import { SnackbarProvider } from "./context/SnackbarContext.tsx";
 import { Provider } from "react-redux";
 import { store } from "./store/store.ts";
-import { WalletProvider } from "./context/WalletContext.tsx";
+// import { WalletProvider } from "./context/WalletContext.tsx";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import ErrorBoundary from "./components/error/ErrorBoundary.tsx";
 import { setupGlobalErrorHandling } from "./utils/errorHandling";
 import ReferralHandler from "./components/referrals/ReferralHandler.tsx";
@@ -42,6 +43,15 @@ const Chat = lazy(() => import("./pages/Chat.tsx"));
 const ChatDetail = lazy(() => import("./pages/ChatDetail.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+      staleTime: 30000,
+    },
+  },
+});
 setupGlobalErrorHandling();
 
 const RouterLayout = () => {
@@ -55,20 +65,22 @@ const RouterLayout = () => {
           enableMetrics={true}
         > */}
           <WagmiProvider config={wagmiConfig}>
-            {/* <WalletProvider> */}
-            <Web3Provider>
-              <AuthProvider>
-                <CurrencyProvider>
-                  <Layout>
-                    <Suspense fallback={<Loadscreen />}>
-                      <Outlet />
-                    </Suspense>
-                    <ReferralHandler />
-                  </Layout>
-                </CurrencyProvider>
-              </AuthProvider>
-            </Web3Provider>
-            {/* </WalletProvider> */}
+            <QueryClientProvider client={queryClient}>
+              {/* <WalletProvider> */}
+              <Web3Provider>
+                <AuthProvider>
+                  <CurrencyProvider>
+                    <Layout>
+                      <Suspense fallback={<Loadscreen />}>
+                        <Outlet />
+                      </Suspense>
+                      <ReferralHandler />
+                    </Layout>
+                  </CurrencyProvider>
+                </AuthProvider>
+              </Web3Provider>
+              {/* </WalletProvider> */}
+            </QueryClientProvider>
           </WagmiProvider>
           {/* </ProviderPoolProvider> */}
         </Provider>
