@@ -208,7 +208,11 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
     try {
       const result = await refetchUSDTBalance();
       if (result.data) {
-        console.log("getUSDTBalance", result);
+        console.log(
+          formatUnits(result.data as bigint, 6),
+          "getUSDTBalance",
+          result
+        );
         return formatUnits(result.data as bigint, 6);
       }
       return "0";
