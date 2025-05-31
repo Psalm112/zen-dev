@@ -14,7 +14,7 @@ interface ProductAndProviders extends Product {
   logisticsProviders: string[];
 }
 interface PurchaseSectionProps {
-  product?: ProductAndProviders;
+  product?: Product;
   selectedVariant?: ProductVariant;
 }
 

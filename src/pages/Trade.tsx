@@ -42,6 +42,8 @@ const SAMPLE_PRODUCTS: Product[] = [
     updatedAt: "2025-04-22T23:54:38.445Z",
     type: [],
     stock: 100,
+    logisticsCost: [],
+    logisticsProviders: [],
   },
   {
     _id: "68082f7a7d3f057ab0fafd5c",
@@ -60,6 +62,8 @@ const SAMPLE_PRODUCTS: Product[] = [
     updatedAt: "2025-04-23T00:08:26.519Z",
     type: [],
     stock: 100,
+    logisticsCost: [],
+    logisticsProviders: [],
   },
 ];
 
@@ -81,6 +85,8 @@ const SAMPLE_INCOMING_ORDERS: Product[] = [
     updatedAt: "2025-04-23T00:08:26.519Z",
     type: [],
     stock: 100,
+    logisticsCost: [],
+    logisticsProviders: [],
   },
 ];
 

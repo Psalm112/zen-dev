@@ -43,6 +43,8 @@ export interface Product {
   updatedAt: string;
   stock: number | string;
   type: ProductVariant[];
+  logisticsCost: string[];
+  logisticsProviders: string[];
 }
 //review
 export interface Review {
