@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState, useEffect } from "react";
 import { FaWallet, FaSpinner } from "react-icons/fa";
 import { Product, ProductVariant } from "../../../utils/types";
-// import { useWallet } from "../../../context/WalletContext";
+import { useWallet } from "../../../context/WalletContext";
 import { useOrderData } from "../../../utils/hooks/useOrder";
 import { useNavigate } from "react-router-dom";
 import QuantitySelector from "./QuantitySelector";
@@ -25,8 +25,8 @@ const PurchaseSection = ({
   const [quantity, setQuantity] = useState(1);
   const { secondaryCurrency } = useCurrency();
   const { isAuthenticated } = useAuth();
-  // const { isConnected, account, balances, connectWallet, refreshBalance } =
-  //   useWallet();
+  const { isConnected, account, balances, connectWallet, refreshBalance } =
+    useWallet();
   const [selectedLogistics, setSelectedLogistics] =
     useState<LogisticsProvider | null>(null);
 
