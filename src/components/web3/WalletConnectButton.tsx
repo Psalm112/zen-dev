@@ -15,7 +15,11 @@ const WalletConnectButton: React.FC = () => {
     return (
       <>
         <Button
-          title={truncateAddress(wallet.address)}
+          title={
+            <span className="max-md:hidden">
+              {truncateAddress(wallet.address)}
+            </span>
+          }
           icon={<HiWallet className="w-4 h-4" />}
           iconPosition="start"
           onClick={() => setShowDetailsModal(true)}
@@ -34,7 +38,11 @@ const WalletConnectButton: React.FC = () => {
   return (
     <>
       <Button
-        title={wallet.isConnecting ? "Connecting..." : "Connect Wallet"}
+        title={
+          <span className="max-md:hidden">
+            {wallet.isConnecting ? "Connecting..." : "Connect Wallet"}
+          </span>
+        }
         icon={<HiWallet className="w-4 h-4" />}
         iconPosition="start"
         onClick={() => setShowConnectionModal(true)}
