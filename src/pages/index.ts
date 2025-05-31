@@ -16,6 +16,7 @@ import Comment from "/images/comment.svg";
 import Detail from "/images/detail.svg";
 import TwoFactor from "/images/two-factor-authentication.svg";
 import Rocket from "/images/Rocket.svg";
+import metamaskLogo from "/images/metamask-icon.svg";
 
 import Product1 from "/images/product1.svg";
 
@@ -38,4 +39,5 @@ export {
   Comment,
   Detail,
   Product1,
+  metamaskLogo,
 };

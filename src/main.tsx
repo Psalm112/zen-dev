@@ -18,6 +18,9 @@ import ReferralHandler from "./components/referrals/ReferralHandler.tsx";
 import { CurrencyProvider } from "./context/CurrencyContext.tsx";
 import { ProviderPoolProvider } from "./context/ProviderPoolContext.tsx";
 import { SUPPORTED_CHAINS } from "./utils/config/wallet.config.ts";
+import { WagmiProvider } from "wagmi";
+import { Web3Provider } from "./context/Web3Context.tsx";
+import { wagmiConfig } from "./utils/config/web3.config.ts";
 
 // import GoogleCallback from "./pages/GoogleCallback.tsx";
 
@@ -45,12 +48,14 @@ const RouterLayout = () => {
   return (
     <Configuration>
       <Provider store={store}>
-        <ProviderPoolProvider
+        {/* <ProviderPoolProvider
           chainId={SUPPORTED_CHAINS.celoAlfajores.id}
           autoHealthCheck={true}
           enableMetrics={true}
-        >
-          <WalletProvider>
+        > */}
+        <WagmiProvider config={wagmiConfig}>
+          {/* <WalletProvider> */}
+          <Web3Provider>
             <AuthProvider>
               <SnackbarProvider>
                 <CurrencyProvider>
@@ -63,8 +68,10 @@ const RouterLayout = () => {
                 </CurrencyProvider>
               </SnackbarProvider>
             </AuthProvider>
-          </WalletProvider>
-        </ProviderPoolProvider>
+          </Web3Provider>
+          {/* </WalletProvider> */}
+        </WagmiProvider>
+        {/* </ProviderPoolProvider> */}
       </Provider>
     </Configuration>
   );

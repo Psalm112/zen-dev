@@ -18,7 +18,7 @@ import { useMetaMaskConnection } from "../utils/hooks/useMetaMaskConnection";
 import { useSmartWalletConnection } from "../utils/hooks/useSmartWalletConnection";
 import { useWalletConnectConnection } from "../utils/hooks/useWalletConnectConnection";
 import { usePaymentProcessor } from "../utils/hooks/usePaymentProcessor";
-import { useWalletBalance } from "../utils/hooks/useWalletBalance";
+import { useWalletBalance } from "../utils/hooks/oldBalance";
 import {
   WalletType,
   ConnectionMethod,

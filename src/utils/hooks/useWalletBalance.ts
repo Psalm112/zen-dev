@@ -1,71 +1,41 @@
-// hooks/useWalletBalance.ts
-import { useState, useCallback, useEffect } from "react";
-import { ethers } from "ethers";
-import { useConnection } from "../../context/WalletConnectionContext";
-import { useCurrencyConverter } from "./useCurrencyConverter";
-import { USDT_CONTRACT_ADDRESS, USDT_ABI } from "../config/wallet.config";
+import { useState, useEffect, useCallback } from "react";
+import { useWeb3 } from "../../context/Web3Context";
 
-export function useWalletBalance() {
-  const { account, provider } = useConnection();
-  const { convertPrice, formatPrice } = useCurrencyConverter();
+interface UseWalletBalanceReturn {
+  usdtBalance: string;
+  celoBalance: string;
+  isLoading: boolean;
+  refetch: () => Promise<void>;
+}
 
-  const [balances, setBalances] = useState({
-    celo: "0",
-    usdt: "0",
-    fiat: "0",
-  });
+export const useWalletBalance = (): UseWalletBalanceReturn => {
+  const { wallet, getUSDTBalance } = useWeb3();
+  const [usdtBalance, setUsdtBalance] = useState("0");
   const [isLoading, setIsLoading] = useState(false);
 
-  const fetchBalance = useCallback(async () => {
-    if (!account || !provider) {
-      setBalances({ celo: "0", usdt: "0", fiat: "0" });
-      return;
-    }
+  const fetchBalances = useCallback(async () => {
+    if (!wallet.isConnected) return;
 
     setIsLoading(true);
     try {
-      // Fetch CELO balance
-      const celoBalanceWei = await provider.getBalance(account);
-      const celoBalance = ethers.formatEther(celoBalanceWei);
-
-      // Fetch USDT balance if contract exists
-      let usdtBalance = "0";
-      if (USDT_CONTRACT_ADDRESS) {
-        const usdtContract = new ethers.Contract(
-          USDT_CONTRACT_ADDRESS,
-          USDT_ABI,
-          provider
-        );
-        const usdtBalanceWei = await usdtContract.balanceOf(account);
-        usdtBalance = ethers.formatUnits(usdtBalanceWei, 6);
-      }
-
-      // Convert to fiat
-      const celoInFiat = convertPrice(parseFloat(celoBalance), "CELO", "FIAT");
-      const usdtInFiat = convertPrice(parseFloat(usdtBalance), "USDT", "FIAT");
-      const totalFiat = (celoInFiat + usdtInFiat).toString();
-
-      setBalances({
-        celo: celoBalance,
-        usdt: usdtBalance,
-        fiat: totalFiat,
-      });
+      const balance = await getUSDTBalance();
+      setUsdtBalance(balance);
     } catch (error) {
       console.error("Failed to fetch balances:", error);
-      setBalances({ celo: "0", usdt: "0", fiat: "0" });
+      setUsdtBalance("0");
     } finally {
       setIsLoading(false);
     }
-  }, [account, provider, convertPrice]);
+  }, [wallet.isConnected, getUSDTBalance]);
 
-  // Auto-refresh on account/provider change
   useEffect(() => {
-    fetchBalance();
-  }, [fetchBalance]);
+    fetchBalances();
+  }, [fetchBalances]);
 
   return {
-    balances,
+    usdtBalance,
+    celoBalance: wallet.balance || "0",
     isLoading,
-    refetch: fetchBalance,
+    refetch: fetchBalances,
   };
-}
+};

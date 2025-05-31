@@ -13,6 +13,7 @@ import ConnectWallet from "../wallet/ConnectWallet";
 import { useChat } from "../../utils/hooks/useChat";
 import CurrencyToggle from "../common/CurrencyToggle";
 import { useWallet, useWalletStatus } from "../../context/WalletContext";
+import WalletConnectButton from "../web3/WalletConnectButton";
 
 const NavList = [
   { title: "Home", path: "/" },
@@ -202,7 +203,8 @@ const Header = () => {
           <CurrencyToggle />
 
           {/* Wallet button */}
-          <button
+          <WalletConnectButton />
+          {/* <button
             onClick={handleWalletClick}
             disabled={isConnecting}
             className={`flex items-center gap-1 md:gap-1.5 bg-[#292B30] text-white px-2 md:px-3 py-1.5 rounded-md transition-all ${
@@ -216,7 +218,7 @@ const Header = () => {
             <span className="text-xs md:text-sm font-medium hidden xs:inline">
               {walletButtonContent}
             </span>
-          </button>
+          </button> */}
 
           {isAuthenticated ? (
             <>
