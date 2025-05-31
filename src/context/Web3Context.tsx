@@ -116,8 +116,8 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
       isConnected,
       address,
       chainId: chain?.id,
-      balance: ethBalance
-        ? formatUnits(ethBalance.value, ethBalance.decimals)
+      balance: celoBalance
+        ? formatUnits(celoBalance.value, celoBalance.decimals)
         : undefined,
       error: connectError?.message,
       isConnecting,
@@ -127,7 +127,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
     isConnected,
     address,
     chain,
-    ethBalance,
+    celoBalance,
     connectError,
     isConnecting,
     convertedUSDTBalances,
