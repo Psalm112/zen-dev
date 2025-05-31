@@ -62,12 +62,6 @@ const Account = () => {
     fetchProfile(false, false);
   }, [fetchProfile]);
 
-  // useEffect(() => {
-  //   if (!selectedUser) {
-  //     fetchProfile(false);
-  //   }
-  // }, [fetchProfile, selectedUser]);
-
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [activeTab]);
