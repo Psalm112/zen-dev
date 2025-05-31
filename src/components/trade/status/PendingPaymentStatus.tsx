@@ -229,6 +229,8 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
 
           <div>
             <LogisticsSelector
+              logisticsCost={[]}
+              logisticsProviders={[]}
               onSelect={(provider) => setSelectedLogisticsProvider(provider)}
               selectedProviderWalletAddress={
                 orderDetails?.logisticsProviderWalletAddress

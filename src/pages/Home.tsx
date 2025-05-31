@@ -148,6 +148,11 @@ const Home = () => {
 
   const userGreeting = useMemo(() => {
     if (!isAuthenticated) return "User";
+    console.log(
+      process.env.VITE_ESCROW_CONTRACT_TESTNET,
+      process.env.VITE_USDT_CONTRACT_ADDRESS_TESTNET,
+      process.env.VITE_WALLETCONNECT_PROJECT_ID
+    );
     return user?.name || "User";
   }, [isAuthenticated, user?.name]);
 

@@ -19,6 +19,8 @@ export interface LogisticsProvider {
 
 interface LogisticsSelectorProps {
   onSelect: (provider: LogisticsProvider) => void;
+  logisticsCost: string[];
+  logisticsProviders: string[];
   selectedProvider?: LogisticsProvider | null;
   selectedProviderWalletAddress?: string;
 }
@@ -61,35 +63,37 @@ const DELIVERY_TIMES = [
 
 const LogisticsSelector = ({
   onSelect,
+  logisticsProviders,
+  logisticsCost,
   selectedProvider,
   selectedProviderWalletAddress,
 }: LogisticsSelectorProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [providers, setProviders] = useState<LogisticsProvider[]>([]);
   const [selected, setSelected] = useState<LogisticsProvider | null>(null);
-  const {
-    getLogisticsProviders,
-    logisticsProviders,
-    logisticsProviderLoading,
-  } = useContract();
+  // const {
+  //   getLogisticsProviders,
+  //   logisticsProviders,
+  //   logisticsProviderLoading,
+  // } = useContract();
 
   // Generate random logistics provider data
   const generateRandomLogisticsData = useCallback(
-    (address: string): LogisticsProvider => {
+    (address: string, index: number): LogisticsProvider => {
       const randomPrefix =
         COMPANY_PREFIXES[Math.floor(Math.random() * COMPANY_PREFIXES.length)];
       const randomSuffix =
         COMPANY_SUFFIXES[Math.floor(Math.random() * COMPANY_SUFFIXES.length)];
       const randomDeliveryTime =
         DELIVERY_TIMES[Math.floor(Math.random() * DELIVERY_TIMES.length)];
-      const randomCost = Math.floor(Math.random() * 4) + 1; // Random cost between 1 and 5
+      const cost = logisticsCost[index];
       const randomRating = (Math.random() * (5 - 4) + 4).toFixed(1); // Random rating between 4.0 and 5.0
 
       return {
         id: address,
         name: `${randomPrefix} ${randomSuffix}`,
         walletAddress: address,
-        cost: randomCost,
+        cost: Number(cost),
         deliveryTime: randomDeliveryTime,
         rating: parseFloat(randomRating),
       };
@@ -99,15 +103,15 @@ const LogisticsSelector = ({
 
   // Transform API logistics providers into full provider objects
   const transformedLogisticsProviders = useMemo(() => {
-    if (!logisticsProviders || !Array.isArray(logisticsProviders.data))
+    if (
+      !logisticsProviders ||
+      !Array.isArray(logisticsProviders) ||
+      !logisticsCost ||
+      !Array.isArray(logisticsCost)
+    )
       return [];
-    return logisticsProviders.data.map(generateRandomLogisticsData);
+    return logisticsProviders.map(generateRandomLogisticsData);
   }, [logisticsProviders, generateRandomLogisticsData]);
-
-  // Initialize logistics providers
-  useEffect(() => {
-    getLogisticsProviders();
-  }, [getLogisticsProviders]);
 
   // Update providers when transformed data changes
   useEffect(() => {
@@ -180,9 +184,9 @@ const LogisticsSelector = ({
             </div>
           ) : (
             <span className="text-gray-400 text-sm">
-              {logisticsProviderLoading
-                ? "Loading options..."
-                : "Select delivery option"}
+              {/* {logisticsProviderLoading
+                ? "Loading options..." */}
+              Select delivery option
             </span>
           )}
           <motion.div
@@ -205,66 +209,71 @@ const LogisticsSelector = ({
               <div className="max-h-[240px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
                 <div className="py-1">
                   <AnimatePresence>
-                    {logisticsProviderLoading ? (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="p-3 text-center text-gray-400"
-                      >
-                        Loading delivery options...
-                      </motion.div>
-                    ) : providers.length > 0 ? (
-                      providers.map((provider, index) => (
-                        <motion.button
-                          key={provider.id}
-                          onClick={() => handleSelectProvider(provider)}
-                          className={`w-full p-3 text-left hover:bg-gray-700/20 transition-colors flex items-center justify-between ${
-                            selected?.id === provider.id ? "bg-gray-700/20" : ""
-                          }`}
-                          initial={{ opacity: 0, y: -5 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: 5 }}
-                          transition={{ duration: 0.2, delay: index * 0.05 }}
-                          whileHover={{
-                            backgroundColor: "rgba(255,255,255,0.05)",
-                          }}
-                        >
-                          <div className="flex flex-col">
-                            <span className="text-white text-sm font-medium">
-                              {provider.name}
-                            </span>
-                            <div className="flex items-center gap-3 mt-0.5">
-                              <span className="text-xs text-gray-400">
-                                {provider.deliveryTime}
+                    {
+                      //   logisticsProviderLoading ? (
+                      //   <motion.div
+                      //     initial={{ opacity: 0 }}
+                      //     animate={{ opacity: 1 }}
+                      //     exit={{ opacity: 0 }}
+                      //     className="p-3 text-center text-gray-400"
+                      //   >
+                      //     Loading delivery options...
+                      //   </motion.div>
+                      // ) :
+                      providers.length > 0 ? (
+                        providers.map((provider, index) => (
+                          <motion.button
+                            key={provider.id}
+                            onClick={() => handleSelectProvider(provider)}
+                            className={`w-full p-3 text-left hover:bg-gray-700/20 transition-colors flex items-center justify-between ${
+                              selected?.id === provider.id
+                                ? "bg-gray-700/20"
+                                : ""
+                            }`}
+                            initial={{ opacity: 0, y: -5 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 5 }}
+                            transition={{ duration: 0.2, delay: index * 0.05 }}
+                            whileHover={{
+                              backgroundColor: "rgba(255,255,255,0.05)",
+                            }}
+                          >
+                            <div className="flex flex-col">
+                              <span className="text-white text-sm font-medium">
+                                {provider.name}
                               </span>
-                              <span className="text-xs text-gray-400">
-                                {provider.cost === 0
-                                  ? "Free"
-                                  : `${provider.cost} USDT`}
-                              </span>
-                              {provider.rating && (
+                              <div className="flex items-center gap-3 mt-0.5">
                                 <span className="text-xs text-gray-400">
-                                  ★ {provider.rating}
+                                  {provider.deliveryTime}
                                 </span>
-                              )}
+                                <span className="text-xs text-gray-400">
+                                  {provider.cost === 0
+                                    ? "Free"
+                                    : `${provider.cost} USDT`}
+                                </span>
+                                {provider.rating && (
+                                  <span className="text-xs text-gray-400">
+                                    ★ {provider.rating}
+                                  </span>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                          {selected?.id === provider.id && (
-                            <FiCheck className="text-Red" />
-                          )}
-                        </motion.button>
-                      ))
-                    ) : (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="p-3 text-center text-gray-400"
-                      >
-                        No delivery options available
-                      </motion.div>
-                    )}
+                            {selected?.id === provider.id && (
+                              <FiCheck className="text-Red" />
+                            )}
+                          </motion.button>
+                        ))
+                      ) : (
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="p-3 text-center text-gray-400"
+                        >
+                          No delivery options available
+                        </motion.div>
+                      )
+                    }
                   </AnimatePresence>
                 </div>
               </div>

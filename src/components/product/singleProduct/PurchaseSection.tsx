@@ -9,8 +9,12 @@ import { useCurrency } from "../../../context/CurrencyContext";
 import LogisticsSelector, { LogisticsProvider } from "./LogisticsSelector";
 import { useAuth } from "../../../context/AuthContext";
 
+interface ProductAndProviders extends Product {
+  logisticsCost: string[];
+  logisticsProviders: string[];
+}
 interface PurchaseSectionProps {
-  product?: Product;
+  product?: ProductAndProviders;
   selectedVariant?: ProductVariant;
 }
 
@@ -136,6 +140,8 @@ const PurchaseSection = ({
 
       {/* Logistics Selector */}
       <LogisticsSelector
+        logisticsCost={product?.logisticsCost ?? []}
+        logisticsProviders={product?.logisticsProviders ?? []}
         onSelect={handleLogisticsSelect}
         selectedProvider={selectedLogistics}
       />
