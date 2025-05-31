@@ -13,8 +13,9 @@ export const ESCROW_ADDRESSES = {
   [celoAlfajores.id]: process.env.VITE_ESCROW_CONTRACT_TESTNET!,
 } as const;
 
-export const TARGET_CHAIN =
-  process.env.NODE_ENV !== "production" ? celo : celoAlfajores;
+// export const TARGET_CHAIN =
+//   process.env.NODE_ENV === "production" ? celo : celoAlfajores;
+export const TARGET_CHAIN = celoAlfajores;
 
 export const wagmiConfig = createConfig({
   chains: [celo, celoAlfajores],

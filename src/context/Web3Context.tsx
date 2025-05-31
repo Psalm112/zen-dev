@@ -133,6 +133,15 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
     convertedUSDTBalances,
   ]);
 
+  useEffect(() => {
+    if (isConnected && address && isCorrectNetwork) {
+      const interval = setInterval(() => {
+        refetchUSDTBalance();
+      }, 30000); // Refresh every 30 seconds
+
+      return () => clearInterval(interval);
+    }
+  }, [isConnected, address, isCorrectNetwork, refetchUSDTBalance]);
   const connectWallet = useCallback(async () => {
     try {
       const connector =
@@ -174,7 +183,12 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       if (!isCorrectNetwork) {
-        await switchToCorrectNetwork();
+        try {
+          await switchToCorrectNetwork();
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        } catch (error) {
+          throw new Error("Please switch to the correct network first");
+        }
       }
 
       const usdtAddress =
