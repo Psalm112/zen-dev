@@ -8,12 +8,14 @@ import {
   HiExclamationTriangle,
   HiXMark,
   HiArrowPath,
+  HiShieldCheck,
 } from "react-icons/hi2";
 import Modal from "../common/Modal";
 import Button from "../common/Button";
 import WalletEducationModal from "./WalletEducationModal";
 import { useWeb3 } from "../../context/Web3Context";
 import { useSnackbar } from "../../context/SnackbarContext";
+import { useCurrencyConverter } from "../../utils/hooks/useCurrencyConverter";
 import { metamaskLogo } from "../../pages";
 
 interface WalletConnectionModalProps {
@@ -28,6 +30,8 @@ const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
   const { showSnackbar } = useSnackbar();
   const { connectors, connect, isPending, reset } = useConnect();
   const { wallet } = useWeb3();
+  const { userCountry, loading: currencyLoading } = useCurrencyConverter();
+
   const [showEducation, setShowEducation] = useState(false);
   const [connectingWallet, setConnectingWallet] = useState<string | null>(null);
   const [connectionTimeout, setConnectionTimeout] = useState(false);
@@ -59,7 +63,7 @@ const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
     if (connectingWallet) {
       timeoutId = setTimeout(() => {
         setConnectionTimeout(true);
-      }, 15000); // 15 seconds timeout
+      }, 15000);
     }
 
     return () => {
@@ -207,24 +211,24 @@ const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className={`p-4 rounded-lg border ${
+              className={`p-4 rounded-lg border transition-all duration-200 ${
                 connectionMessage.timeout
-                  ? "bg-yellow-500/10 border-yellow-500/30 text-yellow-400"
-                  : "bg-blue-500/10 border-blue-500/30 text-blue-400"
+                  ? "bg-Red/10 border-Red/30"
+                  : "bg-Red/5 border-Red/20"
               }`}
             >
               <div className="flex items-start gap-3">
                 {connectionMessage.loading && (
-                  <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin flex-shrink-0 mt-0.5" />
+                  <div className="w-5 h-5 border-2 border-Red border-t-transparent rounded-full animate-spin flex-shrink-0 mt-0.5" />
                 )}
                 {connectionMessage.timeout && (
-                  <HiExclamationTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                  <HiExclamationTriangle className="w-5 h-5 flex-shrink-0 mt-0.5 text-Red" />
                 )}
                 <div className="flex-1">
-                  <h4 className="font-medium mb-1">
+                  <h4 className="font-medium mb-1 text-white">
                     {connectionMessage.title}
                   </h4>
-                  <p className="text-sm opacity-90">
+                  <p className="text-sm text-gray-300">
                     {connectionMessage.message}
                   </p>
 
@@ -234,13 +238,13 @@ const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
                         title="Retry Connection"
                         icon={<HiArrowPath className="w-4 h-4" />}
                         onClick={handleRetryConnection}
-                        className="bg-yellow-600 hover:bg-yellow-700 text-white text-sm px-3 py-1.5"
+                        className="bg-Red hover:bg-Red/80 text-white text-sm px-3 py-1.5 transition-all duration-200"
                       />
                       <Button
                         title="Cancel"
                         icon={<HiXMark className="w-4 h-4" />}
                         onClick={handleCancelConnection}
-                        className="bg-gray-600 hover:bg-gray-700 text-white text-sm px-3 py-1.5"
+                        className="bg-Dark hover:bg-Dark/80 text-white text-sm px-3 py-1.5 transition-all duration-200"
                       />
                     </div>
                   )}
@@ -252,14 +256,15 @@ const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
 
         {/* Introduction */}
         {!connectingWallet && (
-          <div className="text-center space-y-3">
+          <div className="text-center space-y-4">
             <p className="text-gray-300">
               Choose your preferred wallet to start shopping with crypto
             </p>
-            <div className="flex items-center justify-center gap-2 text-sm text-yellow-400 bg-yellow-400/10 rounded-lg p-3">
-              <HiExclamationTriangle className="w-4 h-4 flex-shrink-0" />
+            <div className="flex items-center justify-center gap-2 text-sm text-Red bg-Red/10 rounded-lg p-3 border border-Red/20">
+              <HiShieldCheck className="w-4 h-4 flex-shrink-0" />
               <span>
-                New to crypto wallets? We'll guide you through the setup.
+                Secure payments in {userCountry || "your local currency"} • No
+                fees • Instant settlement
               </span>
             </div>
           </div>
@@ -270,18 +275,19 @@ const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
           {availableConnectors.map((connector) => (
             <motion.div
               key={connector.id}
-              whileHover={!connectingWallet ? { scale: 1.02 } : {}}
-              whileTap={!connectingWallet ? { scale: 0.98 } : {}}
+              whileHover={!connectingWallet ? { scale: 1.01 } : {}}
+              whileTap={!connectingWallet ? { scale: 0.99 } : {}}
+              transition={{ type: "spring", stiffness: 400, damping: 30 }}
             >
               <button
                 onClick={() => handleConnect(connector)}
                 disabled={!!connectingWallet}
                 className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-all duration-200 ${
                   connectingWallet === connector.name
-                    ? "bg-blue-500/20 border-blue-500/50 text-blue-300"
+                    ? "bg-Red/20 border-Red/50 text-white shadow-lg shadow-Red/10"
                     : connectingWallet
-                    ? "bg-gray-800/50 border-gray-700/30 text-gray-500 cursor-not-allowed"
-                    : "bg-[#292B30] hover:bg-[#323539] border-gray-700/50 text-white"
+                    ? "bg-Dark/50 border-gray-700/30 text-gray-500 cursor-not-allowed"
+                    : "bg-Dark hover:bg-Dark/80 border-gray-700/50 text-white hover:border-Red/30 hover:shadow-lg hover:shadow-Red/5"
                 }`}
               >
                 {getWalletIcon(connector.name)}
@@ -296,11 +302,11 @@ const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
                   </p>
                 </div>
                 {connectingWallet === connector.name ? (
-                  <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-5 h-5 border-2 border-Red border-t-transparent rounded-full animate-spin" />
                 ) : connectingWallet ? (
                   <div className="w-2 h-2 bg-gray-500 rounded-full" />
                 ) : (
-                  <div className="w-2 h-2 bg-green-500 rounded-full" />
+                  <div className="w-2 h-2 bg-Red rounded-full animate-pulse" />
                 )}
               </button>
             </motion.div>
@@ -313,7 +319,7 @@ const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
             title="Cancel Connection"
             icon={<HiXMark className="w-4 h-4" />}
             onClick={handleCancelConnection}
-            className="flex items-center justify-center w-full bg-gray-600 hover:bg-gray-700 text-white py-2.5"
+            className="flex items-center justify-center w-full bg-Dark hover:bg-Dark/80 text-white py-2.5 transition-all duration-200"
           />
         )}
 
@@ -324,7 +330,7 @@ const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
               title="New to wallets? Learn the basics"
               icon={<HiQuestionMarkCircle className="w-4 h-4" />}
               onClick={() => setShowEducation(true)}
-              className="flex items-center justify-center w-full bg-transparent border border-gray-600 text-gray-300 hover:bg-gray-700/30"
+              className="flex items-center justify-center w-full bg-transparent border border-Red/30 text-gray-300 hover:bg-Red/5 hover:text-white hover:border-Red/50 transition-all duration-200"
             />
 
             <p className="text-xs text-gray-500 text-center">
@@ -340,9 +346,9 @@ const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg"
+              className="p-3 bg-Red/10 border border-Red/30 rounded-lg"
             >
-              <p className="text-red-400 text-sm">{wallet.error}</p>
+              <p className="text-Red text-sm">{wallet.error}</p>
             </motion.div>
           )}
         </AnimatePresence>

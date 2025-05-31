@@ -5,6 +5,8 @@ import {
   HiArrowsRightLeft,
   HiExclamationTriangle,
   HiChevronDown,
+  HiCurrencyDollar,
+  HiBanknotes,
 } from "react-icons/hi2";
 import { FiLogOut } from "react-icons/fi";
 import Modal from "../common/Modal";
@@ -13,6 +15,7 @@ import { useWeb3 } from "../../context/Web3Context";
 import { TARGET_CHAIN } from "../../utils/config/web3.config";
 import { truncateAddress, copyToClipboard } from "../../utils/web3.utils";
 import { useSnackbar } from "../../context/SnackbarContext";
+import { useCurrencyConverter } from "../../utils/hooks/useCurrencyConverter";
 
 interface WalletDetailsModalProps {
   isOpen: boolean;
@@ -26,15 +29,18 @@ const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
   onClose,
 }) => {
   const { showSnackbar } = useSnackbar();
-  const {
-    wallet,
-    disconnectWallet,
-    isCorrectNetwork,
-    switchToCorrectNetwork,
-    getUSDTBalance,
-  } = useWeb3();
+  const { wallet, disconnectWallet, isCorrectNetwork, switchToCorrectNetwork } =
+    useWeb3();
 
-  const [balanceMode, setBalanceMode] = useState<BalanceDisplayMode>("USDT");
+  const {
+    userCountry,
+    convertPrice,
+    formatPrice,
+    loading: currencyLoading,
+    error: currencyError,
+  } = useCurrencyConverter();
+
+  const [balanceMode, setBalanceMode] = useState<BalanceDisplayMode>("FIAT");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -86,15 +92,47 @@ const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
       case "FIAT":
         return wallet.usdtBalance.fiat;
       default:
-        return wallet.usdtBalance.usdt;
+        return wallet.usdtBalance.fiat; // Default to fiat
+    }
+  };
+
+  const getBalanceIcon = (mode: BalanceDisplayMode) => {
+    switch (mode) {
+      case "USDT":
+        return <HiCurrencyDollar className="w-4 h-4 text-green-500" />;
+      case "CELO":
+        return (
+          <div className="w-4 h-4 rounded-full bg-yellow-500 flex items-center justify-center text-xs font-bold text-black">
+            ◉
+          </div>
+        );
+      case "FIAT":
+        return <HiBanknotes className="w-4 h-4 text-Red" />;
+      default:
+        return <HiBanknotes className="w-4 h-4 text-Red" />;
     }
   };
 
   const balanceOptions = [
-    { mode: "USDT" as const, label: "USDT", symbol: "$" },
-    { mode: "CELO" as const, label: "CELO", symbol: "◉" },
-    { mode: "FIAT" as const, label: "USD", symbol: "$" },
-  ];
+    {
+      mode: "FIAT" as const,
+      label: `${userCountry || "USD"}`,
+      symbol: "💰",
+      priority: 1,
+    },
+    { mode: "USDT" as const, label: "USDT", symbol: "$", priority: 2 },
+    { mode: "CELO" as const, label: "CELO", symbol: "◉", priority: 3 },
+  ].sort((a, b) => a.priority - b.priority);
+
+  // Calculate fiat values for display
+  const usdtNumericValue = wallet.usdtBalance
+    ? parseFloat(wallet.usdtBalance.raw || "0")
+    : 0;
+  const celoNumericValue = wallet.balance ? parseFloat(wallet.balance) : 0;
+
+  const fiatUsdtValue = convertPrice(usdtNumericValue, "USDT", "FIAT");
+  const fiatCeloValue = convertPrice(celoNumericValue, "CELO", "FIAT");
+  const totalFiatValue = fiatUsdtValue + fiatCeloValue;
 
   return (
     <Modal
@@ -107,7 +145,7 @@ const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
         {/* Wallet Address */}
         <div className="space-y-3">
           <h3 className="text-lg font-medium text-white">Connected Wallet</h3>
-          <div className="flex items-center gap-3 p-3 bg-[#292B30] rounded-lg">
+          <div className="flex items-center gap-3 p-3 bg-Dark rounded-lg border border-gray-700/50">
             <div className="flex-1 min-w-0">
               <p className="text-sm text-gray-400">Address</p>
               <p className="font-mono text-white truncate">
@@ -121,14 +159,14 @@ const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
                 title=""
                 icon={<HiClipboardDocument className="w-4 h-4" />}
                 onClick={handleCopyAddress}
-                className="bg-[#212428] hover:bg-[#212428]/70  hover:shadow-md text-white p-2"
+                className="bg-[#1a1c20] hover:bg-Red/10 hover:border-Red/30 hover:shadow-md border border-gray-600 text-white p-2 transition-all duration-200"
                 disabled={!wallet.address}
               />
               <Button
                 title=""
                 icon={<HiArrowTopRightOnSquare className="w-4 h-4" />}
                 path={`https://explorer.celo.org/alfajores/address/${wallet.address}`}
-                className="bg-[#212428] hover:bg-[#212428]/70 hover:shadow-md text-white p-2"
+                className="bg-[#1a1c20] hover:bg-Red/10 hover:border-Red/30 hover:shadow-md border border-gray-600 text-white p-2 transition-all duration-200"
                 disabled={!wallet.address}
               />
             </div>
@@ -139,19 +177,19 @@ const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
         <div className="space-y-3">
           <h3 className="text-lg font-medium text-white">Network</h3>
           {!isCorrectNetwork ? (
-            <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+            <div className="p-3 bg-Red/10 border border-Red/30 rounded-lg">
               <div className="flex items-start gap-2">
-                <HiExclamationTriangle className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+                <HiExclamationTriangle className="w-5 h-5 text-Red flex-shrink-0 mt-0.5" />
                 <div className="flex-1">
-                  <p className="text-yellow-400 font-medium">Wrong Network</p>
-                  <p className="text-sm text-yellow-300/80 mt-1">
+                  <p className="text-Red font-medium">Wrong Network</p>
+                  <p className="text-sm text-Red/80 mt-1">
                     Switch to {TARGET_CHAIN.name} to make purchases
                   </p>
                   <Button
                     title={`Switch to ${TARGET_CHAIN.name}`}
                     icon={<HiArrowsRightLeft className="w-4 h-4" />}
                     onClick={handleSwitchNetwork}
-                    className="mt-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm px-3 py-1.5"
+                    className="mt-2 bg-Red hover:bg-Red/80 text-white text-sm px-3 py-1.5 transition-all duration-200"
                   />
                 </div>
               </div>
@@ -168,26 +206,53 @@ const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
           )}
         </div>
 
+        {/* Portfolio Overview */}
+        <div className="space-y-3">
+          <h3 className="text-lg font-medium text-white">Portfolio Value</h3>
+          <div className="p-4 bg-gradient-to-r from-Red/10 to-Red/5 border border-Red/20 rounded-lg">
+            <div className="text-center">
+              <p className="text-sm text-gray-400 mb-1">Total Balance</p>
+              {currencyLoading ? (
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-4 h-4 border-2 border-Red border-t-transparent rounded-full animate-spin" />
+                  <span className="text-gray-400">Loading...</span>
+                </div>
+              ) : (
+                <p className="text-2xl font-bold text-white">
+                  {formatPrice(totalFiatValue, "FIAT")}
+                </p>
+              )}
+              <p className="text-xs text-gray-500 mt-1">
+                in {userCountry || "USD"}
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Balances */}
         <div className="space-y-3">
-          <h3 className="text-lg font-medium text-white">Balances</h3>
+          <h3 className="text-lg font-medium text-white">Asset Balances</h3>
           <div className="space-y-3">
             {/* USDT Balance with dropdown */}
-            <div className="p-3 bg-[#292B30] rounded-lg">
+            <div className="p-3 bg-Dark rounded-lg border border-gray-700/50">
               <div className="flex justify-between items-center">
-                <span className="text-gray-300">USDT</span>
+                <div className="flex items-center gap-2">
+                  <HiCurrencyDollar className="w-5 h-5 text-green-500" />
+                  <span className="text-gray-300 font-medium">USDT</span>
+                </div>
                 <div className="relative" ref={dropdownRef}>
                   {wallet.isConnecting ? (
                     <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                      <div className="w-4 h-4 border-2 border-Red border-t-transparent rounded-full animate-spin" />
                       <span className="text-gray-400">Loading...</span>
                     </div>
                   ) : (
                     <button
                       onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                      className="flex items-center gap-2 font-mono text-white hover:text-gray-300 transition-colors bg-[#212428] hover:bg-[#212428]/70 px-3 py-1.5 rounded-md"
+                      className="flex items-center gap-2 font-mono text-white hover:text-gray-300 transition-colors bg-[#1a1c20] hover:bg-Red/10 hover:border-Red/30 border border-gray-600 px-3 py-1.5 rounded-md transition-all duration-200"
                       disabled={!wallet.usdtBalance}
                     >
+                      {getBalanceIcon(balanceMode)}
                       <span className="min-w-0">{getBalanceDisplay()}</span>
                       <HiChevronDown
                         className={`w-4 h-4 transition-transform flex-shrink-0 ${
@@ -198,7 +263,7 @@ const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
                   )}
 
                   {isDropdownOpen && wallet.usdtBalance && (
-                    <div className="absolute right-0 top-full mt-1 bg-[#1a1c20] border border-gray-600 rounded-lg shadow-xl z-20 min-w-[140px] overflow-hidden">
+                    <div className="absolute right-0 top-full mt-1 bg-[#1a1c20] border border-Red/30 rounded-lg shadow-xl z-20 min-w-[160px] overflow-hidden">
                       {balanceOptions.map((option) => (
                         <button
                           key={option.mode}
@@ -206,21 +271,19 @@ const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
                             setBalanceMode(option.mode);
                             setIsDropdownOpen(false);
                           }}
-                          className={`w-full px-3 py-2.5 text-left hover:bg-gray-700 transition-colors ${
+                          className={`w-full px-3 py-2.5 text-left hover:bg-Red/10 transition-colors ${
                             balanceMode === option.mode
-                              ? "bg-gray-700 text-white"
+                              ? "bg-Red/20 text-white border-l-2 border-Red"
                               : "text-gray-300"
                           }`}
                         >
                           <div className="flex items-center justify-between">
                             <span className="flex items-center gap-2">
-                              <span className="text-xs opacity-60">
-                                {option.symbol}
-                              </span>
+                              {getBalanceIcon(option.mode)}
                               {option.label}
                             </span>
                             {balanceMode === option.mode && (
-                              <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
+                              <div className="w-1.5 h-1.5 bg-Red rounded-full" />
                             )}
                           </div>
                         </button>
@@ -230,30 +293,49 @@ const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
                 </div>
               </div>
 
-              {wallet.usdtBalance && (
+              {wallet.usdtBalance && !currencyLoading && (
                 <div className="text-xs text-gray-500 mt-2 space-y-1">
                   <div className="flex justify-between">
                     <span>≈ {wallet.usdtBalance.celo}</span>
-                    <span>≈ {wallet.usdtBalance.fiat}</span>
+                    <span>≈ {formatPrice(fiatUsdtValue, "FIAT")}</span>
                   </div>
                 </div>
               )}
             </div>
 
             {/* CELO Balance */}
-            <div className="p-3 bg-[#292B30] rounded-lg">
+            <div className="p-3 bg-Dark rounded-lg border border-gray-700/50">
               <div className="flex justify-between items-center">
-                <span className="text-gray-300">CELO</span>
-                <span className="font-mono text-white">
-                  {wallet.balance
-                    ? `${parseFloat(wallet.balance).toFixed(4)} CELO`
-                    : "0.0000 CELO"}
-                </span>
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 rounded-full bg-yellow-500 flex items-center justify-center text-xs font-bold text-black">
+                    ◉
+                  </div>
+                  <span className="text-gray-300 font-medium">CELO</span>
+                </div>
+                <div className="text-right">
+                  <span className="font-mono text-white">
+                    {wallet.balance
+                      ? `${parseFloat(wallet.balance).toFixed(4)} CELO`
+                      : "0.0000 CELO"}
+                  </span>
+                  {!currencyLoading && (
+                    <p className="text-xs text-gray-500">
+                      ≈ {formatPrice(fiatCeloValue, "FIAT")}
+                    </p>
+                  )}
+                </div>
               </div>
               <p className="text-xs text-gray-500 mt-1">For transaction fees</p>
             </div>
           </div>
         </div>
+
+        {/* Currency Info */}
+        {!currencyLoading && (
+          <div className="text-xs text-gray-500 text-center p-2 bg-Red/5 rounded-lg border border-Red/10">
+            Prices shown in {userCountry || "USD"} • Updated automatically
+          </div>
+        )}
 
         {/* Actions */}
         <div className="border-t border-gray-700/50 pt-4">
@@ -261,7 +343,7 @@ const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
             title="Disconnect Wallet"
             icon={<FiLogOut className="w-4 h-4" />}
             onClick={handleDisconnect}
-            className="flex items-center justify-center w-full bg-red-600 hover:bg-red-700 text-white py-2.5"
+            className="flex items-center justify-center w-full bg-Red hover:bg-Red/80 text-white py-2.5 transition-all duration-200"
           />
         </div>
       </div>
