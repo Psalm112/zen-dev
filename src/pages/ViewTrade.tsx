@@ -11,6 +11,7 @@ import EmptyState from "../components/trade/view/EmptyState";
 import { useNavigate } from "react-router-dom";
 import { useOrderData } from "../utils/hooks/useOrder";
 import { useWeb3 } from "../context/Web3Context";
+import WalletConnectionModal from "../components/web3/WalletConnectionModal";
 
 const ViewTrade = () => {
   const navigate = useNavigate();
@@ -136,18 +137,14 @@ const ViewTrade = () => {
   // }, [error, clearError]);
 
   // Show wallet connection UI if not connected
-  if (!isConnected && !isConnecting) {
+  if (!wallet.isConnected && !wallet.isConnecting) {
     return (
       <div className="bg-Dark min-h-screen text-white">
         <Container>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-          >
-            <Title text="Trade" className="text-center my-8 text-3xl" />
-          </motion.div>
-          <ConnectWallet />
+          <WalletConnectionModal
+            isOpen={showConnectionModal}
+            onClose={() => setShowConnectionModal(false)}
+          />
         </Container>
       </div>
     );

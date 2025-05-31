@@ -5,9 +5,10 @@ import Container from "../components/common/Container";
 import ProductList from "../components/product/ProductList";
 import BannerCarousel from "../components/common/BannerCarousel";
 import { useState, useMemo, useCallback } from "react";
-import ConnectWallet from "../components/wallet/ConnectWallet";
-import Modal from "../components/common/Modal";
 import { useAuth } from "../context/AuthContext";
+import { useWeb3 } from "../context/Web3Context";
+import WalletConnectionModal from "../components/web3/WalletConnectionModal";
+import WalletDetailsModal from "../components/web3/WalletDetailsModal";
 
 // Static data to prevent re-creation on each render
 const QUICK_ACTIONS_CONFIG = [
@@ -105,17 +106,27 @@ const BANNERS_DATA = [
 const Home = () => {
   const { user, isAuthenticated } = useAuth();
   const [showWallet, setShowWallet] = useState(false);
+  const { wallet } = useWeb3();
+  const [showConnectionModal, setShowConnectionModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
 
-  // Memoized wallet modal handlers
   const handleWalletOpen = useCallback(() => {
+    if (wallet.isConnected && wallet.address) {
+      setShowDetailsModal(true);
+      setShowConnectionModal(false);
+    } else {
+      setShowDetailsModal(false);
+      setShowConnectionModal(true);
+    }
     setShowWallet(true);
-  }, []);
+  }, [wallet.isConnected, wallet.address]);
 
   const handleWalletClose = useCallback(() => {
+    setShowDetailsModal(false);
+    setShowConnectionModal(false);
     setShowWallet(false);
   }, []);
 
-  // Memoized quick actions with proper click handlers
   const quickActions = useMemo(() => {
     return QUICK_ACTIONS_CONFIG.map((action) => ({
       ...action,
@@ -123,7 +134,6 @@ const Home = () => {
     }));
   }, [handleWalletOpen]);
 
-  // Memoized display name for mobile view
   const displayName = useMemo(() => {
     if (!isAuthenticated || !user?.name) return "User";
 
@@ -134,9 +144,8 @@ const Home = () => {
         : nameParts[0];
     }
     return "User";
-  }, [isAuthenticated, user?.name]);
+  }, [user?.name]);
 
-  // Memoized user greeting
   const userGreeting = useMemo(() => {
     if (!isAuthenticated) return "User";
     return user?.name || "User";
@@ -240,12 +249,17 @@ const Home = () => {
           showViewAll={true}
         />
       </Container>
-
-      {/* Wallet modal */}
-      {showWallet && (
-        <Modal onClose={handleWalletClose} isOpen>
-          <ConnectWallet />
-        </Modal>
+      {showWallet && showConnectionModal && !showDetailsModal && (
+        <WalletConnectionModal
+          isOpen={showConnectionModal}
+          onClose={handleWalletClose}
+        />
+      )}
+      {showWallet && showDetailsModal && !showConnectionModal && (
+        <WalletDetailsModal
+          isOpen={showDetailsModal}
+          onClose={handleWalletClose}
+        />
       )}
     </div>
   );
