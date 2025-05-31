@@ -71,8 +71,8 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
 
   const isCorrectNetwork = chain?.id === TARGET_CHAIN.id;
 
-  // Get ETH balance for gas fees
-  const { data: ethBalance } = useBalance({
+  // Get CELO balance for gas fees
+  const { data: celoBalance } = useBalance({
     address,
     query: { enabled: !!address },
   });
@@ -100,7 +100,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
 
     const rawBalance = formatUnits(usdtBalance as bigint, 6);
     const numericBalance = parseFloat(rawBalance);
-
+    console.log(rawBalance, numericBalance, usdtContractAddress, usdtBalance);
     return {
       raw: rawBalance,
       usdt: formatPrice(numericBalance, "USDT"),

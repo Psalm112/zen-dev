@@ -114,17 +114,17 @@ const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
             </div>
             <div className="flex gap-2 flex-shrink-0">
               <Button
-                title="Copy address"
+                title=""
                 icon={<HiClipboardDocument className="w-4 h-4" />}
                 onClick={handleCopyAddress}
-                className="bg-gray-700 hover:bg-gray-600 text-white p-2"
+                className="bg-[#212428] hover:bg-[#212428]/70  hover:shadow-md text-white p-2"
                 disabled={!wallet.address}
               />
               <Button
-                title="View on explorer"
+                title=""
                 icon={<HiArrowTopRightOnSquare className="w-4 h-4" />}
                 path={`https://explorer.celo.org/alfajores/address/${wallet.address}`}
-                className="bg-gray-700 hover:bg-gray-600 text-white p-2"
+                className="bg-[#212428] hover:bg-[#212428]/70 hover:shadow-md text-white p-2"
                 disabled={!wallet.address}
               />
             </div>
@@ -175,7 +175,7 @@ const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
                 <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className="flex items-center gap-2 font-mono text-white hover:text-gray-300 transition-colors bg-gray-700/50 hover:bg-gray-700 px-3 py-1.5 rounded-md"
+                    className="flex items-center gap-2 font-mono text-white hover:text-gray-300 transition-colors bg-[#212428] hover:bg-[#212428]/70 px-3 py-1.5 rounded-md"
                     disabled={!wallet.usdtBalance}
                   >
                     <span className="min-w-0">{getBalanceDisplay()}</span>
