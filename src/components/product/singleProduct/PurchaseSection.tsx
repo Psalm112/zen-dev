@@ -184,7 +184,7 @@ const PurchaseSection = ({
                 {wallet.usdtBalance.celo} · {wallet.usdtBalance.usdt} ·{" "}
                 {wallet.usdtBalance.fiat}
                 <br />
-                ETH:{" "}
+                CELO:{" "}
                 {wallet.balance
                   ? `${parseFloat(wallet.balance).toFixed(4)}`
                   : "0.0000"}

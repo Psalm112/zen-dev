@@ -78,8 +78,6 @@ const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
 
   const getBalanceDisplay = () => {
     if (!wallet.usdtBalance) return "$0.00";
-    console.log(getUSDTBalance());
-    console.log("balance", wallet.usdtBalance);
     switch (balanceMode) {
       case "USDT":
         return wallet.usdtBalance.usdt;
