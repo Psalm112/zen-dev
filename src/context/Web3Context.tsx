@@ -103,31 +103,27 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
       refetchInterval: 30000,
     },
   });
-
-  // Get USDT balance with fixed typing
-  // const { data: usdtBalance, refetch: refetchUSDTBalance } = useReadContract({
-  //   address: usdtContractAddress,
-  //   abi: erc20Abi,
-  //   functionName: "balanceOf",
-  //   args: address ? [address] : undefined,
-  //   query: { enabled: !!address && !!usdtContractAddress },
-  // });
-
   // converted USDT balances
   const convertedUSDTBalances = useMemo(() => {
     if (!usdtBalance || usdtError) return undefined;
 
     try {
+      // USDT has 6 decimals, so format accordingly
       const rawBalance = formatUnits(usdtBalance as bigint, 6);
       const numericBalance = parseFloat(rawBalance);
 
       if (isNaN(numericBalance)) return undefined;
 
+      // Format with appropriate decimal places
+      const formatWithDecimals = (value: number, decimals: number = 2) => {
+        return value.toFixed(decimals).replace(/\.?0+$/, "");
+      };
+
       return {
         raw: rawBalance,
-        usdt: formatPrice(numericBalance, "USDT"),
+        usdt: `${formatWithDecimals(numericBalance)} USDT`,
         celo: formatPrice(convertPrice(numericBalance, "USDT", "CELO"), "CELO"),
-        fiat: formatPrice(convertPrice(numericBalance, "USDT", "FIAT"), "FIAT"),
+        fiat: `$${formatWithDecimals(numericBalance)}`,
       };
     } catch (error) {
       console.error("Error formatting USDT balance:", error);
