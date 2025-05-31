@@ -57,7 +57,7 @@ const Modal: FC<ModalProps> = ({
         {/* Modal content */}
         <div
           ref={modalRef}
-          className={`relative w-full ${maxWidth} bg-[#212428]/90 backdrop-blur-md rounded-xl shadow-xl border border-gray-700/50 overflow-hidden transform transition-all`}
+          className={`relative w-full ${maxWidth} bg-[#212428]/90 backdrop-blur-md rounded-xl shadow-xl border border-gray-700/50 overflow-hidden transform transition-all max-h-[90vh] flex flex-col`}
           style={{ backdropFilter: "blur(12px)" }}
         >
           {/* Header with title and close button */}
@@ -79,7 +79,9 @@ const Modal: FC<ModalProps> = ({
           )}
 
           {/* Modal body */}
-          <div className="p-6 max-md:px-1">{children}</div>
+          <div className="p-6 max-md:px-1 overflow-y-auto flex-1">
+            {children}
+          </div>
         </div>
       </motion.div>
     </AnimatePresence>,
