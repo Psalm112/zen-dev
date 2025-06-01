@@ -35,6 +35,7 @@ export interface Web3ContextType {
   switchToCorrectNetwork: () => Promise<void>;
   sendPayment: (params: PaymentParams) => Promise<PaymentTransaction>;
   getUSDTBalance: () => Promise<string>;
+  getCurrentAllowance: () => Promise<number>;
   isCorrectNetwork: boolean;
 }
 

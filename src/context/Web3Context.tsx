@@ -45,6 +45,8 @@ interface ExtendedWeb3ContextType extends Omit<Web3ContextType, "wallet"> {
   wallet: ExtendedWalletState;
   buyTrade: (params: BuyTradeParams) => Promise<PaymentTransaction>;
   approveUSDT: (amount: string) => Promise<string>;
+  usdtAllowance: bigint | undefined;
+  usdtDecimals: number | undefined;
 }
 
 const Web3Context = createContext<ExtendedWeb3ContextType | undefined>(
@@ -365,6 +367,26 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
     },
   });
 
+  const getCurrentAllowance = useCallback(async (): Promise<number> => {
+    if (!address || !chain?.id || !usdtContractAddress) {
+      return 0;
+    }
+
+    try {
+      const result = await refetchAllowance();
+      if (result.data && usdtDecimals !== undefined) {
+        const allowanceBigInt = result.data as bigint;
+        const decimals = Number(usdtDecimals);
+        const formattedAllowance = formatUnits(allowanceBigInt, decimals);
+        return parseFloat(formattedAllowance);
+      }
+      return 0;
+    } catch (error) {
+      console.error("Failed to fetch allowance:", error);
+      return 0;
+    }
+  }, [address, chain?.id, usdtContractAddress, refetchAllowance, usdtDecimals]);
+
   const sendPayment = useCallback(
     async (params: PaymentParams): Promise<PaymentTransaction> => {
       if (!address || !chain?.id) {
@@ -430,6 +452,9 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
     disconnectWallet,
     switchToCorrectNetwork,
     sendPayment,
+    usdtAllowance,
+    usdtDecimals,
+    getCurrentAllowance,
     getUSDTBalance,
     buyTrade,
     approveUSDT,

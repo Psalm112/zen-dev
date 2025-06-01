@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   HiCreditCard,
@@ -33,13 +33,15 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   const { showSnackbar } = useSnackbar();
   const {
     wallet,
-    sendPayment,
     buyTrade,
     approveUSDT,
     getUSDTBalance,
     isCorrectNetwork,
     switchToCorrectNetwork,
+    getCurrentAllowance,
   } = useWeb3();
+
+  // State management
   const [step, setStep] = useState<PaymentStep>("review");
   const [needsApproval, setNeedsApproval] = useState(false);
   const [approvalHash, setApprovalHash] = useState<string>("");
@@ -49,42 +51,76 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   const [usdtBalance, setUsdtBalance] = useState<string>("0");
   const [error, setError] = useState<string>("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
-  useEffect(() => {
-    if (isOpen && wallet.isConnected) {
-      loadBalance();
-    }
-  }, [isOpen, wallet.isConnected]);
-  // Check approval needs
-  useEffect(() => {
-    const checkApproval = async () => {
-      if (wallet.isConnected && isCorrectNetwork) {
-        // Check if allowance is sufficient
-        const allowance = await getCurrentAllowance(); // Implement this
-        const requiredAmount = parseFloat(orderDetails.amount);
-        setNeedsApproval(allowance < requiredAmount);
-      }
-    };
+  // Memoized calculations
+  const orderAmount = useMemo(
+    () => parseFloat(orderDetails.amount),
+    [orderDetails.amount]
+  );
+  const balanceNumber = useMemo(
+    () => parseFloat(usdtBalance.replace(/,/g, "")),
+    [usdtBalance]
+  );
+  const gasBalance = useMemo(
+    () => parseFloat(wallet.balance || "0"),
+    [wallet.balance]
+  );
 
-    if (isOpen) {
-      checkApproval();
-    }
-  }, [isOpen, wallet.isConnected, isCorrectNetwork]);
+  const hasInsufficientBalance = useMemo(
+    () => balanceNumber < orderAmount,
+    [balanceNumber, orderAmount]
+  );
+  const hasInsufficientGas = useMemo(() => gasBalance < 0.01, [gasBalance]);
 
-  const loadBalance = async () => {
+  // Load balance on mount and wallet connection
+  const loadBalance = useCallback(async () => {
+    if (!wallet.isConnected) return;
+
     try {
       const balance = await getUSDTBalance();
       setUsdtBalance(balance);
     } catch (error) {
       console.error("Failed to load balance:", error);
+      setUsdtBalance("0");
     }
-  };
+  }, [wallet.isConnected, getUSDTBalance]);
 
-  const hasInsufficientBalance =
-    parseFloat(usdtBalance.replace(/,/g, "")) < parseFloat(orderDetails.amount);
-  const hasInsufficientGas = parseFloat(wallet.balance || "0") < 0.01;
+  // Check approval requirements
+  const checkApprovalNeeds = useCallback(async () => {
+    if (!wallet.isConnected || !isCorrectNetwork) return;
 
-  const handlePayment = async () => {
+    try {
+      const allowance = await getCurrentAllowance();
+      setNeedsApproval(allowance < orderAmount);
+    } catch (error) {
+      console.error("Failed to check allowance:", error);
+      // Assume approval needed on error
+      setNeedsApproval(true);
+    }
+  }, [wallet.isConnected, isCorrectNetwork, getCurrentAllowance, orderAmount]);
+
+  // Effects
+  useEffect(() => {
+    if (isOpen && wallet.isConnected) {
+      loadBalance();
+      checkApprovalNeeds();
+    }
+  }, [isOpen, wallet.isConnected, loadBalance, checkApprovalNeeds]);
+
+  // Reset state when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setStep("review");
+      setError("");
+      setTransaction(null);
+      setApprovalHash("");
+      setRetryCount(0);
+    }
+  }, [isOpen]);
+
+  // Handle payment process
+  const handlePayment = useCallback(async () => {
     if (!wallet.isConnected) {
       showSnackbar("Please connect your wallet first", "error");
       return;
@@ -93,9 +129,31 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     if (!isCorrectNetwork) {
       try {
         await switchToCorrectNetwork();
+        // Wait for network switch to complete
+        await new Promise((resolve) => setTimeout(resolve, 2000));
       } catch (error) {
+        setError("Failed to switch network. Please switch manually.");
+        setStep("error");
         return;
       }
+    }
+
+    if (hasInsufficientBalance) {
+      setError(
+        `Insufficient USDT balance. Required: ${formatCurrency(
+          orderDetails.amount
+        )} USDT`
+      );
+      setStep("error");
+      return;
+    }
+
+    if (hasInsufficientGas) {
+      setError(
+        "Insufficient CELO for transaction fees. Please add some CELO to your wallet."
+      );
+      setStep("error");
+      return;
     }
 
     try {
@@ -105,83 +163,81 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
       // Step 1: Approve USDT if needed
       if (needsApproval) {
+        showSnackbar("Approving USDT spending...", "info");
         const approvalTx = await approveUSDT(orderDetails.amount);
         setApprovalHash(approvalTx);
 
-        // Wait for approval confirmation
-        // You might want to use useWaitForTransactionReceipt here
-        await new Promise((resolve) => setTimeout(resolve, 3000));
+        // Wait for approval confirmation with timeout
+        const approvalTimeout = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Approval timeout")), 60000)
+        );
+
+        const approvalWait = new Promise((resolve) =>
+          setTimeout(resolve, 5000)
+        );
+
+        try {
+          await Promise.race([approvalWait, approvalTimeout]);
+          showSnackbar("USDT spending approved!", "success");
+        } catch (timeoutError) {
+          throw new Error("Approval transaction timed out. Please try again.");
+        }
       }
 
       // Step 2: Execute buy trade
+      showSnackbar("Processing purchase...", "info");
       const paymentTransaction = await buyTrade({
-        tradeId: orderDetails.tradeId, // Add this to orderDetails interface
-        quantity: orderDetails.quantity, // Add this to orderDetails interface
-        logisticsProvider: orderDetails.logisticsProvider, // Add this to orderDetails interface
+        tradeId: orderDetails.tradeId,
+        quantity: orderDetails.quantity,
+        logisticsProvider: orderDetails.logisticsProvider,
       });
 
       setTransaction(paymentTransaction);
       setStep("success");
       onPaymentSuccess(paymentTransaction);
+      showSnackbar("Purchase completed successfully!", "success");
     } catch (error: any) {
       console.error("Payment failed:", error);
-      setError(error.message || "Payment failed. Please try again.");
+      const errorMessage = error.message || "Payment failed. Please try again.";
+      setError(errorMessage);
       setStep("error");
+      showSnackbar(errorMessage, "error");
     } finally {
       setIsProcessing(false);
     }
-  };
+  }, [
+    wallet.isConnected,
+    isCorrectNetwork,
+    hasInsufficientBalance,
+    hasInsufficientGas,
+    needsApproval,
+    orderDetails,
+    switchToCorrectNetwork,
+    approveUSDT,
+    buyTrade,
+    onPaymentSuccess,
+    showSnackbar,
+  ]);
 
-  // const handlePayment = async () => {
-  //   if (!wallet.isConnected) {
-  //     showSnackbar("Please connect your wallet first", "error");
-  //     return;
-  //   }
+  // Retry handler
+  const handleRetry = useCallback(() => {
+    setRetryCount((prev) => prev + 1);
+    setStep("review");
+    setError("");
 
-  //   if (!isCorrectNetwork) {
-  //     try {
-  //       await switchToCorrectNetwork();
-  //     } catch (error) {
-  //       return;
-  //     }
-  //   }
+    // Refresh balance and approval status
+    loadBalance();
+    checkApprovalNeeds();
+  }, [loadBalance, checkApprovalNeeds]);
 
-  //   if (hasInsufficientBalance) {
-  //     setError("Insufficient USDT balance");
-  //     setStep("error");
-  //     return;
-  //   }
-
-  //   if (hasInsufficientGas) {
-  //     setError(
-  //       "Insufficient CELO for transaction fees. Please add some CELO to your wallet."
-  //     );
-  //     setStep("error");
-  //     return;
-  //   }
-
-  //   try {
-  //     setIsProcessing(true);
-  //     setStep("processing");
-  //     setError("");
-
-  //     const paymentTransaction = await sendPayment({
-  //       to: orderDetails.escrowAddress,
-  //       amount: orderDetails.amount,
-  //       orderId: orderDetails.id,
-  //     });
-
-  //     setTransaction(paymentTransaction);
-  //     setStep("success");
-  //     onPaymentSuccess(paymentTransaction);
-  //   } catch (error: any) {
-  //     console.error("Payment failed:", error);
-  //     setError(error.message || "Payment failed. Please try again.");
-  //     setStep("error");
-  //   } finally {
-  //     setIsProcessing(false);
-  //   }
-  // };
+  // Safe modal close
+  const handleModalClose = useCallback(() => {
+    if (step === "processing") {
+      showSnackbar("Transaction in progress. Please wait...", "info");
+      return;
+    }
+    onClose();
+  }, [step, onClose, showSnackbar]);
 
   const renderStepContent = () => {
     switch (step) {
@@ -230,12 +286,14 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                       <p className="text-white font-medium">
                         USDT (Celo Network)
                       </p>
-                      <p className="text-sm text-gray-400">Celo testnet</p>
+                      <p className="text-sm text-gray-400">
+                        {needsApproval ? "Approval required" : "Ready to pay"}
+                      </p>
                     </div>
                   </div>
                   <div className="text-right">
                     <p className="text-white font-medium">
-                      {wallet.usdtBalance?.usdt}
+                      {wallet.usdtBalance?.usdt || `${usdtBalance} USDT`}
                     </p>
                     <p className="text-xs text-gray-400">Available</p>
                   </div>
@@ -250,8 +308,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 <div>
                   <p className="text-Red font-medium">Secure Escrow Payment</p>
                   <p className="text-sm text-Red/80 mt-1">
-                    Your payment is held securely until you confirm the delivery
-                    of your order.
+                    Your payment is held securely until you confirm delivery of
+                    your order.
                   </p>
                 </div>
               </div>
@@ -267,8 +325,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                     <div className="flex items-center gap-2">
                       <HiExclamationTriangle className="w-4 h-4 text-red-400" />
                       <span className="text-red-400 text-sm">
-                        Insufficient USDT balance. Need $
-                        {formatCurrency(orderDetails.amount)}
+                        Insufficient USDT balance. Need{" "}
+                        {formatCurrency(orderDetails.amount)} USDT
                       </span>
                     </div>
                   </div>
@@ -298,6 +356,17 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               </div>
             )}
 
+            {/* Retry indicator */}
+            {retryCount > 0 && (
+              <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-blue-400 text-sm">
+                    Retry attempt #{retryCount}
+                  </span>
+                </div>
+              </div>
+            )}
+
             {/* Payment Button */}
             <Button
               title={`Pay ${formatCurrency(orderDetails.amount)} USDT`}
@@ -305,7 +374,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               disabled={
                 hasInsufficientBalance || hasInsufficientGas || isProcessing
               }
-              className="flex items-center justify-center w-full bg-Red hover:bg-Red/80 text-white text-lg py-4 font-semibold transition-all duration-200"
+              className="flex items-center justify-center w-full bg-Red hover:bg-Red/80 disabled:bg-gray-600 disabled:cursor-not-allowed text-white text-lg py-4 font-semibold transition-all duration-200"
             />
           </div>
         );
@@ -322,8 +391,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 Processing Payment
               </h3>
               <p className="text-gray-300 max-w-sm mx-auto">
-                Please confirm the transaction in your wallet and wait for
-                blockchain confirmation.
+                {needsApproval && !approvalHash
+                  ? "Approving USDT spending permission..."
+                  : "Completing your purchase transaction..."}
+              </p>
+              <p className="text-sm text-gray-400">
+                Please confirm the transaction in your wallet
               </p>
               <div className="flex items-center justify-center gap-1 text-sm text-Red">
                 <div className="w-2 h-2 bg-Red rounded-full animate-pulse" />
@@ -340,11 +413,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             <motion.div
               initial={{ scale: 0, rotate: -180 }}
               animate={{ scale: 1, rotate: 0 }}
-              transition={{
-                type: "spring",
-                duration: 0.6,
-                delay: 0.1,
-              }}
+              transition={{ type: "spring", duration: 0.6, delay: 0.1 }}
             >
               <div className="w-16 h-16 bg-Red/20 rounded-full flex items-center justify-center mx-auto">
                 <HiCheckCircle className="w-10 h-10 text-Red" />
@@ -390,7 +459,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             <div className="space-y-3">
               <Button
                 title="Try Again"
-                onClick={() => setStep("review")}
+                onClick={handleRetry}
                 className="w-full bg-Red hover:bg-Red/80 text-white"
               />
               <Button
@@ -410,7 +479,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   return (
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={handleModalClose}
       title={step === "review" ? "Complete Payment" : ""}
       maxWidth="md:max-w-lg"
       showCloseButton={step !== "processing"}
