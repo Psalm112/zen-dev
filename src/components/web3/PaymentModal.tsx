@@ -138,7 +138,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                       {item.name} × {item.quantity}
                     </span>
                     <span className="text-white font-medium">
-                      {formatCurrency(item.price)}
+                      {formatCurrency(item.price)} USDT
                     </span>
                   </div>
                 ))}
@@ -146,7 +146,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                   <div className="flex justify-between text-lg font-bold">
                     <span className="text-white">Total</span>
                     <span className="text-Red">
-                      ${formatCurrency(orderDetails.amount)} USDT
+                      {formatCurrency(orderDetails.amount)} USDT
                     </span>
                   </div>
                 </div>
