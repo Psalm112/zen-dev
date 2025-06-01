@@ -77,8 +77,8 @@ const WalletEducationModal: React.FC<WalletEducationModalProps> = ({
           {educationSteps.map((_, index) => (
             <div
               key={index}
-              className={`flex-1 h-2 rounded-full transition-colors duration-300 ${
-                index <= currentStep ? "bg-Red" : "bg-gray-700"
+              className={`flex-1 h-2 rounded-full transition-all duration-300 ${
+                index <= currentStep ? "bg-Red shadow-sm" : "bg-Dark"
               }`}
             />
           ))}
@@ -91,18 +91,25 @@ const WalletEducationModal: React.FC<WalletEducationModalProps> = ({
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.2 }}
             className="text-center space-y-6"
           >
-            <div className="flex justify-center">
-              {educationSteps[currentStep].icon}
-            </div>
+            <motion.div
+              className="flex justify-center"
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.1 }}
+            >
+              <div className="w-16 h-16 bg-Red/20 rounded-full flex items-center justify-center">
+                {educationSteps[currentStep].icon}
+              </div>
+            </motion.div>
 
             <div className="space-y-3">
               <h3 className="text-xl font-bold text-white">
                 {educationSteps[currentStep].title}
               </h3>
-              <p className="text-gray-300 leading-relaxed">
+              <p className="text-gray-300 leading-relaxed max-w-md mx-auto">
                 {educationSteps[currentStep].description}
               </p>
             </div>
@@ -116,7 +123,7 @@ const WalletEducationModal: React.FC<WalletEducationModalProps> = ({
             icon={<HiArrowLeft className="w-4 h-4" />}
             iconPosition="start"
             onClick={isFirstStep ? onBack : prevStep}
-            className="bg-gray-700 hover:bg-gray-600 text-white"
+            className="bg-gray-700 hover:bg-gray-600 text-white transition-colors"
           />
 
           <div className="text-sm text-gray-400">
@@ -128,23 +135,23 @@ const WalletEducationModal: React.FC<WalletEducationModalProps> = ({
               title="Get Started"
               icon={<HiPlay className="w-4 h-4" />}
               onClick={onBack}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-Red hover:bg-Red/80 text-white transition-colors"
             />
           ) : (
             <Button
               title="Next"
               icon={<HiArrowRight className="w-4 h-4" />}
               onClick={nextStep}
-              className="bg-Red hover:bg-Red/40 text-white"
+              className="bg-Red hover:bg-Red/80 text-white transition-colors"
             />
           )}
         </div>
 
-        {/* Quick Tips */}
-        <div className="border-t border-Red/90 pt-4">
-          <div className="bg-Red/20 border border-blue-Red/40 rounded-lg p-4">
-            <h4 className="font-medium text-Red/90 mb-2">💡 Pro Tip</h4>
-            <p className="text-sm text-Red/60">
+        {/* Pro Tips */}
+        <div className="border-t border-Red/20 pt-4">
+          <div className="bg-Red/10 border border-Red/20 rounded-lg p-4">
+            <h4 className="font-medium text-Red mb-2">💡 Pro Tip</h4>
+            <p className="text-sm text-Red/80">
               {currentStep === 0 &&
                 "Most people already have a wallet app on their phone - like MetaMask or Coinbase Wallet."}
               {currentStep === 1 &&

@@ -4,22 +4,23 @@
 @tailwind utilities;
 
 
-.scrollbar-hide::-webkit-scrollbar {
+.scrollbar-hide::-webkit-scrollbar .hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
 
-.scrollbar-hide {
+.scrollbar-hide .hide-scrollbar {
+   -ms-overflow-style: none;
   scrollbar-width: none;
 }
 
-.hide-scrollbar::-webkit-scrollbar {
+ /* {
   display: none;
 }
 
-.hide-scrollbar {
+ {
   -ms-overflow-style: none;
   scrollbar-width: none;
-}
+} */
 
 /* Custom scrollbar styling */
 .scrollbar-thin::-webkit-scrollbar {

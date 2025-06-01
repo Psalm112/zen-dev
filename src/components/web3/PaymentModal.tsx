@@ -6,6 +6,7 @@ import {
   HiExclamationTriangle,
   HiCheckCircle,
   HiXCircle,
+  HiCurrencyDollar,
 } from "react-icons/hi2";
 import Modal from "../common/Modal";
 import Button from "../common/Button";
@@ -66,8 +67,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   };
 
   const hasInsufficientBalance =
-    parseFloat(usdtBalance) < parseFloat(orderDetails.amount);
-  const hasInsufficientGas = parseFloat(wallet.balance || "0") < 0.01; // Minimum CELO for gas
+    parseFloat(usdtBalance.replace(/,/g, "")) < parseFloat(orderDetails.amount);
+  const hasInsufficientGas = parseFloat(wallet.balance || "0") < 0.01;
 
   const handlePayment = async () => {
     if (!wallet.isConnected) {
@@ -79,7 +80,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       try {
         await switchToCorrectNetwork();
       } catch (error) {
-        return; // Error already handled
+        return;
       }
     }
 
@@ -127,8 +128,10 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           <div className="space-y-6">
             {/* Order Summary */}
             <div className="space-y-4">
-              <h3 className="text-lg font-medium text-white">Order Summary</h3>
-              <div className="bg-[#292B30] rounded-lg p-4 space-y-3">
+              <h3 className="text-lg font-semibold text-white">
+                Order Summary
+              </h3>
+              <div className="bg-Dark/50 border border-Red/20 rounded-lg p-4 space-y-3">
                 {orderDetails.items.map((item, index) => (
                   <div key={index} className="flex justify-between text-sm">
                     <span className="text-gray-300">
@@ -139,10 +142,10 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                     </span>
                   </div>
                 ))}
-                <div className="border-t border-gray-700/50 pt-3">
+                <div className="border-t border-Red/20 pt-3">
                   <div className="flex justify-between text-lg font-bold">
                     <span className="text-white">Total</span>
-                    <span className="text-green-400">
+                    <span className="text-Red">
                       ${formatCurrency(orderDetails.amount)} USDT
                     </span>
                   </div>
@@ -150,33 +153,41 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               </div>
             </div>
 
-            {/* Payment Method */}
+            {/* Payment Method & Balance */}
             <div className="space-y-3">
-              <h3 className="text-lg font-medium text-white">Payment Method</h3>
-              <div className="bg-[#292B30] rounded-lg p-4">
-                <div className="flex items-center gap-3">
-                  <HiCreditCard className="w-6 h-6 text-blue-500" />
-                  <div>
+              <h3 className="text-lg font-semibold text-white">
+                Payment Method
+              </h3>
+              <div className="bg-Dark/50 border border-Red/20 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-Red/20 rounded-full flex items-center justify-center">
+                      <HiCurrencyDollar className="w-5 h-5 text-Red" />
+                    </div>
+                    <div>
+                      <p className="text-white font-medium">
+                        USDT (Celo Network)
+                      </p>
+                      <p className="text-sm text-gray-400">Celo testnet</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
                     <p className="text-white font-medium">
-                      USDT (Celo Network)
+                      ${formatCurrency(usdtBalance)}
                     </p>
-                    <p className="text-sm text-gray-400">
-                      Balance: ${formatCurrency(usdtBalance)}
-                    </p>
+                    <p className="text-xs text-gray-400">Available</p>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Security Notice */}
-            <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+            <div className="bg-Red/10 border border-Red/30 rounded-lg p-4">
               <div className="flex items-start gap-3">
-                <HiShieldCheck className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                <HiShieldCheck className="w-5 h-5 text-Red flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-green-400 font-medium">
-                    Secure Escrow Payment
-                  </p>
-                  <p className="text-sm text-green-300/80 mt-1">
+                  <p className="text-Red font-medium">Secure Escrow Payment</p>
+                  <p className="text-sm text-Red/80 mt-1">
                     Your payment is held securely until you confirm receipt of
                     your order.
                   </p>
@@ -190,9 +201,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               !isCorrectNetwork) && (
               <div className="space-y-2">
                 {hasInsufficientBalance && (
-                  <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3">
+                  <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-3">
                     <div className="flex items-center gap-2">
-                      <HiExclamationTriangle className="w-4 h-4 text-red-500" />
+                      <HiExclamationTriangle className="w-4 h-4 text-red-400" />
                       <span className="text-red-400 text-sm">
                         Insufficient USDT balance. Need $
                         {formatCurrency(orderDetails.amount)}
@@ -202,9 +213,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 )}
 
                 {hasInsufficientGas && (
-                  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3">
+                  <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-3">
                     <div className="flex items-center gap-2">
-                      <HiExclamationTriangle className="w-4 h-4 text-yellow-500" />
+                      <HiExclamationTriangle className="w-4 h-4 text-yellow-400" />
                       <span className="text-yellow-400 text-sm">
                         Low CELO balance for transaction fees
                       </span>
@@ -213,9 +224,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 )}
 
                 {!isCorrectNetwork && (
-                  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3">
+                  <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-3">
                     <div className="flex items-center gap-2">
-                      <HiExclamationTriangle className="w-4 h-4 text-yellow-500" />
+                      <HiExclamationTriangle className="w-4 h-4 text-yellow-400" />
                       <span className="text-yellow-400 text-sm">
                         Please switch to Celo network
                       </span>
@@ -232,26 +243,31 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               disabled={
                 hasInsufficientBalance || hasInsufficientGas || isProcessing
               }
-              className="w-full bg-green-600 hover:bg-green-700 text-white text-lg py-3"
+              className="w-full bg-Red hover:bg-Red/80 text-white text-lg py-4 font-semibold transition-all duration-200"
             />
           </div>
         );
 
       case "processing":
         return (
-          <div className="text-center space-y-6 py-8">
-            <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto" />
-            <div className="space-y-2">
+          <div className="text-center space-y-6 py-12">
+            <div className="relative">
+              <div className="w-16 h-16 border-4 border-Red/30 border-t-Red rounded-full animate-spin mx-auto" />
+              <div className="absolute inset-0 w-12 h-12 border-2 border-Red/20 border-t-transparent rounded-full animate-spin mx-auto mt-2" />
+            </div>
+            <div className="space-y-3">
               <h3 className="text-xl font-bold text-white">
                 Processing Payment
               </h3>
-              <p className="text-gray-300">
+              <p className="text-gray-300 max-w-sm mx-auto">
                 Please confirm the transaction in your wallet and wait for
                 blockchain confirmation.
               </p>
-              <p className="text-sm text-gray-400">
-                This may take a few moments...
-              </p>
+              <div className="flex items-center justify-center gap-1 text-sm text-Red">
+                <div className="w-2 h-2 bg-Red rounded-full animate-pulse" />
+                <div className="w-2 h-2 bg-Red rounded-full animate-pulse delay-100" />
+                <div className="w-2 h-2 bg-Red rounded-full animate-pulse delay-200" />
+              </div>
             </div>
           </div>
         );
@@ -260,24 +276,32 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
         return (
           <div className="text-center space-y-6 py-8">
             <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", duration: 0.5 }}
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{
+                type: "spring",
+                duration: 0.6,
+                delay: 0.1,
+              }}
             >
-              <HiCheckCircle className="w-16 h-16 text-green-500 mx-auto" />
+              <div className="w-16 h-16 bg-Red/20 rounded-full flex items-center justify-center mx-auto">
+                <HiCheckCircle className="w-10 h-10 text-Red" />
+              </div>
             </motion.div>
-            <div className="space-y-2">
+            <div className="space-y-3">
               <h3 className="text-xl font-bold text-white">
                 Payment Successful!
               </h3>
-              <p className="text-gray-300">
+              <p className="text-gray-300 max-w-md mx-auto">
                 Your payment has been sent to escrow. You'll receive your order
                 soon.
               </p>
               {transaction && (
-                <div className="bg-[#292B30] rounded-lg p-4 mt-4">
-                  <p className="text-sm text-gray-400">Transaction Hash:</p>
-                  <p className="font-mono text-xs text-blue-400 break-all">
+                <div className="bg-Dark/50 border border-Red/20 rounded-lg p-4 mt-4">
+                  <p className="text-sm text-gray-400 mb-1">
+                    Transaction Hash:
+                  </p>
+                  <p className="font-mono text-xs text-Red break-all">
                     {transaction.hash}
                   </p>
                 </div>
@@ -286,7 +310,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             <Button
               title="Continue Shopping"
               onClick={onClose}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+              className="w-full bg-Red hover:bg-Red/80 text-white"
             />
           </div>
         );
@@ -294,16 +318,18 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       case "error":
         return (
           <div className="text-center space-y-6 py-8">
-            <HiXCircle className="w-16 h-16 text-red-500 mx-auto" />
-            <div className="space-y-2">
+            <div className="w-16 h-16 bg-red-900/20 rounded-full flex items-center justify-center mx-auto">
+              <HiXCircle className="w-10 h-10 text-red-400" />
+            </div>
+            <div className="space-y-3">
               <h3 className="text-xl font-bold text-white">Payment Failed</h3>
-              <p className="text-gray-300">{error}</p>
+              <p className="text-gray-300 max-w-md mx-auto">{error}</p>
             </div>
             <div className="space-y-3">
               <Button
                 title="Try Again"
                 onClick={() => setStep("review")}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                className="w-full bg-Red hover:bg-Red/80 text-white"
               />
               <Button
                 title="Close"
@@ -333,7 +359,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.2 }}
         >
           {renderStepContent()}
         </motion.div>

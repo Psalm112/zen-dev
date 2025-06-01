@@ -90,7 +90,13 @@ const ViewOrderDetail = () => {
 
   const handleContactSeller = () => {
     toast.info("Opening chat with seller...");
-    // navigate(`/chat/${orderDetails?.seller?._id}`);
+    navigate(
+      `/chat/${
+        typeof orderDetails?.seller === "string"
+          ? orderDetails?.seller
+          : orderDetails?.seller?._id
+      }`
+    );
   };
 
   const handleContactBuyer = () => {
@@ -124,7 +130,7 @@ const ViewOrderDetail = () => {
     if (!orderId) return;
 
     try {
-      navigate(`/trades/viewtrades/${orderId}?status=release`, {
+      navigate(`/trades/orders/${orderId}?status=release`, {
         replace: true,
       });
     } catch (error) {
@@ -219,7 +225,7 @@ const ViewOrderDetail = () => {
             onReleaseNow={handleReleaseNow}
             onConfirmDelivery={handleConfirmDelivery}
             orderId={orderId}
-            navigatePath={`/trades/viewtrades/${orderId}?status=release`}
+            navigatePath={`/orders/${orderId}?status=release`}
           />
         </motion.div>
       </Container>

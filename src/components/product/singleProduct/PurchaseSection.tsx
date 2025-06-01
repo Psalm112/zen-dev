@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { FaWallet, FaSpinner } from "react-icons/fa";
+import { HiCurrencyDollar, HiSignal } from "react-icons/hi2";
 import { Product, ProductVariant } from "../../../utils/types";
 import { useWeb3 } from "../../../context/Web3Context";
 import { useOrderData } from "../../../utils/hooks/useOrder";
@@ -10,10 +11,6 @@ import LogisticsSelector, { LogisticsProvider } from "./LogisticsSelector";
 import { useAuth } from "../../../context/AuthContext";
 import WalletConnectionModal from "../../web3/WalletConnectionModal";
 
-// interface ProductAndProviders extends Product {
-//   logisticsCost: string[];
-//   logisticsProviders: string[];
-// }
 interface PurchaseSectionProps {
   product?: Product;
   selectedVariant?: ProductVariant;
@@ -35,7 +32,6 @@ const PurchaseSection = ({
   const [selectedLogistics, setSelectedLogistics] =
     useState<LogisticsProvider | null>(null);
 
-  // Reset quantity when variant changes
   useEffect(() => {
     setQuantity(1);
   }, [selectedVariant]);
@@ -118,7 +114,8 @@ const PurchaseSection = ({
     <>
       <div className="bg-[#212428] p-4 md:p-6 space-y-4">
         {error && (
-          <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-2 rounded-md text-sm mb-3">
+          <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-3 rounded-md text-sm mb-3 flex items-center gap-2">
+            <HiSignal className="w-4 h-4 flex-shrink-0" />
             {error}
           </div>
         )}
@@ -133,10 +130,12 @@ const PurchaseSection = ({
           />
 
           {isOutOfStock ? (
-            <span className="text-xs text-red-500">Out of stock</span>
+            <span className="text-xs text-red-500 font-medium">
+              Out of stock
+            </span>
           ) : availableQuantity && Number(availableQuantity) < 10 ? (
-            <span className="text-xs text-yellow-500">
-              Only {availableQuantity} left in stock
+            <span className="text-xs text-yellow-500 font-medium">
+              Only {availableQuantity} left
             </span>
           ) : null}
         </div>
@@ -149,9 +148,10 @@ const PurchaseSection = ({
           selectedProvider={selectedLogistics}
         />
 
+        {/* Purchase Button */}
         <div className="flex gap-3 w-full">
           <button
-            className="bg-Red text-white py-3 px-6 md:px-10 font-bold flex-1 rounded-md transition-all hover:bg-[#d52a33] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:bg-Red flex items-center justify-center gap-2"
+            className="bg-Red text-white py-3 px-6 md:px-10 font-bold flex-1 rounded-md transition-all duration-200 hover:bg-Red/80 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-Red flex items-center justify-center gap-2 shadow-lg"
             onClick={handleButtonClick}
             disabled={isProcessing || !product || isOutOfStock}
           >
@@ -177,30 +177,46 @@ const PurchaseSection = ({
           </button>
         </div>
 
+        {/* Wallet Balance Display */}
         {wallet.isConnected && (
-          <div className="text-center text-xs text-gray-400">
-            {wallet.usdtBalance ? (
-              <>
-                {wallet.usdtBalance.celo} · {wallet.usdtBalance.usdt} ·{" "}
-                {wallet.usdtBalance.fiat}
-                <br />
-                CELO:{" "}
-                {wallet.balance
-                  ? `${parseFloat(wallet.balance).toFixed(4)}`
-                  : "0.0000"}
-              </>
-            ) : (
-              "Loading balances..."
-            )}
-            <br />
-            {wallet.address
-              ? `${wallet.address.substring(0, 6)}...${wallet.address.substring(
-                  wallet.address.length - 4
-                )}`
-              : ""}
+          <div className="bg-Dark/30 border border-Red/20 rounded-lg p-3 space-y-2">
+            <div className="flex items-center gap-2 text-xs text-gray-400">
+              <HiCurrencyDollar className="w-3 h-3" />
+              <span>Wallet Balance</span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div className="space-y-1">
+                <div className="text-gray-400">USDT</div>
+                <div className="text-white font-medium">
+                  {wallet.usdtBalance?.usdt || "Loading..."}
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <div className="text-gray-400">CELO (Gas)</div>
+                <div className="text-white font-medium">
+                  {wallet.balance
+                    ? `${parseFloat(wallet.balance).toFixed(4)}`
+                    : "0.0000"}
+                </div>
+              </div>
+            </div>
+
+            <div className="text-center pt-2 border-t border-Red/10">
+              <div className="text-xs text-gray-500">
+                {wallet.address
+                  ? `${wallet.address.substring(
+                      0,
+                      6
+                    )}...${wallet.address.substring(wallet.address.length - 4)}`
+                  : ""}
+              </div>
+            </div>
           </div>
         )}
       </div>
+
       <WalletConnectionModal
         isOpen={showWalletModal}
         onClose={() => setShowWalletModal(false)}

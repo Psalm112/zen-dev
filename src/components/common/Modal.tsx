@@ -79,7 +79,7 @@ const Modal: FC<ModalProps> = ({
           )}
 
           {/* Modal body */}
-          <div className="p-6 max-md:px-1 overflow-y-auto flex-1">
+          <div className="p-6 max-md:px-1 overflow-y-auto flex-1 hide-scrollbar">
             {children}
           </div>
         </div>
