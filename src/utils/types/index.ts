@@ -85,6 +85,8 @@ export interface Order {
     price: number;
     images: string[];
     tradeId: string;
+    logisticsCost: string[];
+    logisticsProviders: string[];
   };
   buyer:
     | {

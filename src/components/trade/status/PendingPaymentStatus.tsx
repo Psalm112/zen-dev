@@ -213,6 +213,7 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
         maxWidth="md:max-w-lg"
       >
         <div className="space-y-4 mt-4">
+          {/* add type here */}
           <div>
             <label htmlFor="quantity" className="block text-gray-300 mb-2">
               Quantity
@@ -229,8 +230,10 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
 
           <div>
             <LogisticsSelector
-              logisticsCost={[]}
-              logisticsProviders={[]}
+              logisticsCost={orderDetails?.product.logisticsCost ?? []}
+              logisticsProviders={
+                orderDetails?.product.logisticsProviders ?? []
+              }
               onSelect={(provider) => setSelectedLogisticsProvider(provider)}
               selectedProviderWalletAddress={
                 orderDetails?.logisticsProviderWalletAddress

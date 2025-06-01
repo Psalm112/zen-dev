@@ -32,8 +32,8 @@ export const getBlockExplorerUrl = (
 ): string => {
   const baseUrl =
     process.env.NODE_ENV === "production"
-      ? "https://explorer.celo.org"
-      : "https://explorer.celo.org/alfajores";
+      ? "https://celo.blockscout.com"
+      : "https://celo-alfajores.blockscout.com";
 
   return `${baseUrl}/${type}/${hash}`;
 };

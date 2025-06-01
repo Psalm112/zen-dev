@@ -202,7 +202,7 @@ const SingleProduct = () => {
                   <h1 className="text-2xl sm:text-3xl font-bold">
                     {formattedProduct.name}
                   </h1>
-                  <div className="flex flex-col gap-1">
+                  <div className="flex flex-col gap-1 text-right">
                     <div className="flex items-center gap-2">
                       <span className="text-2xl font-bold">
                         {formattedProduct.formattedCeloPrice}

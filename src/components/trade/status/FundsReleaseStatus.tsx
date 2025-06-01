@@ -15,6 +15,7 @@ import Modal from "../../common/Modal";
 // import { useWallet } from "../../../utils/hooks/useWallet";
 import { motion } from "framer-motion";
 import { useWeb3 } from "../../../context/Web3Context";
+import { useSnackbar } from "../../../context/SnackbarContext";
 
 interface FundsReleaseStatusProps {
   tradeDetails?: TradeDetails;
@@ -29,6 +30,7 @@ interface FundsReleaseStatusProps {
 
 const FundsReleaseStatus: FC<FundsReleaseStatusProps> = ({
   tradeDetails,
+  orderDetails,
   transactionInfo,
   onContactSeller,
   onOrderDispute,
@@ -36,10 +38,11 @@ const FundsReleaseStatus: FC<FundsReleaseStatusProps> = ({
   orderId,
   showTimer,
 }) => {
-  const [timeRemaining, setTimeRemaining] = useState({
-    minutes: 9,
-    seconds: 59,
-  });
+  const { showSnackbar } = useSnackbar();
+  // const [timeRemaining, setTimeRemaining] = useState({
+  //   minutes: 9,
+  //   seconds: 59,
+  // });
   const [isProcessing, setIsProcessing] = useState(false);
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
   const [isDisputeModalOpen, setIsDisputeModalOpen] = useState(false);
@@ -48,17 +51,17 @@ const FundsReleaseStatus: FC<FundsReleaseStatusProps> = ({
   const { confirmDelivery } = useContract();
   const { wallet } = useWeb3();
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeRemaining((prev) => {
-        if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 };
-        if (prev.minutes > 0) return { minutes: prev.minutes - 1, seconds: 59 };
-        clearInterval(timer);
-        return { minutes: 0, seconds: 0 };
-      });
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
+  // useEffect(() => {
+  //   const timer = setInterval(() => {
+  //     setTimeRemaining((prev) => {
+  //       if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 };
+  //       if (prev.minutes > 0) return { minutes: prev.minutes - 1, seconds: 59 };
+  //       clearInterval(timer);
+  //       return { minutes: 0, seconds: 0 };
+  //     });
+  //   }, 1000);
+  //   return () => clearInterval(timer);
+  // }, []);
 
   const handleConfirmDelivery = async () => {
     if (!wallet.isConnected) {
@@ -83,8 +86,9 @@ const FundsReleaseStatus: FC<FundsReleaseStatusProps> = ({
         onConfirmDelivery();
       }
 
-      toast.success(
-        "Delivery confirmed successfully! Funds released to seller."
+      showSnackbar(
+        "Delivery confirmed successfully! Funds released to seller.",
+        "success"
       );
     } catch (error: any) {
       console.error("Error during delivery confirmation:", error);
@@ -156,20 +160,25 @@ const FundsReleaseStatus: FC<FundsReleaseStatusProps> = ({
     <>
       <BaseStatus
         statusTitle="Funds Release"
-        statusDescription="The buyer has confirmed payment for this order. Please release the funds."
+        statusDescription="Dezenmart has confirmed payment for this order."
         statusAlert={
           <StatusAlert
             icon={<BsShieldExclamation size={18} />}
-            message="To ensure the safety of your funds, please verify the real name of the payer: Femi Cole"
+            message={`To ensure the safety of your purchase, please verify the real name of the payer: ${
+              typeof orderDetails?.seller !== "string"
+                ? orderDetails?.seller.name
+                : "unknown"
+            }`}
             type="warning"
           />
         }
         tradeDetails={tradeDetails}
+        orderDetails={orderDetails}
         transactionInfo={transactionInfo}
-        contactLabel="Contact Buyer"
+        contactLabel="Contact Seller"
         onContact={onContactSeller}
         showTimer={showTimer}
-        timeRemaining={timeRemaining}
+        // timeRemaining={timeRemaining}
         actionButtons={
           <div className="w-full flex justify-evenly flex-row flex-wrap gap-4">
             {onOrderDispute && (
@@ -234,17 +243,6 @@ const FundsReleaseStatus: FC<FundsReleaseStatusProps> = ({
           </motion.div>
         </form>
       </Modal>
-      {/* <Modal
-        isOpen={isWalletModalOpen}
-        onClose={() => setIsWalletModalOpen(false)}
-        title="Connect Wallet"
-        maxWidth="md:max-w-lg"
-      >
-        <ConnectWallet
-        // showAlternatives={true}
-        // onTransactionComplete={handleWalletConnected}
-        />
-      </Modal> */}
     </>
   );
 };

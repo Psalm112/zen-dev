@@ -165,7 +165,7 @@ const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
               <Button
                 title=""
                 icon={<HiArrowTopRightOnSquare className="w-4 h-4" />}
-                path={`https://explorer.celo.org/alfajores/address/${wallet.address}`}
+                path={`https://celo-alfajores.blockscout.com/address/${wallet.address}`}
                 className="bg-[#1a1c20] hover:bg-Red/10 hover:border-Red/30 hover:shadow-md border border-gray-600 text-white p-2 transition-all duration-200"
                 disabled={!wallet.address}
               />
