@@ -1,82 +1,112 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { useWeb3 } from "../../context/Web3Context";
 import PaymentModal from "../web3/PaymentModal";
 import Button from "../common/Button";
-import { HiCreditCard, HiWallet } from "react-icons/hi2";
+import { HiWallet } from "react-icons/hi2";
 
 interface CheckoutWithWeb3Props {
   orderData: {
     id: string;
     amount: string;
+    tradeId?: string; // Add optional tradeId
+    logisticsProvider?: string; // Add optional logisticsProvider
     items: Array<{ name: string; quantity: number; price: string }>;
   };
   onOrderComplete: (transactionHash: string) => void;
 }
 
-const CheckoutWithWeb3: React.FC<CheckoutWithWeb3Props> = ({
-  orderData,
-  onOrderComplete,
-}) => {
-  const { wallet } = useWeb3();
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [showWalletConnect, setShowWalletConnect] = useState(false);
+const CheckoutWithWeb3: React.FC<CheckoutWithWeb3Props> = React.memo(
+  ({ orderData, onOrderComplete }) => {
+    const { wallet } = useWeb3();
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
 
-  const handleCryptoPayment = () => {
-    if (!wallet.isConnected) {
-      setShowWalletConnect(true);
-      return;
-    }
-    setShowPaymentModal(true);
-  };
+    // Memoize button text to prevent unnecessary re-renders
+    const buttonText = useMemo(() => {
+      return wallet.isConnected
+        ? "Pay with USDT"
+        : "Connect Wallet to Pay with Crypto";
+    }, [wallet.isConnected]);
 
-  const handlePaymentSuccess = (transaction: any) => {
-    setShowPaymentModal(false);
-    onOrderComplete(transaction.hash);
-  };
+    // Optimize button class computation
+    const buttonClassName = useMemo(() => {
+      return "w-full bg-green-600 hover:bg-green-700 text-white p-4 text-left justify-start transition-colors duration-200";
+    }, []);
 
-  return (
-    <div className="space-y-6">
-      {/* Payment Options */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-medium text-white">
-          Choose Payment Method
-        </h3>
+    const handleCryptoPayment = useCallback(() => {
+      if (!wallet.isConnected) {
+        // If wallet is not connected, the PaymentModal will handle the connection
+        setShowPaymentModal(true);
+        return;
+      }
+      setShowPaymentModal(true);
+    }, [wallet.isConnected]);
 
-        {/* Traditional Payment */}
-        {/* <Button
-          title="Pay with Card"
-          icon={<HiCreditCard className="w-5 h-5" />}
-          iconPosition="start"
-          onClick={() => {}}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white p-4 text-left justify-start"
-        /> */}
+    const handlePaymentSuccess = useCallback(
+      (transaction: any) => {
+        setShowPaymentModal(false);
+        onOrderComplete(transaction.hash);
+      },
+      [onOrderComplete]
+    );
 
-        {/* Crypto Payment */}
-        <Button
-          title={
-            wallet.isConnected
-              ? "Pay with USDT"
-              : "Connect Wallet to Pay with Crypto"
-          }
-          icon={<HiWallet className="w-5 h-5" />}
-          iconPosition="start"
-          onClick={handleCryptoPayment}
-          className="w-full bg-green-600 hover:bg-green-700 text-white p-4 text-left justify-start"
+    const handleModalClose = useCallback(() => {
+      setShowPaymentModal(false);
+    }, []);
+
+    // Calculate total quantity from items
+    const totalQuantity = useMemo(() => {
+      return orderData.items.reduce((sum, item) => sum + item.quantity, 0);
+    }, [orderData.items]);
+
+    // Memoize order details to prevent unnecessary PaymentModal re-renders
+    const memoizedOrderDetails = useMemo(
+      () => ({
+        id: orderData.id,
+        amount: orderData.amount,
+        tradeId: orderData.tradeId || "0", // Default to "0" if not provided
+        quantity: totalQuantity.toString(),
+        logisticsProvider: orderData.logisticsProvider || "", // Default to empty string if not provided
+        items: orderData.items,
+        escrowAddress: import.meta.env.VITE_ESCROW_CONTRACT_MAINNET!,
+      }),
+      [orderData, totalQuantity]
+    );
+
+    return (
+      <div className="space-y-6">
+        {/* Payment Options */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium text-white">
+            Choose Payment Method
+          </h3>
+
+          {/* Crypto Payment */}
+          <Button
+            title={buttonText}
+            icon={<HiWallet className="w-5 h-5" />}
+            iconPosition="start"
+            onClick={handleCryptoPayment}
+            className={buttonClassName}
+            aria-label={
+              wallet.isConnected
+                ? "Pay with USDT cryptocurrency"
+                : "Connect wallet to pay with cryptocurrency"
+            }
+          />
+        </div>
+
+        {/* Crypto Payment Modal */}
+        <PaymentModal
+          isOpen={showPaymentModal}
+          onClose={handleModalClose}
+          orderDetails={memoizedOrderDetails}
+          onPaymentSuccess={handlePaymentSuccess}
         />
       </div>
+    );
+  }
+);
 
-      {/* Crypto Payment Modal */}
-      <PaymentModal
-        isOpen={showPaymentModal}
-        onClose={() => setShowPaymentModal(false)}
-        orderDetails={{
-          ...orderData,
-          escrowAddress: import.meta.env.VITE_ESCROW_CONTRACT_MAINNET!,
-        }}
-        onPaymentSuccess={handlePaymentSuccess}
-      />
-    </div>
-  );
-};
+CheckoutWithWeb3.displayName = "CheckoutWithWeb3";
 
 export default CheckoutWithWeb3;

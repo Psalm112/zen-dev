@@ -219,7 +219,7 @@ export const useCurrencyConverter = () => {
     [rates]
   );
 
-  // Format price with currency symbol and proper locale formatting
+  // Format price
   const formatPrice = useCallback(
     (price: number, currency: Currency): string => {
       if (isNaN(price)) return "—";
@@ -234,7 +234,6 @@ export const useCurrencyConverter = () => {
       }
 
       if (currency === "CELO") {
-        // Use standard number format for CELO with 4 decimals
         return `${price.toLocaleString(navigator.language, {
           minimumFractionDigits: 2,
           maximumFractionDigits: 4,
@@ -252,15 +251,11 @@ export const useCurrencyConverter = () => {
     [userCountry]
   );
 
-  // Manual refresh function that consumers can call
   const refreshRates = useCallback(() => {
     return fetchRates(true);
   }, [fetchRates]);
 
-  // Initial fetch and refresh interval
   useEffect(() => {
-    // Set loading immediately to handle initial state
-    // Check if we don't have rates or if they're stale
     if (!rates.lastUpdated || Date.now() - rates.lastUpdated > 5 * 60 * 1000) {
       setLoading(true);
     } else {

@@ -1,8 +1,8 @@
 import React from "react";
 import { FaRegHeart, FaHeart } from "react-icons/fa";
-import { RiVerifiedBadgeFill } from "react-icons/ri";
+// import { RiVerifiedBadgeFill } from "react-icons/ri";
 import { Link, useNavigate } from "react-router-dom";
-import { BsCart3 } from "react-icons/bs";
+// import { BsCart3 } from "react-icons/bs";
 import { Product } from "../../utils/types";
 import { useWatchlist } from "../../utils/hooks/useWatchlist";
 import { useCurrency } from "../../context/CurrencyContext";
@@ -17,12 +17,10 @@ interface ProductCardProps {
   isNew?: boolean;
 }
 
-const API_URL = import.meta.env.VITE_API_URL;
-
 const ProductCard = React.memo(
   ({ product, isNew = false }: ProductCardProps) => {
     const navigate = useNavigate();
-    const { _id, name, description, images, seller, isSponsored } = product;
+    const { _id, name, description, images, isSponsored } = product;
     const { isProductInWatchlist, toggleWatchlist } = useWatchlist();
     const { secondaryCurrency } = useCurrency();
     const isFavorite = isProductInWatchlist(_id);

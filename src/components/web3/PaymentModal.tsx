@@ -53,7 +53,6 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
 
-  // Memoized calculations
   const orderAmount = useMemo(
     () => parseFloat(orderDetails.amount),
     [orderDetails.amount]
@@ -73,7 +72,6 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   );
   const hasInsufficientGas = useMemo(() => gasBalance < 0.01, [gasBalance]);
 
-  // Load balance on mount and wallet connection
   const loadBalance = useCallback(async () => {
     if (!wallet.isConnected) return;
 
@@ -95,7 +93,6 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       setNeedsApproval(allowance < orderAmount);
     } catch (error) {
       console.error("Failed to check allowance:", error);
-      // Assume approval needed on error
       setNeedsApproval(true);
     }
   }, [wallet.isConnected, isCorrectNetwork, getCurrentAllowance, orderAmount]);

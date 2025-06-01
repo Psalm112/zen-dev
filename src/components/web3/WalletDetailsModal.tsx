@@ -16,6 +16,7 @@ import { TARGET_CHAIN } from "../../utils/config/web3.config";
 import { truncateAddress, copyToClipboard } from "../../utils/web3.utils";
 import { useSnackbar } from "../../context/SnackbarContext";
 import { useCurrencyConverter } from "../../utils/hooks/useCurrencyConverter";
+import { useCurrency } from "../../context/CurrencyContext";
 
 interface WalletDetailsModalProps {
   isOpen: boolean;
@@ -29,6 +30,7 @@ const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
   onClose,
 }) => {
   const { showSnackbar } = useSnackbar();
+  const { secondaryCurrency } = useCurrency();
   const { wallet, disconnectWallet, isCorrectNetwork, switchToCorrectNetwork } =
     useWeb3();
 
@@ -219,7 +221,9 @@ const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
                 </div>
               ) : (
                 <p className="text-2xl font-bold text-white">
-                  {formatPrice(totalFiatValue, "FIAT")}
+                  {secondaryCurrency === "USDT"
+                    ? formatPrice(usdtNumericValue + celoNumericValue, "USDT")
+                    : formatPrice(totalFiatValue, "FIAT")}
                 </p>
               )}
               <p className="text-xs text-gray-500 mt-1">
