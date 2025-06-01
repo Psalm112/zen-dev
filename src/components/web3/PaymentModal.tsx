@@ -11,19 +11,14 @@ import {
 import Modal from "../common/Modal";
 import Button from "../common/Button";
 import { useWeb3 } from "../../context/Web3Context";
-import { PaymentTransaction } from "../../utils/types/web3.types";
+import { OrderDetails, PaymentTransaction } from "../../utils/types/web3.types";
 import { formatCurrency } from "../../utils/web3.utils";
 import { useSnackbar } from "../../context/SnackbarContext";
 
 interface PaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  orderDetails: {
-    id: string;
-    amount: string;
-    items: Array<{ name: string; quantity: number; price: string }>;
-    escrowAddress: string;
-  };
+  orderDetails: OrderDetails;
   onPaymentSuccess: (transaction: PaymentTransaction) => void;
 }
 
@@ -39,11 +34,15 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   const {
     wallet,
     sendPayment,
+    buyTrade,
+    approveUSDT,
     getUSDTBalance,
     isCorrectNetwork,
     switchToCorrectNetwork,
   } = useWeb3();
   const [step, setStep] = useState<PaymentStep>("review");
+  const [needsApproval, setNeedsApproval] = useState(false);
+  const [approvalHash, setApprovalHash] = useState<string>("");
   const [transaction, setTransaction] = useState<PaymentTransaction | null>(
     null
   );
@@ -56,6 +55,21 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       loadBalance();
     }
   }, [isOpen, wallet.isConnected]);
+  // Check approval needs
+  useEffect(() => {
+    const checkApproval = async () => {
+      if (wallet.isConnected && isCorrectNetwork) {
+        // Check if allowance is sufficient
+        const allowance = await getCurrentAllowance(); // Implement this
+        const requiredAmount = parseFloat(orderDetails.amount);
+        setNeedsApproval(allowance < requiredAmount);
+      }
+    };
+
+    if (isOpen) {
+      checkApproval();
+    }
+  }, [isOpen, wallet.isConnected, isCorrectNetwork]);
 
   const loadBalance = async () => {
     try {
@@ -84,29 +98,26 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       }
     }
 
-    if (hasInsufficientBalance) {
-      setError("Insufficient USDT balance");
-      setStep("error");
-      return;
-    }
-
-    if (hasInsufficientGas) {
-      setError(
-        "Insufficient CELO for transaction fees. Please add some CELO to your wallet."
-      );
-      setStep("error");
-      return;
-    }
-
     try {
       setIsProcessing(true);
       setStep("processing");
       setError("");
 
-      const paymentTransaction = await sendPayment({
-        to: orderDetails.escrowAddress,
-        amount: orderDetails.amount,
-        orderId: orderDetails.id,
+      // Step 1: Approve USDT if needed
+      if (needsApproval) {
+        const approvalTx = await approveUSDT(orderDetails.amount);
+        setApprovalHash(approvalTx);
+
+        // Wait for approval confirmation
+        // You might want to use useWaitForTransactionReceipt here
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+      }
+
+      // Step 2: Execute buy trade
+      const paymentTransaction = await buyTrade({
+        tradeId: orderDetails.tradeId, // Add this to orderDetails interface
+        quantity: orderDetails.quantity, // Add this to orderDetails interface
+        logisticsProvider: orderDetails.logisticsProvider, // Add this to orderDetails interface
       });
 
       setTransaction(paymentTransaction);
@@ -120,6 +131,57 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       setIsProcessing(false);
     }
   };
+
+  // const handlePayment = async () => {
+  //   if (!wallet.isConnected) {
+  //     showSnackbar("Please connect your wallet first", "error");
+  //     return;
+  //   }
+
+  //   if (!isCorrectNetwork) {
+  //     try {
+  //       await switchToCorrectNetwork();
+  //     } catch (error) {
+  //       return;
+  //     }
+  //   }
+
+  //   if (hasInsufficientBalance) {
+  //     setError("Insufficient USDT balance");
+  //     setStep("error");
+  //     return;
+  //   }
+
+  //   if (hasInsufficientGas) {
+  //     setError(
+  //       "Insufficient CELO for transaction fees. Please add some CELO to your wallet."
+  //     );
+  //     setStep("error");
+  //     return;
+  //   }
+
+  //   try {
+  //     setIsProcessing(true);
+  //     setStep("processing");
+  //     setError("");
+
+  //     const paymentTransaction = await sendPayment({
+  //       to: orderDetails.escrowAddress,
+  //       amount: orderDetails.amount,
+  //       orderId: orderDetails.id,
+  //     });
+
+  //     setTransaction(paymentTransaction);
+  //     setStep("success");
+  //     onPaymentSuccess(paymentTransaction);
+  //   } catch (error: any) {
+  //     console.error("Payment failed:", error);
+  //     setError(error.message || "Payment failed. Please try again.");
+  //     setStep("error");
+  //   } finally {
+  //     setIsProcessing(false);
+  //   }
+  // };
 
   const renderStepContent = () => {
     switch (step) {

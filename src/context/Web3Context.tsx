@@ -17,19 +17,21 @@ import { parseUnits, formatUnits, erc20Abi } from "viem";
 import {
   useReadContract,
   useWriteContract,
-  useWaitForTransactionReceipt,
+  // useWaitForTransactionReceipt,
 } from "wagmi";
 import {
   Web3ContextType,
   WalletState,
   PaymentTransaction,
   PaymentParams,
+  BuyTradeParams,
 } from "../utils/types/web3.types";
 import { TARGET_CHAIN, USDT_ADDRESSES } from "../utils/config/web3.config";
 import { useSnackbar } from "./SnackbarContext";
 import { useCurrencyConverter } from "../utils/hooks/useCurrencyConverter";
+import { DEZENMART_ABI } from "../utils/abi/dezenmartAbi.json";
+import { ESCROW_ADDRESSES } from "../utils/config/web3.config";
 
-// Extended wallet state to include converted balances
 interface ExtendedWalletState extends WalletState {
   usdtBalance?: {
     raw: string;
@@ -39,9 +41,10 @@ interface ExtendedWalletState extends WalletState {
   };
 }
 
-// Extended context type
 interface ExtendedWeb3ContextType extends Omit<Web3ContextType, "wallet"> {
   wallet: ExtendedWalletState;
+  buyTrade: (params: BuyTradeParams) => Promise<PaymentTransaction>;
+  approveUSDT: (amount: string) => Promise<string>;
 }
 
 const Web3Context = createContext<ExtendedWeb3ContextType | undefined>(
@@ -71,7 +74,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
 
   const isCorrectNetwork = chain?.id === TARGET_CHAIN.id;
 
-  // Get CELO balance for gas fees
+  // CELO balance for gas fees
   const { data: celoBalance, refetch: refetchCeloBalance } = useBalance({
     address,
     query: {
@@ -172,7 +175,6 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
         const formattedBalance = formatUnits(balanceBigInt, decimals);
         const numericBalance = parseFloat(formattedBalance);
 
-        // Format with proper localization and precision
         const cleanBalance = numericBalance.toLocaleString("en-US", {
           minimumFractionDigits: 0,
           maximumFractionDigits: Math.min(decimals, 6),
@@ -245,6 +247,124 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
     convertedUSDTBalances,
   ]);
 
+  const buyTrade = useCallback(
+    async (params: BuyTradeParams): Promise<PaymentTransaction> => {
+      if (!address || !chain?.id) {
+        throw new Error("Wallet not connected");
+      }
+
+      if (!isCorrectNetwork) {
+        await switchToCorrectNetwork();
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+
+      const escrowAddress =
+        ESCROW_ADDRESSES[chain.id as keyof typeof ESCROW_ADDRESSES];
+      if (!escrowAddress) {
+        throw new Error("Escrow contract not available on this network");
+      }
+
+      try {
+        const hash = await writeContractAsync({
+          address: escrowAddress as `0x${string}`,
+          abi: DEZENMART_ABI,
+          functionName: "buyTrade",
+          args: [
+            BigInt(params.tradeId),
+            BigInt(params.quantity),
+            params.logisticsProvider as `0x${string}`,
+          ],
+        });
+
+        const transaction: PaymentTransaction = {
+          hash,
+          amount: "0", // Will be calculated by contract
+          token: "USDT",
+          to: escrowAddress,
+          from: address,
+          status: "pending",
+          timestamp: Date.now(),
+        };
+
+        showSnackbar(
+          "Purchase initiated! Waiting for confirmation...",
+          "success"
+        );
+        return transaction;
+      } catch (error: any) {
+        console.error("Buy trade failed:", error);
+
+        // Handle specific contract errors
+        if (error.message?.includes("InsufficientUSDTBalance")) {
+          throw new Error("Insufficient USDT balance for this purchase");
+        }
+        if (error.message?.includes("InsufficientUSDTAllowance")) {
+          throw new Error("Please approve USDT spending first");
+        }
+        if (error.message?.includes("InsufficientQuantity")) {
+          throw new Error("Not enough items available");
+        }
+
+        throw new Error(error.message || "Purchase failed");
+      }
+    },
+    [
+      address,
+      chain,
+      isCorrectNetwork,
+      switchToCorrectNetwork,
+      writeContractAsync,
+      showSnackbar,
+    ]
+  );
+
+  const approveUSDT = useCallback(
+    async (amount: string): Promise<string> => {
+      if (!address || !chain?.id) {
+        throw new Error("Wallet not connected");
+      }
+
+      const usdtAddress =
+        USDT_ADDRESSES[chain.id as keyof typeof USDT_ADDRESSES];
+      const escrowAddress =
+        ESCROW_ADDRESSES[chain.id as keyof typeof ESCROW_ADDRESSES];
+
+      if (!usdtAddress || !escrowAddress) {
+        throw new Error("Contracts not available on this network");
+      }
+
+      const hash = await writeContractAsync({
+        address: usdtAddress as `0x${string}`,
+        abi: erc20Abi,
+        functionName: "approve",
+        args: [escrowAddress as `0x${string}`, parseUnits(amount, 6)],
+      });
+
+      return hash;
+    },
+    [address, chain, writeContractAsync]
+  );
+
+  // Check current allowance
+  const { data: usdtAllowance, refetch: refetchAllowance } = useReadContract({
+    address: usdtContractAddress,
+    abi: erc20Abi,
+    functionName: "allowance",
+    args:
+      address && chain?.id
+        ? [
+            address,
+            ESCROW_ADDRESSES[
+              chain.id as keyof typeof ESCROW_ADDRESSES
+            ] as `0x${string}`,
+          ]
+        : undefined,
+    query: {
+      enabled: !!address && !!usdtContractAddress && isCorrectNetwork,
+      refetchInterval: 30000,
+    },
+  });
+
   const sendPayment = useCallback(
     async (params: PaymentParams): Promise<PaymentTransaction> => {
       if (!address || !chain?.id) {
@@ -311,6 +431,8 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
     switchToCorrectNetwork,
     sendPayment,
     getUSDTBalance,
+    buyTrade,
+    approveUSDT,
     isCorrectNetwork,
   };
 

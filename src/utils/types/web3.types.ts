@@ -51,3 +51,19 @@ export interface WalletEducationStep {
   icon: React.ReactNode;
   action?: string;
 }
+
+export interface BuyTradeParams {
+  tradeId: string;
+  quantity: string;
+  logisticsProvider: string;
+}
+
+export interface OrderDetails {
+  id: string;
+  amount: string;
+  tradeId: string;
+  quantity: string;
+  logisticsProvider: string;
+  items: Array<{ name: string; quantity: number; price: string }>;
+  escrowAddress: string;
+}

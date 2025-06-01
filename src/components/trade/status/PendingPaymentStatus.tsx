@@ -265,6 +265,9 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
           orderDetails={{
             id: orderDetails._id || orderId || "",
             amount: ((orderDetails.product?.price || 0) * quantity).toString(),
+            tradeId: orderDetails.product.tradeId,
+            quantity: orderDetails.quantity.toString(),
+            logisticsProvider: orderDetails.logisticsProviderWalletAddress,
             items: [
               {
                 name: orderDetails.product?.name || "Product",
