@@ -18,14 +18,6 @@ export const copyToClipboard = async (text: string): Promise<void> => {
   }
 };
 
-export const formatCurrency = (amount: string | number): string => {
-  const num = typeof amount === "string" ? parseFloat(amount) : amount;
-  return new Intl.NumberFormat("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(num);
-};
-
 export const getBlockExplorerUrl = (
   hash: string,
   type: "tx" | "address" = "tx"

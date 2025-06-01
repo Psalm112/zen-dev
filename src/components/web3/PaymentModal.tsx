@@ -138,7 +138,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                       {item.name} × {item.quantity}
                     </span>
                     <span className="text-white font-medium">
-                      ${formatCurrency(item.price)}
+                      {formatCurrency(item.price)}
                     </span>
                   </div>
                 ))}
@@ -173,7 +173,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                   </div>
                   <div className="text-right">
                     <p className="text-white font-medium">
-                      ${formatCurrency(usdtBalance)}
+                      {wallet.usdtBalance?.usdt}
                     </p>
                     <p className="text-xs text-gray-400">Available</p>
                   </div>
@@ -188,8 +188,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 <div>
                   <p className="text-Red font-medium">Secure Escrow Payment</p>
                   <p className="text-sm text-Red/80 mt-1">
-                    Your payment is held securely until you confirm receipt of
-                    your order.
+                    Your payment is held securely until you confirm the delivery
+                    of your order.
                   </p>
                 </div>
               </div>
@@ -238,12 +238,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
             {/* Payment Button */}
             <Button
-              title={`Pay $${formatCurrency(orderDetails.amount)} USDT`}
+              title={`Pay ${formatCurrency(orderDetails.amount)} USDT`}
               onClick={handlePayment}
               disabled={
                 hasInsufficientBalance || hasInsufficientGas || isProcessing
               }
-              className="w-full bg-Red hover:bg-Red/80 text-white text-lg py-4 font-semibold transition-all duration-200"
+              className="flex items-center justify-center w-full bg-Red hover:bg-Red/80 text-white text-lg py-4 font-semibold transition-all duration-200"
             />
           </div>
         );

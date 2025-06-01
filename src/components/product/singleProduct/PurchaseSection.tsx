@@ -179,36 +179,30 @@ const PurchaseSection = ({
 
         {/* Wallet Balance Display */}
         {wallet.isConnected && (
-          <div className="bg-Dark/30 border border-Red/20 rounded-lg p-3 space-y-2">
-            <div className="flex items-center gap-2 text-xs text-gray-400">
-              <HiCurrencyDollar className="w-3 h-3" />
-              <span>Wallet Balance</span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 text-xs">
-              <div className="space-y-1">
-                <div className="text-gray-400">USDT</div>
-                <div className="text-white font-medium">
+          <div className="bg-Dark/30 border border-Red/20 rounded-lg p-2 text-xs">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <HiCurrencyDollar className="w-3 h-3 text-Red" />
+                <span className="text-gray-400">Balance:</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-white">
                   {wallet.usdtBalance?.usdt || "Loading..."}
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <div className="text-gray-400">CELO (Gas)</div>
-                <div className="text-white font-medium">
+                </span>
+                <span className="text-gray-300">
                   {wallet.balance
-                    ? `${parseFloat(wallet.balance).toFixed(4)}`
-                    : "0.0000"}
-                </div>
+                    ? `${parseFloat(wallet.balance).toFixed(2)} CELO`
+                    : "0 CELO"}
+                </span>
               </div>
             </div>
 
-            <div className="text-center pt-2 border-t border-Red/10">
-              <div className="text-xs text-gray-500">
+            <div className="text-center mt-1 pt-1 border-t border-Red/10">
+              <div className="text-gray-500 text-xs">
                 {wallet.address
                   ? `${wallet.address.substring(
                       0,
-                      6
+                      4
                     )}...${wallet.address.substring(wallet.address.length - 4)}`
                   : ""}
               </div>
