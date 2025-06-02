@@ -31,6 +31,7 @@ import { useSnackbar } from "./SnackbarContext";
 import { useCurrencyConverter } from "../utils/hooks/useCurrencyConverter";
 import { DEZENMART_ABI } from "../utils/abi/dezenmartAbi.json";
 import { ESCROW_ADDRESSES } from "../utils/config/web3.config";
+import { parseWeb3Error } from "../utils/errorParser";
 
 interface ExtendedWalletState extends WalletState {
   usdtBalance?: {
@@ -293,21 +294,10 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
           "success"
         );
         return transaction;
-      } catch (error: any) {
+      } catch (error) {
         console.error("Buy trade failed:", error);
-
-        // Handle specific contract errors
-        if (error.message?.includes("InsufficientUSDTBalance")) {
-          throw new Error("Insufficient USDT balance for this purchase");
-        }
-        if (error.message?.includes("InsufficientUSDTAllowance")) {
-          throw new Error("Please approve USDT spending first");
-        }
-        if (error.message?.includes("InsufficientQuantity")) {
-          throw new Error("Not enough items available");
-        }
-
-        throw new Error(error.message || "Purchase failed");
+        const errorMessage = parseWeb3Error(error);
+        throw new Error(errorMessage);
       }
     },
     [

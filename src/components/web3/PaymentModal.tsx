@@ -15,6 +15,7 @@ import { PaymentTransaction } from "../../utils/types/web3.types";
 import { formatCurrency } from "../../utils/web3.utils";
 import { useSnackbar } from "../../context/SnackbarContext";
 import { Order } from "../../utils/types";
+import { parseWeb3Error } from "../../utils/errorParser";
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -190,9 +191,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       setStep("success");
       onPaymentSuccess(paymentTransaction);
       showSnackbar("Purchase completed successfully!", "success");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Payment failed:", error);
-      const errorMessage = error.message || "Payment failed. Please try again.";
+      const errorMessage = parseWeb3Error(error);
       setError(errorMessage);
       setStep("error");
       showSnackbar(errorMessage, "error");
