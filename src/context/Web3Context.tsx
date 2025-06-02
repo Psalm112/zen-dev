@@ -267,17 +267,27 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       try {
-        // Execute the buyTrade transaction with proper error handling
+        // Ensure all parameters are properly typed and validated
+        const tradeId = BigInt(params.tradeId);
+        const quantity = BigInt(params.quantity);
+        const logisticsProvider = params.logisticsProvider as `0x${string}`;
+
+        // Validate logistics provider address format
+        if (
+          !logisticsProvider ||
+          !logisticsProvider.startsWith("0x") ||
+          logisticsProvider.length !== 42
+        ) {
+          throw new Error("Invalid logistics provider address");
+        }
+
+        // Execute the buyTrade transaction
         const hash = await writeContractAsync({
           address: escrowAddress as `0x${string}`,
           abi: DEZENMART_ABI,
           functionName: "buyTrade",
-          args: [
-            BigInt(params.tradeId),
-            BigInt(params.quantity),
-            params.logisticsProvider as `0x${string}`,
-          ],
-          gas: BigInt(500000), // Set explicit gas limit
+          args: [tradeId, quantity, logisticsProvider],
+          gas: BigInt(500000),
         });
 
         if (!hash) {
@@ -286,7 +296,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
 
         const transaction: PaymentTransaction = {
           hash,
-          amount: "0", // Will be calculated by contract
+          amount: "0",
           token: "USDT",
           to: escrowAddress,
           from: address,
@@ -298,7 +308,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
       } catch (error: any) {
         console.error("Buy trade failed:", error);
 
-        // Enhanced error handling for specific contract errors
+        // Enhanced error handling
         if (error?.message?.includes("InsufficientUSDTBalance")) {
           throw new Error("Insufficient USDT balance for this purchase");
         }
@@ -319,8 +329,8 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
           throw new Error("Transaction was rejected by user");
         }
 
-        const errorMessage = parseWeb3Error(error);
-        throw new Error(errorMessage);
+        // Generic fallback
+        throw new Error("Transaction failed. Please try again.");
       }
     },
     [address, chain, isCorrectNetwork, writeContractAsync]
