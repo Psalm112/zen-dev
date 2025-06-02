@@ -59,12 +59,18 @@ export interface BuyTradeParams {
   logisticsProvider: string;
 }
 
-export interface OrderDetails {
-  id: string;
-  amount: string;
-  tradeId: string;
-  quantity: string;
-  logisticsProvider: string;
-  items: Array<{ name: string; quantity: number; price: string }>;
-  escrowAddress: string;
+export interface PaymentOrderDetails {
+  _id: string;
+  product: {
+    _id: string;
+    name: string;
+    price: number;
+    tradeId: string;
+    logisticsCost: string[];
+    logisticsProviders: string[];
+  };
+  amount: number;
+  quantity: number;
+  logisticsProviderWalletAddress: string;
+  escrowAddress?: string;
 }

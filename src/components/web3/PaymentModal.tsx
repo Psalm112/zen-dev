@@ -11,7 +11,7 @@ import {
 import Modal from "../common/Modal";
 import Button from "../common/Button";
 import { useWeb3 } from "../../context/Web3Context";
-import { OrderDetails, PaymentTransaction } from "../../utils/types/web3.types";
+import { PaymentTransaction } from "../../utils/types/web3.types";
 import { formatCurrency } from "../../utils/web3.utils";
 import { useSnackbar } from "../../context/SnackbarContext";
 import { Order } from "../../utils/types";
@@ -54,11 +54,19 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
 
-  const orderAmount = useMemo(() => orderDetails.amount, [orderDetails.amount]);
+  // Memoized calculations
+  const orderAmount = useMemo(() => {
+    return (
+      orderDetails?.amount ||
+      (orderDetails?.product?.price || 0) * (orderDetails?.quantity || 1)
+    );
+  }, [orderDetails]);
+
   const balanceNumber = useMemo(
     () => parseFloat(usdtBalance.replace(/,/g, "")),
     [usdtBalance]
   );
+
   const gasBalance = useMemo(
     () => parseFloat(wallet.balance || "0"),
     [wallet.balance]
@@ -68,8 +76,10 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     () => balanceNumber < orderAmount,
     [balanceNumber, orderAmount]
   );
+
   const hasInsufficientGas = useMemo(() => gasBalance < 0.01, [gasBalance]);
 
+  // Load balance function
   const loadBalance = useCallback(async () => {
     if (!wallet.isConnected) return;
 
@@ -111,6 +121,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       setTransaction(null);
       setApprovalHash("");
       setRetryCount(0);
+      setIsProcessing(false);
     }
   }, [isOpen]);
 
@@ -136,7 +147,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     if (hasInsufficientBalance) {
       setError(
         `Insufficient USDT balance. Required: ${formatCurrency(
-          orderDetails.amount
+          orderAmount
         )} USDT`
       );
       setStep("error");
@@ -159,24 +170,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       // Step 1: Approve USDT if needed
       if (needsApproval) {
         showSnackbar("Approving USDT spending...", "info");
-        const approvalTx = await approveUSDT(orderDetails.amount.toString());
+        const approvalTx = await approveUSDT(orderAmount.toString());
         setApprovalHash(approvalTx);
 
-        // Wait for approval confirmation with timeout
-        const approvalTimeout = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("Approval timeout")), 60000)
-        );
-
-        const approvalWait = new Promise((resolve) =>
-          setTimeout(resolve, 5000)
-        );
-
-        try {
-          await Promise.race([approvalWait, approvalTimeout]);
-          showSnackbar("USDT spending approved!", "success");
-        } catch (timeoutError) {
-          throw new Error("Approval transaction timed out. Please try again.");
-        }
+        // Wait for approval confirmation
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+        showSnackbar("USDT spending approved!", "success");
       }
 
       // Step 2: Execute buy trade
@@ -207,6 +206,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     hasInsufficientGas,
     needsApproval,
     orderDetails,
+    orderAmount,
     switchToCorrectNetwork,
     approveUSDT,
     buyTrade,
@@ -219,6 +219,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     setRetryCount((prev) => prev + 1);
     setStep("review");
     setError("");
+    setIsProcessing(false);
 
     // Refresh balance and approval status
     loadBalance();
@@ -227,12 +228,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
   // Safe modal close
   const handleModalClose = useCallback(() => {
-    if (step === "processing") {
+    if (step === "processing" && isProcessing) {
       showSnackbar("Transaction in progress. Please wait...", "info");
       return;
     }
     onClose();
-  }, [step, onClose, showSnackbar]);
+  }, [step, isProcessing, onClose, showSnackbar]);
 
   const renderStepContent = () => {
     switch (step) {
@@ -245,21 +246,19 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 Order Summary
               </h3>
               <div className="bg-Dark/50 border border-Red/20 rounded-lg p-4 space-y-3">
-                {orderDetails.product && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-300">
-                      {orderDetails.product.name} × {orderDetails.quantity}
-                    </span>
-                    <span className="text-white font-medium">
-                      {formatCurrency(orderDetails.amount)} USDT
-                    </span>
-                  </div>
-                )}
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-300">
+                    {orderDetails.product?.name} × {orderDetails.quantity}
+                  </span>
+                  <span className="text-white font-medium">
+                    {formatCurrency(orderAmount)} USDT
+                  </span>
+                </div>
                 <div className="border-t border-Red/20 pt-3">
                   <div className="flex justify-between text-lg font-bold">
                     <span className="text-white">Total</span>
                     <span className="text-Red">
-                      {formatCurrency(orderDetails.amount)} USDT
+                      {formatCurrency(orderAmount)} USDT
                     </span>
                   </div>
                 </div>
@@ -321,7 +320,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                       <HiExclamationTriangle className="w-4 h-4 text-red-400" />
                       <span className="text-red-400 text-sm">
                         Insufficient USDT balance. Need{" "}
-                        {formatCurrency(orderDetails.amount)} USDT
+                        {formatCurrency(orderAmount)} USDT
                       </span>
                     </div>
                   </div>
@@ -364,7 +363,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
             {/* Payment Button */}
             <Button
-              title={`Pay ${formatCurrency(orderDetails.amount)} USDT`}
+              title={`Pay ${formatCurrency(orderAmount)} USDT`}
               onClick={handlePayment}
               disabled={
                 hasInsufficientBalance || hasInsufficientGas || isProcessing
