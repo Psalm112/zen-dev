@@ -49,12 +49,11 @@ const ViewOrderDetail = () => {
     if (orderDetails?.status) {
       const statusMapping: Record<string, TradeStatusType> = {
         pending: "pending",
-        accepted: "pending",
+        accepted: "release",
         rejected: "cancelled",
         completed: "completed",
         disputed: "cancelled",
         refunded: "pending",
-        delivery_confirmed: "completed",
       };
 
       setOrderStatus(
