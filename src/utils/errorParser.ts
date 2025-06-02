@@ -1,69 +1,90 @@
-interface Web3Error {
-  message?: string;
-  reason?: string;
-  code?: string | number;
-  data?: {
-    message?: string;
-  };
-  details?: string;
-  shortMessage?: string;
-}
-
-export const parseWeb3Error = (error: unknown): string => {
-  // Handle null/undefined
-  if (!error) {
-    return "An unknown error occurred";
+export const parseWeb3Error = (error: any): string => {
+  if (error?.cause?.reason) {
+    return error.cause.reason;
   }
 
-  // Handle string errors
-  if (typeof error === "string") {
-    return error;
+  if (error?.shortMessage) {
+    return error.shortMessage;
   }
 
-  // Handle Error objects and Web3 errors
-  if (typeof error === "object") {
-    const err = error as Web3Error;
+  const errorMessage = error?.message || error?.toString() || "";
 
-    // Check for specific contract errors first
-    const errorStr = JSON.stringify(error).toLowerCase();
-
-    if (errorStr.includes("insufficientusdtbalance")) {
-      return "Insufficient USDT balance for this purchase";
-    }
-    if (errorStr.includes("insufficientusdtallowance")) {
-      return "Please approve USDT spending first";
-    }
-    if (errorStr.includes("insufficientquantity")) {
-      return "Not enough items available";
-    }
-    if (errorStr.includes("buyerisseller")) {
-      return "You cannot buy your own product";
-    }
-    if (errorStr.includes("user rejected")) {
-      return "Transaction was rejected by user";
-    }
-    if (errorStr.includes("insufficient funds")) {
-      return "Insufficient CELO for transaction fees";
-    }
-
-    // Try different error message properties
-    if (err.shortMessage && typeof err.shortMessage === "string") {
-      return err.shortMessage;
-    }
-    if (err.message && typeof err.message === "string") {
-      return err.message;
-    }
-    if (err.reason && typeof err.reason === "string") {
-      return err.reason;
-    }
-    if (err.data?.message && typeof err.data.message === "string") {
-      return err.data.message;
-    }
-    if (err.details && typeof err.details === "string") {
-      return err.details;
-    }
+  // error messages
+  if (errorMessage.includes("insufficient funds")) {
+    return "Insufficient funds for gas fees";
   }
 
-  // Fallback
+  if (errorMessage.includes("user rejected")) {
+    return "Transaction was cancelled by user";
+  }
+
+  if (
+    errorMessage.includes("network changed") ||
+    errorMessage.includes("chain mismatch")
+  ) {
+    return "Network changed during transaction. Please try again.";
+  }
+
+  if (errorMessage.includes("nonce too low")) {
+    return "Transaction nonce error. Please try again.";
+  }
+
+  if (errorMessage.includes("gas limit")) {
+    return "Gas limit exceeded. Please try again.";
+  }
+
+  if (errorMessage.includes("replacement transaction underpriced")) {
+    return "Transaction underpriced. Please increase gas price.";
+  }
+
+  // Contract-specific errors
+  if (errorMessage.includes("InsufficientUSDTBalance")) {
+    return "Insufficient USDT balance";
+  }
+
+  if (errorMessage.includes("InsufficientUSDTAllowance")) {
+    return "Insufficient USDT allowance. Please approve spending.";
+  }
+
+  if (errorMessage.includes("InvalidTradeId")) {
+    return "Invalid trade ID";
+  }
+
+  if (errorMessage.includes("InvalidQuantity")) {
+    return "Invalid quantity specified";
+  }
+
+  if (errorMessage.includes("InsufficientQuantity")) {
+    return "Insufficient quantity available";
+  }
+
+  if (errorMessage.includes("BuyerIsSeller")) {
+    return "Cannot buy your own trade";
+  }
+
+  if (errorMessage.includes("InvalidLogisticsProvider")) {
+    return "Invalid logistics provider selected";
+  }
+
+  if (errorMessage.includes("NotAuthorized")) {
+    return "You are not authorized to perform this action";
+  }
+
+  if (errorMessage.includes("InvalidPurchaseId")) {
+    return "Invalid purchase ID";
+  }
+
+  if (errorMessage.includes("InvalidPurchaseState")) {
+    return "Purchase is not in the correct state for this action";
+  }
+
+  if (errorMessage.includes("PurchaseNotFound")) {
+    return "Purchase not found";
+  }
+
+  if (errorMessage.includes("TradeNotFound")) {
+    return "Trade not found";
+  }
+
   return "Transaction failed. Please try again.";
 };
