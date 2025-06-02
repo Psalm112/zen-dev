@@ -401,15 +401,14 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
           abi: erc20Abi,
           functionName: "approve",
           args: [escrowAddress as `0x${string}`, maxApproval],
-          gas: BigInt(150000), // Increased gas limit
+          gas: BigInt(150000),
         });
 
-        // Wait for transaction confirmation
-        const receipt = await waitForTransactionReceipt(config, { hash });
+        // const receipt = await waitForTransactionReceipt(config, { hash });
 
-        if (receipt.status !== "success") {
-          throw new Error("Approval transaction failed");
-        }
+        // if (receipt.status !== "success") {
+        //   throw new Error("Approval transaction failed");
+        // }
 
         return hash;
       } catch (error: any) {
