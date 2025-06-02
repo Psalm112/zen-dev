@@ -1,4 +1,3 @@
-// src/components/trade/status/PendingPaymentStatus.tsx
 import { FC, useState, useEffect, useCallback, useMemo } from "react";
 import {
   OrderDetails,
