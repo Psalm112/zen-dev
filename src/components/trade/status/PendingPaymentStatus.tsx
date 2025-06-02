@@ -290,25 +290,25 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
   );
 
   // Memoized order details for PaymentModal
-  const paymentOrderDetails = useMemo(() => {
-    if (!orderDetails) return null;
+  // const paymentOrderDetails = useMemo(() => {
+  //   if (!orderDetails) return null;
 
-    return {
-      id: orderDetails._id || orderId || "",
-      amount: totalAmount.toString(),
-      tradeId: orderDetails.product.tradeId,
-      quantity: quantity.toString(),
-      logisticsProvider: orderDetails.logisticsProviderWalletAddress,
-      items: [
-        {
-          name: orderDetails.product?.name || "Product",
-          quantity: quantity,
-          price: (orderDetails.product?.price || 0).toString(),
-        },
-      ],
-      escrowAddress,
-    };
-  }, [orderDetails, orderId, totalAmount, quantity, escrowAddress]);
+  //   return {
+  //     id: orderDetails._id || orderId || "",
+  //     amount: totalAmount.toString(),
+  //     tradeId: orderDetails.product.tradeId,
+  //     quantity: quantity.toString(),
+  //     logisticsProvider: orderDetails.logisticsProviderWalletAddress,
+  //     items: [
+  //       {
+  //         name: orderDetails.product?.name || "Product",
+  //         quantity: quantity,
+  //         price: (orderDetails.product?.price || 0).toString(),
+  //       },
+  //     ],
+  //     escrowAddress,
+  //   };
+  // }, [orderDetails, orderId, totalAmount, quantity, escrowAddress]);
 
   return (
     <>
@@ -386,11 +386,11 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
       </Modal>
 
       {/* Payment Modal */}
-      {paymentOrderDetails && (
+      {orderDetails && (
         <PaymentModal
           isOpen={isPaymentModalOpen}
           onClose={handlePaymentModalClose}
-          orderDetails={paymentOrderDetails}
+          orderDetails={orderDetails}
           onPaymentSuccess={handlePaymentSuccess}
         />
       )}

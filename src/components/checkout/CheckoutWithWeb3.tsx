@@ -95,12 +95,12 @@ const CheckoutWithWeb3: React.FC<CheckoutWithWeb3Props> = React.memo(
         </div>
 
         {/* Crypto Payment Modal */}
-        <PaymentModal
+        {/* <PaymentModal
           isOpen={showPaymentModal}
           onClose={handleModalClose}
           orderDetails={memoizedOrderDetails}
           onPaymentSuccess={handlePaymentSuccess}
-        />
+        /> */}
       </div>
     );
   }

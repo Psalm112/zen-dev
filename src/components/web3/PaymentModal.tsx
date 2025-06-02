@@ -14,11 +14,12 @@ import { useWeb3 } from "../../context/Web3Context";
 import { OrderDetails, PaymentTransaction } from "../../utils/types/web3.types";
 import { formatCurrency } from "../../utils/web3.utils";
 import { useSnackbar } from "../../context/SnackbarContext";
+import { Order } from "../../utils/types";
 
 interface PaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  orderDetails: OrderDetails;
+  orderDetails: Order;
   onPaymentSuccess: (transaction: PaymentTransaction) => void;
 }
 
@@ -53,10 +54,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
 
-  const orderAmount = useMemo(
-    () => parseFloat(orderDetails.amount),
-    [orderDetails.amount]
-  );
+  const orderAmount = useMemo(() => orderDetails.amount, [orderDetails.amount]);
   const balanceNumber = useMemo(
     () => parseFloat(usdtBalance.replace(/,/g, "")),
     [usdtBalance]
@@ -161,90 +159,41 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       // Step 1: Approve USDT if needed
       if (needsApproval) {
         showSnackbar("Approving USDT spending...", "info");
-        const approvalTx = await approveUSDT(orderDetails.amount);
+        const approvalTx = await approveUSDT(orderDetails.amount.toString());
         setApprovalHash(approvalTx);
 
-        // Wait for approval confirmation with exponential backoff
-        let retries = 0;
-        const maxRetries = 5;
-        const baseDelay = 3000;
+        // Wait for approval confirmation with timeout
+        const approvalTimeout = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Approval timeout")), 60000)
+        );
 
-        while (retries < maxRetries) {
-          try {
-            await new Promise((resolve) =>
-              setTimeout(resolve, baseDelay * Math.pow(1.5, retries))
-            );
+        const approvalWait = new Promise((resolve) =>
+          setTimeout(resolve, 5000)
+        );
 
-            // Check if approval went through
-            const currentAllowance = await getCurrentAllowance();
-            if (currentAllowance >= orderAmount) {
-              showSnackbar("USDT spending approved!", "success");
-              break;
-            }
-
-            retries++;
-            if (retries === maxRetries) {
-              throw new Error(
-                "Approval confirmation timed out. Please try again."
-              );
-            }
-          } catch (error) {
-            if (retries === maxRetries - 1) {
-              throw new Error("Approval transaction failed or timed out.");
-            }
-            retries++;
-          }
+        try {
+          await Promise.race([approvalWait, approvalTimeout]);
+          showSnackbar("USDT spending approved!", "success");
+        } catch (timeoutError) {
+          throw new Error("Approval transaction timed out. Please try again.");
         }
       }
 
-      // Step 2: Execute buy trade with proper logistics provider validation
+      // Step 2: Execute buy trade
       showSnackbar("Processing purchase...", "info");
-
-      // Validate and ensure logistics provider is a proper address string
-      const logisticsProvider = orderDetails.logisticsProvider?.trim();
-      if (!logisticsProvider || typeof logisticsProvider !== "string") {
-        throw new Error("Invalid logistics provider address");
-      }
-
-      // Validate it's a proper Ethereum address format
-      if (!/^0x[a-fA-F0-9]{40}$/.test(logisticsProvider)) {
-        throw new Error("Logistics provider must be a valid Ethereum address");
-      }
-
       const paymentTransaction = await buyTrade({
-        tradeId: orderDetails.tradeId,
-        quantity: orderDetails.quantity,
-        logisticsProvider: logisticsProvider as `0x${string}`,
+        tradeId: orderDetails.product.tradeId,
+        quantity: orderDetails.quantity.toString(),
+        logisticsProvider: orderDetails.logisticsProviderWalletAddress,
       });
 
       setTransaction(paymentTransaction);
       setStep("success");
       onPaymentSuccess(paymentTransaction);
       showSnackbar("Purchase completed successfully!", "success");
-
-      // Auto-refresh balances after successful purchase
-      setTimeout(() => {
-        loadBalance();
-      }, 2000);
     } catch (error: any) {
       console.error("Payment failed:", error);
-
-      // Enhanced error handling with specific error messages
-      let errorMessage = "Payment failed. Please try again.";
-
-      if (error.message?.includes("user rejected")) {
-        errorMessage = "Transaction was cancelled by user.";
-      } else if (error.message?.includes("insufficient funds")) {
-        errorMessage = "Insufficient funds for transaction.";
-      } else if (error.message?.includes("gas")) {
-        errorMessage =
-          "Transaction failed due to gas issues. Please try again.";
-      } else if (error.message?.includes("logistics provider")) {
-        errorMessage = "Invalid logistics provider. Please contact support.";
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-
+      const errorMessage = error.message || "Payment failed. Please try again.";
       setError(errorMessage);
       setStep("error");
       showSnackbar(errorMessage, "error");
@@ -258,14 +207,11 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     hasInsufficientGas,
     needsApproval,
     orderDetails,
-    orderAmount,
     switchToCorrectNetwork,
     approveUSDT,
     buyTrade,
-    getCurrentAllowance,
     onPaymentSuccess,
     showSnackbar,
-    loadBalance,
   ]);
 
   // Retry handler
@@ -299,16 +245,16 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 Order Summary
               </h3>
               <div className="bg-Dark/50 border border-Red/20 rounded-lg p-4 space-y-3">
-                {orderDetails.items.map((item, index) => (
-                  <div key={index} className="flex justify-between text-sm">
+                {orderDetails.product && (
+                  <div className="flex justify-between text-sm">
                     <span className="text-gray-300">
-                      {item.name} × {item.quantity}
+                      {orderDetails.product.name} × {orderDetails.quantity}
                     </span>
                     <span className="text-white font-medium">
-                      {formatCurrency(item.price)} USDT
+                      {formatCurrency(orderDetails.amount)} USDT
                     </span>
                   </div>
-                ))}
+                )}
                 <div className="border-t border-Red/20 pt-3">
                   <div className="flex justify-between text-lg font-bold">
                     <span className="text-white">Total</span>
