@@ -147,7 +147,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       try {
         setIsProcessing(true);
         await switchToCorrectNetwork();
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await new Promise((resolve) => setTimeout(resolve, 3000)); // Wait longer
         setIsProcessing(false);
       } catch (error) {
         setError(
@@ -187,21 +187,41 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
         try {
           const approvalTx = await approveUSDT(orderAmount.toString());
-          setApprovalHash(approvalTx);
-          showSnackbar(
-            "USDT approval submitted. Waiting for confirmation...",
-            "info"
-          );
 
-          // Wait for approval confirmation
-          await new Promise((resolve) => setTimeout(resolve, 5000));
-
-          // Recheck allowance
-          const newAllowance = await getCurrentAllowance();
-          if (newAllowance < orderAmount) {
-            throw new Error(
-              "Approval failed or insufficient. Please try again."
+          if (approvalTx !== "0x0") {
+            // Only wait if new approval was made
+            setApprovalHash(approvalTx);
+            showSnackbar(
+              "USDT approval submitted. Waiting for confirmation...",
+              "info"
             );
+
+            // Wait for approval confirmation with retry logic
+            let confirmed = false;
+            let attempts = 0;
+            const maxAttempts = 20; // 40 seconds total
+
+            while (!confirmed && attempts < maxAttempts) {
+              await new Promise((resolve) => setTimeout(resolve, 2000));
+
+              try {
+                const newAllowance = await getCurrentAllowance();
+                if (newAllowance >= orderAmount) {
+                  confirmed = true;
+                  break;
+                }
+              } catch (checkError) {
+                console.warn("Allowance check failed:", checkError);
+              }
+
+              attempts++;
+            }
+
+            if (!confirmed) {
+              throw new Error(
+                "Approval confirmation timeout. Please try again."
+              );
+            }
           }
 
           showSnackbar("USDT spending approved!", "success");
@@ -210,6 +230,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           throw new Error(`Approval failed: ${parseWeb3Error(approvalError)}`);
         }
       }
+
+      // Add delay before purchase transaction
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       showSnackbar("Processing purchase transaction...", "info");
 
@@ -224,9 +247,10 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       onPaymentSuccess(paymentTransaction);
       showSnackbar("Purchase completed successfully!", "success");
 
+      // Refresh balance after successful transaction
       setTimeout(() => {
         loadBalance();
-      }, 2000);
+      }, 3000);
     } catch (error: unknown) {
       console.error("Payment failed:", error);
       const errorMessage = parseWeb3Error(error);
@@ -253,7 +277,6 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     showSnackbar,
     loadBalance,
   ]);
-
   // Enhanced retry with state refresh
   const handleRetry = useCallback(() => {
     setRetryCount((prev) => prev + 1);
@@ -361,6 +384,17 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 </div>
               </div>
             </div>
+
+            {needsApproval && (
+              <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-3">
+                <div className="flex items-center gap-2">
+                  <HiExclamationTriangle className="w-4 h-4 text-yellow-400" />
+                  <span className="text-yellow-400 text-sm">
+                    USDT spending approval required for this transaction
+                  </span>
+                </div>
+              </div>
+            )}
 
             {/* Warnings */}
             {(!wallet.isConnected ||

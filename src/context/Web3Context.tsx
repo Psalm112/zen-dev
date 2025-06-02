@@ -57,6 +57,7 @@ const Web3Context = createContext<ExtendedWeb3ContextType | undefined>(
 export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
+  const waitForTransactionReceipt = useWaitForTransactionReceipt;
   const { showSnackbar } = useSnackbar();
   const { address, isConnected, chain } = useAccount();
   const {
@@ -326,54 +327,6 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
     [address, chain, isCorrectNetwork, writeContractAsync]
   );
 
-  const approveUSDT = useCallback(
-    async (amount: string): Promise<string> => {
-      if (!address || !chain?.id) {
-        throw new Error("Wallet not connected");
-      }
-
-      const usdtAddress =
-        USDT_ADDRESSES[chain.id as keyof typeof USDT_ADDRESSES];
-      const escrowAddress =
-        ESCROW_ADDRESSES[chain.id as keyof typeof ESCROW_ADDRESSES];
-
-      if (!usdtAddress || !escrowAddress) {
-        throw new Error("Contracts not available on this network");
-      }
-
-      try {
-        // Use a higher allowance to avoid repeated approvals
-        const approvalAmount = parseUnits(
-          (parseFloat(amount) * 1.1).toString(),
-          6
-        );
-
-        const hash = await writeContractAsync({
-          address: usdtAddress as `0x${string}`,
-          abi: erc20Abi,
-          functionName: "approve",
-          args: [escrowAddress as `0x${string}`, approvalAmount],
-          gas: BigInt(100000), // Set explicit gas limit for approval
-        });
-
-        if (!hash) {
-          throw new Error("Approval transaction failed");
-        }
-
-        return hash;
-      } catch (error: any) {
-        console.error("USDT approval failed:", error);
-
-        if (error?.message?.includes("User rejected")) {
-          throw new Error("Approval was rejected by user");
-        }
-
-        throw new Error(parseWeb3Error(error));
-      }
-    },
-    [address, chain, writeContractAsync]
-  );
-
   // Check current allowance
   const { data: usdtAllowance, refetch: refetchAllowance } = useReadContract({
     address: usdtContractAddress,
@@ -413,6 +366,67 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
       return 0;
     }
   }, [address, chain?.id, usdtContractAddress, refetchAllowance, usdtDecimals]);
+
+  const approveUSDT = useCallback(
+    async (amount: string): Promise<string> => {
+      if (!address || !chain?.id) {
+        throw new Error("Wallet not connected");
+      }
+
+      const usdtAddress =
+        USDT_ADDRESSES[chain.id as keyof typeof USDT_ADDRESSES];
+      const escrowAddress =
+        ESCROW_ADDRESSES[chain.id as keyof typeof ESCROW_ADDRESSES];
+
+      if (!usdtAddress || !escrowAddress) {
+        throw new Error("Contracts not available on this network");
+      }
+
+      try {
+        // Check current allowance first
+        const currentAllowance = await getCurrentAllowance();
+        const requiredAmount = parseFloat(amount);
+
+        if (currentAllowance >= requiredAmount) {
+          return "0x0"; // Already approved
+        }
+
+        // Set approval to max uint256 to avoid repeated approvals
+        const maxApproval = BigInt(
+          "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        );
+
+        const hash = await writeContractAsync({
+          address: usdtAddress as `0x${string}`,
+          abi: erc20Abi,
+          functionName: "approve",
+          args: [escrowAddress as `0x${string}`, maxApproval],
+          gas: BigInt(150000), // Increased gas limit
+        });
+
+        // Wait for transaction confirmation
+        const receipt = await waitForTransactionReceipt(config, { hash });
+
+        if (receipt.status !== "success") {
+          throw new Error("Approval transaction failed");
+        }
+
+        return hash;
+      } catch (error: any) {
+        console.error("USDT approval failed:", error);
+
+        if (error?.message?.includes("User rejected")) {
+          throw new Error("Approval was rejected by user");
+        }
+        if (error?.message?.includes("insufficient funds")) {
+          throw new Error("Insufficient CELO for gas fees");
+        }
+
+        throw new Error(`Approval failed: ${parseWeb3Error(error)}`);
+      }
+    },
+    [address, chain, writeContractAsync, getCurrentAllowance]
+  );
 
   const sendPayment = useCallback(
     async (params: PaymentParams): Promise<PaymentTransaction> => {
