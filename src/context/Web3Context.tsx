@@ -12,13 +12,13 @@ import {
   useDisconnect,
   useBalance,
   useSwitchChain,
-} from "wagmi";
-import { parseUnits, formatUnits, erc20Abi } from "viem";
-import {
   useReadContract,
   useWriteContract,
   useWaitForTransactionReceipt,
 } from "wagmi";
+import { parseUnits, formatUnits, erc20Abi } from "viem";
+import { readContract } from "@wagmi/core";
+import { config } from "../utils/config/wagmi.config";
 import {
   Web3ContextType,
   WalletState,
@@ -26,11 +26,14 @@ import {
   PaymentParams,
   BuyTradeParams,
 } from "../utils/types/web3.types";
-import { TARGET_CHAIN, USDT_ADDRESSES } from "../utils/config/web3.config";
+import {
+  TARGET_CHAIN,
+  USDT_ADDRESSES,
+  ESCROW_ADDRESSES,
+} from "../utils/config/web3.config";
 import { useSnackbar } from "./SnackbarContext";
 import { useCurrencyConverter } from "../utils/hooks/useCurrencyConverter";
 import { DEZENMART_ABI } from "../utils/abi/dezenmartAbi.json";
-import { ESCROW_ADDRESSES } from "../utils/config/web3.config";
 import { parseWeb3Error } from "../utils/errorParser";
 
 interface ExtendedWalletState extends WalletState {
@@ -49,6 +52,17 @@ interface TransactionState {
   error?: string;
 }
 
+interface TradeDetails {
+  seller: string;
+  productCost: bigint;
+  escrowFee: bigint;
+  totalQuantity: bigint;
+  remainingQuantity: bigint;
+  active: boolean;
+  logisticsProviders: string[];
+  logisticsCosts: bigint[];
+}
+
 interface ExtendedWeb3ContextType extends Omit<Web3ContextType, "wallet"> {
   wallet: ExtendedWalletState;
   buyTrade: (params: BuyTradeParams) => Promise<PaymentTransaction>;
@@ -57,6 +71,12 @@ interface ExtendedWeb3ContextType extends Omit<Web3ContextType, "wallet"> {
   usdtDecimals: number | undefined;
   transactionState: TransactionState;
   needsApproval: (amount: string) => Promise<boolean>;
+  getTradeDetails: (tradeId: string) => Promise<TradeDetails>;
+  calculateTotalCost: (
+    tradeId: string,
+    quantity: string,
+    logisticsProvider: string
+  ) => Promise<string>;
 }
 
 const Web3Context = createContext<ExtendedWeb3ContextType | undefined>(
@@ -92,13 +112,34 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
 
   const isCorrectNetwork = chain?.id === TARGET_CHAIN.id;
 
+  // Memoized contract addresses
+  const contractConfig = useMemo(() => {
+    if (!chain?.id) return null;
+    return {
+      escrowAddress:
+        ESCROW_ADDRESSES[chain.id as keyof typeof ESCROW_ADDRESSES],
+      usdtAddress: USDT_ADDRESSES[chain.id as keyof typeof USDT_ADDRESSES],
+    };
+  }, [chain?.id]);
+
+  // Query options
+  const queryOptions = useMemo(
+    () => ({
+      enabled: !!address && !!contractConfig?.usdtAddress && isCorrectNetwork,
+      refetchInterval: 30000,
+      staleTime: 15000,
+      retry: 2,
+      retryDelay: (attemptIndex: number) =>
+        Math.min(1000 * 2 ** attemptIndex, 10000),
+    }),
+    [address, contractConfig?.usdtAddress, isCorrectNetwork]
+  );
+
   // Transaction receipt monitoring
   const { data: receipt, isLoading: isConfirming } =
     useWaitForTransactionReceipt({
       hash: currentTxHash as `0x${string}`,
-      query: {
-        enabled: !!currentTxHash,
-      },
+      query: { enabled: !!currentTxHash },
     });
 
   // Update transaction state based on receipt
@@ -136,65 +177,44 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
   // CELO balance for gas fees
   const { data: celoBalance, refetch: refetchCeloBalance } = useBalance({
     address,
-    query: {
-      enabled: !!address && isCorrectNetwork,
-      refetchInterval: 30000,
-    },
+    query: queryOptions,
   });
 
-  // Get USDT contract address
-  const usdtContractAddress = useMemo(() => {
-    if (!address || !chain?.id) return undefined;
-    const contractAddr =
-      USDT_ADDRESSES[chain.id as keyof typeof USDT_ADDRESSES];
-    return contractAddr as `0x${string}` | undefined;
-  }, [address, chain?.id]);
-
+  // USDT balance
   const {
     data: usdtBalance,
     refetch: refetchUSDTBalance,
     isLoading: isLoadingUSDT,
     error: usdtError,
   } = useReadContract({
-    address: usdtContractAddress,
+    address: contractConfig?.usdtAddress as `0x${string}`,
     abi: erc20Abi,
     functionName: "balanceOf",
     args: address ? [address] : undefined,
-    query: {
-      enabled: !!address && !!usdtContractAddress && isCorrectNetwork,
-      refetchInterval: 30000,
-    },
+    query: queryOptions,
   });
 
-  // get USDT decimals
+  // USDT decimals
   const { data: usdtDecimals } = useReadContract({
-    address: usdtContractAddress,
+    address: contractConfig?.usdtAddress as `0x${string}`,
     abi: erc20Abi,
     functionName: "decimals",
     query: {
-      enabled: !!usdtContractAddress && isCorrectNetwork,
+      enabled: !!contractConfig?.usdtAddress && isCorrectNetwork,
       staleTime: Infinity,
     },
   });
 
-  // Check current allowance
+  // USDT allowance
   const { data: usdtAllowance, refetch: refetchAllowance } = useReadContract({
-    address: usdtContractAddress,
+    address: contractConfig?.usdtAddress as `0x${string}`,
     abi: erc20Abi,
     functionName: "allowance",
     args:
-      address && chain?.id
-        ? [
-            address,
-            ESCROW_ADDRESSES[
-              chain.id as keyof typeof ESCROW_ADDRESSES
-            ] as `0x${string}`,
-          ]
+      address && contractConfig?.escrowAddress
+        ? [address, contractConfig.escrowAddress as `0x${string}`]
         : undefined,
-    query: {
-      enabled: !!address && !!usdtContractAddress && isCorrectNetwork,
-      refetchInterval: 30000,
-    },
+    query: queryOptions,
   });
 
   // Optimized balance refetching
@@ -226,10 +246,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
 
   // Handle account and chain changes
   useEffect(() => {
-    const handleAccountsChanged = () => {
-      refetchBalances();
-    };
-
+    const handleAccountsChanged = () => refetchBalances();
     const handleChainChanged = () => {
       if (chain?.id !== TARGET_CHAIN.id) {
         showSnackbar("Please switch to the correct network", "info");
@@ -250,6 +267,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [chain?.id, refetchBalances, showSnackbar]);
 
+  // Wallet functions
   const connectWallet = useCallback(async () => {
     try {
       const connector =
@@ -280,22 +298,92 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [switchChain, showSnackbar]);
 
+  // Get trade details from contract
+  const getTradeDetails = useCallback(
+    async (tradeId: string): Promise<TradeDetails> => {
+      if (!address || !contractConfig?.escrowAddress) {
+        throw new Error("Wallet not connected or contract not available");
+      }
+
+      try {
+        const trade = await readContract(config, {
+          address: contractConfig.escrowAddress as `0x${string}`,
+          abi: DEZENMART_ABI,
+          functionName: "getTrade",
+          args: [BigInt(tradeId)],
+        });
+
+        return {
+          seller: trade.seller,
+          productCost: trade.productCost,
+          escrowFee: trade.escrowFee,
+          totalQuantity: trade.totalQuantity,
+          remainingQuantity: trade.remainingQuantity,
+          active: trade.active,
+          logisticsProviders: trade.logisticsProviders,
+          logisticsCosts: trade.logisticsCosts,
+        };
+      } catch (error) {
+        console.error("Failed to get trade details:", error);
+        throw new Error("Failed to fetch trade details");
+      }
+    },
+    [address, contractConfig?.escrowAddress]
+  );
+
+  // Calculate total cost using contract data
+  const calculateTotalCost = useCallback(
+    async (
+      tradeId: string,
+      quantity: string,
+      logisticsProvider: string
+    ): Promise<string> => {
+      if (usdtDecimals === undefined) {
+        throw new Error("USDT decimals not loaded");
+      }
+
+      try {
+        const trade = await getTradeDetails(tradeId);
+
+        // Find logistics cost for the selected provider
+        const providerIndex = trade.logisticsProviders.findIndex(
+          (provider) =>
+            provider.toLowerCase() === logisticsProvider.toLowerCase()
+        );
+
+        if (providerIndex === -1) {
+          throw new Error("Invalid logistics provider");
+        }
+
+        const logisticsCost = trade.logisticsCosts[providerIndex];
+        const productCost = trade.productCost * BigInt(quantity);
+        const escrowFee = trade.escrowFee;
+
+        // Total = (productCost * quantity) + logisticsCost + escrowFee
+        const totalCostBigInt = productCost + logisticsCost + escrowFee;
+
+        return formatUnits(totalCostBigInt, Number(usdtDecimals));
+      } catch (error) {
+        console.error("Failed to calculate total cost:", error);
+        throw error;
+      }
+    },
+    [getTradeDetails, usdtDecimals]
+  );
+
   const getUSDTBalance = useCallback(async (): Promise<string> => {
     try {
       const result = await refetchUSDTBalance();
       if (result.data && usdtDecimals !== undefined) {
         const balanceBigInt = result.data as bigint;
         const decimals = Number(usdtDecimals);
-
         const formattedBalance = formatUnits(balanceBigInt, decimals);
         const numericBalance = parseFloat(formattedBalance);
 
-        const cleanBalance = numericBalance.toLocaleString("en-US", {
+        return numericBalance.toLocaleString("en-US", {
           minimumFractionDigits: 0,
           maximumFractionDigits: Math.min(decimals, 6),
         });
-
-        return cleanBalance;
       }
       return "0";
     } catch (error) {
@@ -304,7 +392,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [refetchUSDTBalance, usdtDecimals]);
 
-  // converted USDT balances
+  // Converted USDT balances
   const convertedUSDTBalances = useMemo(() => {
     if (!usdtBalance || usdtError || usdtDecimals === undefined)
       return undefined;
@@ -365,7 +453,6 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
   const needsApproval = useCallback(
     async (amount: string): Promise<boolean> => {
       if (!usdtAllowance || usdtDecimals === undefined) return true;
-
       const requiredAmount = parseUnits(amount, Number(usdtDecimals));
       return (usdtAllowance as bigint) < requiredAmount;
     },
@@ -373,9 +460,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
   );
 
   const getCurrentAllowance = useCallback(async (): Promise<number> => {
-    if (!address || !chain?.id || !usdtContractAddress) {
-      return 0;
-    }
+    if (!address || !contractConfig?.usdtAddress) return 0;
 
     try {
       const result = await refetchAllowance();
@@ -390,11 +475,11 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
       console.error("Failed to fetch allowance:", error);
       return 0;
     }
-  }, [address, chain?.id, usdtContractAddress, refetchAllowance, usdtDecimals]);
+  }, [address, contractConfig?.usdtAddress, refetchAllowance, usdtDecimals]);
 
   const approveUSDT = useCallback(
     async (amount: string): Promise<string> => {
-      if (!address || !chain?.id) {
+      if (!address || !contractConfig) {
         throw new Error("Wallet not connected");
       }
 
@@ -403,12 +488,11 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
         await new Promise((resolve) => setTimeout(resolve, 1500));
       }
 
-      const usdtAddress =
-        USDT_ADDRESSES[chain.id as keyof typeof USDT_ADDRESSES];
-      const escrowAddress =
-        ESCROW_ADDRESSES[chain.id as keyof typeof ESCROW_ADDRESSES];
-
-      if (!usdtAddress || !escrowAddress || usdtDecimals === undefined) {
+      if (
+        !contractConfig.usdtAddress ||
+        !contractConfig.escrowAddress ||
+        usdtDecimals === undefined
+      ) {
         throw new Error("Contracts not available on this network");
       }
 
@@ -417,11 +501,11 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
 
       try {
         const hash = await writeContractAsync({
-          address: usdtAddress as `0x${string}`,
+          address: contractConfig.usdtAddress as `0x${string}`,
           abi: erc20Abi,
           functionName: "approve",
           args: [
-            escrowAddress as `0x${string}`,
+            contractConfig.escrowAddress as `0x${string}`,
             parseUnits(amount, Number(usdtDecimals)),
           ],
         });
@@ -436,7 +520,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
     },
     [
       address,
-      chain,
+      contractConfig,
       isCorrectNetwork,
       switchToCorrectNetwork,
       writeContractAsync,
@@ -447,7 +531,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
 
   const buyTrade = useCallback(
     async (params: BuyTradeParams): Promise<PaymentTransaction> => {
-      if (!address || !chain?.id) {
+      if (!address || !contractConfig?.escrowAddress) {
         throw new Error("Wallet not connected");
       }
 
@@ -456,39 +540,30 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
 
-      const escrowAddress =
-        ESCROW_ADDRESSES[chain.id as keyof typeof ESCROW_ADDRESSES];
-      if (!escrowAddress) {
-        throw new Error("Escrow contract not available on this network");
-      }
-
-      // Calculate total amount needed (this should come from contract or be calculated)
-      const totalAmount = (
-        params.productCost * params.quantity +
-        params.logisticsCost
-      ).toString();
-
       try {
-        // Step 1: Check if approval is needed
+        // Get actual total cost from contract calculation
+        const totalAmount = await calculateTotalCost(
+          params.tradeId,
+          params.quantity,
+          params.logisticsProvider
+        );
+
+        // Check if approval is needed
         const approvalNeeded = await needsApproval(totalAmount);
 
         if (approvalNeeded) {
           showSnackbar("Approval required for USDT spending", "info");
           await approveUSDT(totalAmount);
-
-          // Wait for approval to be mined
           await new Promise((resolve) => setTimeout(resolve, 2000));
-
-          // Refresh allowance
           await refetchAllowance();
         }
 
-        // Step 2: Execute buy trade
+        // Execute buy trade
         setTransactionState({ status: "pending" });
         showSnackbar("Initiating purchase...", "info");
 
         const hash = await writeContractAsync({
-          address: escrowAddress as `0x${string}`,
+          address: contractConfig.escrowAddress as `0x${string}`,
           abi: DEZENMART_ABI,
           functionName: "buyTrade",
           args: [
@@ -504,7 +579,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
           hash,
           amount: totalAmount,
           token: "USDT",
-          to: escrowAddress,
+          to: contractConfig.escrowAddress,
           from: address,
           status: "pending",
           timestamp: Date.now(),
@@ -513,9 +588,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
         showSnackbar("Purchase submitted! Waiting for confirmation...", "info");
 
         // Refresh balances after transaction
-        setTimeout(() => {
-          refetchBalances();
-        }, 3000);
+        setTimeout(refetchBalances, 3000);
 
         return transaction;
       } catch (error) {
@@ -528,7 +601,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
     },
     [
       address,
-      chain,
+      contractConfig,
       isCorrectNetwork,
       switchToCorrectNetwork,
       writeContractAsync,
@@ -537,12 +610,13 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
       approveUSDT,
       refetchAllowance,
       refetchBalances,
+      calculateTotalCost,
     ]
   );
 
   const sendPayment = useCallback(
     async (params: PaymentParams): Promise<PaymentTransaction> => {
-      if (!address || !chain?.id) {
+      if (!address || !contractConfig?.usdtAddress) {
         throw new Error("Wallet not connected");
       }
 
@@ -555,9 +629,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
         }
       }
 
-      const usdtAddress =
-        USDT_ADDRESSES[chain.id as keyof typeof USDT_ADDRESSES];
-      if (!usdtAddress || usdtDecimals === undefined) {
+      if (usdtDecimals === undefined) {
         throw new Error("USDT not supported on this network");
       }
 
@@ -567,7 +639,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
         const amount = parseUnits(params.amount, Number(usdtDecimals));
 
         const hash = await writeContractAsync({
-          address: usdtAddress as `0x${string}`,
+          address: contractConfig.usdtAddress as `0x${string}`,
           abi: erc20Abi,
           functionName: "transfer",
           args: [params.to as `0x${string}`, amount],
@@ -597,7 +669,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
     },
     [
       address,
-      chain,
+      contractConfig,
       isCorrectNetwork,
       switchToCorrectNetwork,
       writeContractAsync,
@@ -606,22 +678,45 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
     ]
   );
 
-  const value: ExtendedWeb3ContextType = {
-    wallet,
-    connectWallet,
-    disconnectWallet,
-    switchToCorrectNetwork,
-    sendPayment,
-    usdtAllowance,
-    usdtDecimals,
-    getCurrentAllowance,
-    getUSDTBalance,
-    buyTrade,
-    approveUSDT,
-    isCorrectNetwork,
-    transactionState,
-    needsApproval,
-  };
+  // Memoized context value
+  const value = useMemo(
+    (): ExtendedWeb3ContextType => ({
+      wallet,
+      connectWallet,
+      disconnectWallet,
+      switchToCorrectNetwork,
+      sendPayment,
+      usdtAllowance,
+      usdtDecimals,
+      getCurrentAllowance,
+      getUSDTBalance,
+      buyTrade,
+      approveUSDT,
+      getTradeDetails,
+      calculateTotalCost,
+      isCorrectNetwork,
+      transactionState,
+      needsApproval,
+    }),
+    [
+      wallet,
+      connectWallet,
+      disconnectWallet,
+      switchToCorrectNetwork,
+      sendPayment,
+      usdtAllowance,
+      usdtDecimals,
+      getCurrentAllowance,
+      getUSDTBalance,
+      buyTrade,
+      approveUSDT,
+      getTradeDetails,
+      calculateTotalCost,
+      isCorrectNetwork,
+      transactionState,
+      needsApproval,
+    ]
+  );
 
   return <Web3Context.Provider value={value}>{children}</Web3Context.Provider>;
 };
