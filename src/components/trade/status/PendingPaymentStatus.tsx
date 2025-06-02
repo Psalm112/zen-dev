@@ -59,55 +59,52 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
   const { usdtBalance, refetch: refetchBalance } = useWalletBalance();
   const { changeOrderStatus } = useOrderData();
 
-  // Refs for cleanup and performance
+  // Performance: Use refs for cleanup and state management
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const isMountedRef = useRef(true);
+  const mountedRef = useRef(true);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const balanceRefetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // State management with better typing
-  const [timeRemaining, setTimeRemaining] = useState<TimeRemaining>({
+  // State with proper initialization
+  const [timeRemaining, setTimeRemaining] = useState<TimeRemaining>(() => ({
     minutes: 9,
     seconds: 59,
-  });
+  }));
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [quantity, setQuantity] = useState<number>(
-    () => orderDetails?.quantity || 1
-  );
+  const [quantity, setQuantity] = useState<number>(1);
   const [selectedLogisticsProvider, setSelectedLogisticsProvider] =
     useState<any>(null);
 
-  // Memoized order validation
+  // Performance: Memoized validation with error boundary protection
   const orderValidation = useMemo(() => {
-    if (!orderDetails) {
+    try {
+      if (!orderDetails?.product?.price || !orderDetails.quantity) {
+        return {
+          isValid: false,
+          error: "Order information incomplete",
+        };
+      }
+
+      if (quantity <= 0 || quantity > 999) {
+        return {
+          isValid: false,
+          error: "Invalid quantity (1-999)",
+        };
+      }
+
+      return { isValid: true, error: null };
+    } catch (error) {
+      console.error("Order validation error:", error);
       return {
         isValid: false,
-        error: "Order details not available",
+        error: "Order validation failed",
       };
     }
+  }, [orderDetails?.product?.price, orderDetails?.quantity, quantity]);
 
-    if (!orderDetails.product) {
-      return {
-        isValid: false,
-        error: "Product information missing",
-      };
-    }
-
-    if (quantity <= 0) {
-      return {
-        isValid: false,
-        error: "Invalid quantity",
-      };
-    }
-
-    return {
-      isValid: true,
-      error: null,
-    };
-  }, [orderDetails, quantity]);
-
-  // Memoized calculations with error handling
+  // Performance: Optimized calculations with proper number handling
   const calculations = useMemo(() => {
     if (!orderValidation.isValid || !orderDetails?.product?.price) {
       return {
@@ -119,26 +116,41 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
       };
     }
 
-    const totalAmount = orderDetails.product.price * quantity;
-    const requiredAmount = Math.ceil(totalAmount * 1.02 * 100) / 100; // Round up to 2 decimals
+    try {
+      const totalAmount = Number(
+        (orderDetails.product.price * quantity).toFixed(6)
+      );
+      const requiredAmount = Number((totalAmount * 1.02).toFixed(6));
 
-    const hasQuantityChanged = quantity !== orderDetails.quantity;
-    const hasLogisticsChanged =
-      selectedLogisticsProvider?.walletAddress !==
-      orderDetails.logisticsProviderWalletAddress;
-    const hasChanges = hasQuantityChanged || hasLogisticsChanged;
+      const hasQuantityChanged = quantity !== orderDetails.quantity;
+      const hasLogisticsChanged =
+        selectedLogisticsProvider?.walletAddress !==
+        orderDetails.logisticsProviderWalletAddress;
 
-    const userBalance =
-      parseFloat(String(usdtBalance || 0).replace(/,/g, "")) || 0;
-    const hasSufficientBalance = userBalance >= requiredAmount;
+      // Performance: Parse balance once and cache
+      const userBalance = (() => {
+        const balanceStr = String(usdtBalance || 0).replace(/[,\s]/g, "");
+        const parsed = Number(balanceStr);
+        return Number.isFinite(parsed) ? parsed : 0;
+      })();
 
-    return {
-      totalAmount,
-      requiredAmount,
-      hasChanges,
-      userBalance,
-      hasSufficientBalance,
-    };
+      return {
+        totalAmount,
+        requiredAmount,
+        hasChanges: hasQuantityChanged || hasLogisticsChanged,
+        userBalance,
+        hasSufficientBalance: userBalance >= requiredAmount,
+      };
+    } catch (error) {
+      console.error("Calculation error:", error);
+      return {
+        totalAmount: 0,
+        requiredAmount: 0,
+        hasChanges: false,
+        userBalance: 0,
+        hasSufficientBalance: false,
+      };
+    }
   }, [
     orderValidation.isValid,
     orderDetails?.product?.price,
@@ -149,17 +161,16 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     usdtBalance,
   ]);
 
-  // Memoized escrow address with error handling
+  // Performance: Memoized escrow address with error handling
   const escrowAddress = useMemo(() => {
     try {
       return ESCROW_ADDRESSES[44787] || null;
-    } catch (error) {
-      console.error("Failed to get escrow address:", error);
+    } catch {
       return null;
     }
   }, []);
 
-  // Memoized button text with loading state
+  // Performance: Memoized button text with loading state
   const payButtonText = useMemo(() => {
     if (loading) return "Processing...";
     if (!wallet.isConnected) return "Connect Wallet to Pay";
@@ -172,82 +183,81 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     loading,
   ]);
 
-  // Initialize quantity with effect cleanup
+  // Performance: Initialize quantity only once
   useEffect(() => {
-    if (orderDetails?.quantity && orderDetails.quantity !== quantity) {
+    if (
+      orderDetails?.quantity &&
+      quantity === 1 &&
+      orderDetails.quantity !== 1
+    ) {
       setQuantity(orderDetails.quantity);
     }
-  }, [orderDetails?.quantity]); // Remove quantity from deps to avoid loops
+  }, [orderDetails?.quantity]);
 
-  // Enhanced timer with cleanup and performance optimization
+  // Performance: Optimized timer with proper cleanup
   useEffect(() => {
     if (!showTimer) return;
 
-    const startTimer = () => {
-      timerRef.current = setInterval(() => {
-        if (!isMountedRef.current) return;
+    const timer = setInterval(() => {
+      if (!mountedRef.current) return;
 
-        setTimeRemaining((prev) => {
-          if (prev.seconds > 0) {
-            return { ...prev, seconds: prev.seconds - 1 };
-          }
-          if (prev.minutes > 0) {
-            return { minutes: prev.minutes - 1, seconds: 59 };
-          }
-          // Timer expired
-          if (timerRef.current) {
-            clearInterval(timerRef.current);
-            timerRef.current = null;
-          }
-          return { minutes: 0, seconds: 0 };
-        });
-      }, 1000);
-    };
+      setTimeRemaining((prev) => {
+        if (prev.seconds > 0) {
+          return { ...prev, seconds: prev.seconds - 1 };
+        }
+        if (prev.minutes > 0) {
+          return { minutes: prev.minutes - 1, seconds: 59 };
+        }
+        return { minutes: 0, seconds: 0 };
+      });
+    }, 1000);
 
-    startTimer();
-
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-    };
+    timerRef.current = timer;
+    return () => clearInterval(timer);
   }, [showTimer]);
 
-  // Cleanup on unmount
+  // Performance: Single cleanup effect
   useEffect(() => {
-    isMountedRef.current = true;
+    mountedRef.current = true;
 
     return () => {
-      isMountedRef.current = false;
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
+      mountedRef.current = false;
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (abortControllerRef.current) abortControllerRef.current.abort();
+      if (balanceRefetchTimeoutRef.current)
+        clearTimeout(balanceRefetchTimeoutRef.current);
     };
   }, []);
 
-  // Enhanced handlers with error handling and loading states
-  const handlePayNow = useCallback(async () => {
-    if (!orderValidation.isValid) {
-      showSnackbar(orderValidation.error || "Invalid order", "error");
-      return;
+  // Performance: Debounced balance refetch
+  const debouncedRefetchBalance = useCallback(() => {
+    if (balanceRefetchTimeoutRef.current) {
+      clearTimeout(balanceRefetchTimeoutRef.current);
     }
+    balanceRefetchTimeoutRef.current = setTimeout(() => {
+      if (mountedRef.current) {
+        refetchBalance();
+      }
+    }, 500);
+  }, [refetchBalance]);
 
-    if (loading) return;
+  // Performance: Optimized payment handler with proper error boundaries
+  const handlePayNow = useCallback(async () => {
+    if (!orderValidation.isValid || loading) return;
 
     setLoading(true);
-    abortControllerRef.current = new AbortController();
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
 
     try {
       if (!wallet.isConnected) {
         await connectWallet();
-        // Wait for wallet connection to complete
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        await refetchBalance();
+        // Performance: Use shorter wait time
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        debouncedRefetchBalance();
       }
+
+      if (controller.signal.aborted) return;
 
       if (!calculations.hasSufficientBalance) {
         showSnackbar(
@@ -259,59 +269,56 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
         return;
       }
 
-      if (abortControllerRef.current?.signal.aborted) return;
-
       setIsPaymentModalOpen(true);
     } catch (error) {
-      console.error("Payment initialization failed:", error);
-      showSnackbar(
-        error instanceof Error ? error.message : "Failed to initialize payment",
-        "error"
-      );
+      if (!controller.signal.aborted && mountedRef.current) {
+        console.error("Payment initialization failed:", error);
+        showSnackbar(
+          error instanceof Error
+            ? error.message
+            : "Failed to initialize payment",
+          "error"
+        );
+      }
     } finally {
-      setLoading(false);
+      if (mountedRef.current) {
+        setLoading(false);
+      }
     }
   }, [
-    orderValidation,
+    orderValidation.isValid,
     loading,
     wallet.isConnected,
     calculations.hasSufficientBalance,
     calculations.requiredAmount,
     connectWallet,
-    refetchBalance,
+    debouncedRefetchBalance,
     showSnackbar,
   ]);
 
+  // Performance: Optimized payment success handler
   const handlePaymentSuccess = useCallback(
     async (transaction: any) => {
       setIsPaymentModalOpen(false);
-
-      if (!isMountedRef.current) return;
+      if (!mountedRef.current) return;
 
       try {
-        // Update order status with optimistic UI
         if (orderId) {
-          showSnackbar("Updating order status...", "info");
-          await changeOrderStatus(orderId, "accepted", false);
+          // Performance: Fire and forget for better UX
+          changeOrderStatus(orderId, "accepted", false).catch(console.error);
         }
 
         showSnackbar("Payment completed successfully!", "success");
 
-        // Navigate with slight delay for better UX
-        setTimeout(() => {
-          if (!isMountedRef.current) return;
-
-          if (navigatePath) {
-            navigate(navigatePath, { replace: true });
-          } else if (onReleaseNow) {
-            onReleaseNow();
-          }
-        }, 1000);
+        // Performance: Immediate navigation for better UX
+        if (navigatePath) {
+          navigate(navigatePath, { replace: true });
+        } else if (onReleaseNow) {
+          onReleaseNow();
+        }
       } catch (error) {
-        console.error("Error updating order status:", error);
-        // Still show success for payment completion
-        showSnackbar("Payment completed successfully!", "success");
-
+        console.error("Post-payment processing error:", error);
+        // Still navigate on payment success
         if (navigatePath) {
           navigate(navigatePath, { replace: true });
         } else if (onReleaseNow) {
@@ -329,17 +336,18 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     ]
   );
 
+  // Performance: Optimized update handler with validation
   const handleUpdateOrder = useCallback(async () => {
-    if (!orderId || !onUpdateOrder || loading) return;
-
-    // Validate changes
-    if (!calculations.hasChanges) {
-      showSnackbar("No changes to save", "info");
+    if (!orderId || !onUpdateOrder || loading || !calculations.hasChanges) {
+      if (!calculations.hasChanges) {
+        showSnackbar("No changes to save", "info");
+      }
       return;
     }
 
     setLoading(true);
-    abortControllerRef.current = new AbortController();
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
 
     try {
       const updates: UpdateOrderPayload = {
@@ -350,23 +358,23 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
         }),
       };
 
-      if (abortControllerRef.current?.signal.aborted) return;
+      if (controller.signal.aborted) return;
 
       await onUpdateOrder(orderId, updates);
 
-      if (!isMountedRef.current) return;
-
-      toast.success("Order updated successfully!");
-      setIsEditModalOpen(false);
+      if (mountedRef.current) {
+        toast.success("Order updated successfully!");
+        setIsEditModalOpen(false);
+      }
     } catch (error: any) {
-      console.error("Order update failed:", error);
-      if (!isMountedRef.current) return;
-
-      const errorMessage =
-        error?.message || "Failed to update order. Please try again.";
-      toast.error(errorMessage);
+      if (!controller.signal.aborted && mountedRef.current) {
+        console.error("Order update failed:", error);
+        toast.error(
+          error?.message || "Failed to update order. Please try again."
+        );
+      }
     } finally {
-      if (isMountedRef.current) {
+      if (mountedRef.current) {
         setLoading(false);
       }
     }
@@ -380,35 +388,33 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     showSnackbar,
   ]);
 
-  // Optimized modal handlers
+  // Performance: Optimized modal handlers
   const handleEditModalClose = useCallback(() => {
-    if (loading) {
-      showSnackbar("Please wait for the current operation to complete", "info");
-      return;
+    if (!loading) {
+      setIsEditModalOpen(false);
     }
-    setIsEditModalOpen(false);
-  }, [loading, showSnackbar]);
-
-  const handlePaymentModalClose = useCallback(() => {
-    if (loading) {
-      showSnackbar("Transaction in progress. Please wait...", "info");
-      return;
-    }
-    setIsPaymentModalOpen(false);
-  }, [loading, showSnackbar]);
-
-  const handleEditModalOpen = useCallback(() => {
-    if (loading) return;
-    setIsEditModalOpen(true);
   }, [loading]);
 
-  // Input handlers with validation
+  const handlePaymentModalClose = useCallback(() => {
+    if (!loading) {
+      setIsPaymentModalOpen(false);
+    }
+  }, [loading]);
+
+  const handleEditModalOpen = useCallback(() => {
+    if (!loading) {
+      setIsEditModalOpen(true);
+    }
+  }, [loading]);
+
+  // Performance: Optimized input handlers
   const handleQuantityChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = parseInt(e.target.value, 10);
-      if (!isNaN(value) && value > 0) {
-        setQuantity(value);
-      }
+      const value = Math.max(
+        1,
+        Math.min(999, parseInt(e.target.value, 10) || 1)
+      );
+      setQuantity(value);
     },
     []
   );
@@ -417,7 +423,7 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     setSelectedLogisticsProvider(provider);
   }, []);
 
-  // Memoized components with performance optimization
+  // Performance: Memoized components
   const editButton = useMemo(
     () => (
       <Button
@@ -450,7 +456,6 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
           loading ||
           !orderValidation.isValid
         }
-        aria-label={payButtonText}
       />
     ),
     [
@@ -473,16 +478,6 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     []
   );
 
-  const actionButtons = useMemo(
-    () => (
-      <div className="w-full flex items-center justify-center flex-wrap gap-4">
-        {editButton}
-        {payButton}
-      </div>
-    ),
-    [editButton, payButton]
-  );
-
   // Early return for invalid states
   if (!orderValidation.isValid) {
     return (
@@ -503,10 +498,14 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
         transactionInfo={transactionInfo}
         showTimer={showTimer}
         timeRemaining={timeRemaining}
-        actionButtons={actionButtons}
+        actionButtons={
+          <div className="w-full flex items-center justify-center flex-wrap gap-4">
+            {editButton}
+            {payButton}
+          </div>
+        }
       />
 
-      {/* Edit Order Modal */}
       <Modal
         isOpen={isEditModalOpen}
         onClose={handleEditModalClose}
@@ -526,55 +525,38 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
               value={quantity}
               onChange={handleQuantityChange}
               disabled={loading}
-              className="w-full px-3 py-2 bg-neutral-800 text-white border border-neutral-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              aria-describedby="quantity-help"
+              className="w-full px-3 py-2 bg-neutral-800 text-white border border-neutral-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors duration-200 disabled:opacity-50"
             />
-            <p id="quantity-help" className="text-xs text-gray-400 mt-1">
-              Enter the desired quantity for this order (1-999)
-            </p>
           </div>
 
           {orderDetails?.product && (
-            <div>
-              <LogisticsSelector
-                logisticsCost={orderDetails.product.logisticsCost ?? []}
-                logisticsProviders={
-                  orderDetails.product.logisticsProviders ?? []
-                }
-                onSelect={handleLogisticsSelect}
-                selectedProviderWalletAddress={
-                  orderDetails.logisticsProviderWalletAddress
-                }
-              />
-            </div>
+            <LogisticsSelector
+              logisticsCost={orderDetails.product.logisticsCost ?? []}
+              logisticsProviders={orderDetails.product.logisticsProviders ?? []}
+              onSelect={handleLogisticsSelect}
+              selectedProviderWalletAddress={
+                orderDetails.logisticsProviderWalletAddress
+              }
+            />
           )}
 
           <div className="flex justify-end gap-3 mt-6">
             <Button
               title="Cancel"
-              className="bg-transparent hover:bg-gray-700 text-white text-sm px-4 py-2 border border-gray-600 rounded transition-colors duration-200 disabled:opacity-50"
+              className="bg-transparent hover:bg-gray-700 text-white text-sm px-4 py-2 border border-gray-600 rounded transition-colors duration-200"
               onClick={handleEditModalClose}
               disabled={loading}
             />
             <Button
               title={loading ? "Updating..." : "Save Changes"}
-              className="bg-Red hover:bg-[#e02d37] text-white text-sm px-4 py-2 rounded transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-Red hover:bg-[#e02d37] text-white text-sm px-4 py-2 rounded transition-colors duration-200 disabled:opacity-50"
               onClick={handleUpdateOrder}
               disabled={loading || !calculations.hasChanges}
-              aria-describedby={
-                !calculations.hasChanges ? "no-changes-help" : undefined
-              }
             />
-            {!calculations.hasChanges && (
-              <p id="no-changes-help" className="text-xs text-gray-400 sr-only">
-                No changes detected to save
-              </p>
-            )}
           </div>
         </div>
       </Modal>
 
-      {/* Payment Modal */}
       {orderDetails && escrowAddress && (
         <PaymentModal
           isOpen={isPaymentModalOpen}
