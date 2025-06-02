@@ -57,7 +57,6 @@ const Web3Context = createContext<ExtendedWeb3ContextType | undefined>(
 export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const waitForTransactionReceipt = useWaitForTransactionReceipt;
   const { showSnackbar } = useSnackbar();
   const { address, isConnected, chain } = useAccount();
   const {
@@ -403,12 +402,6 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
           args: [escrowAddress as `0x${string}`, maxApproval],
           gas: BigInt(150000),
         });
-
-        // const receipt = await waitForTransactionReceipt(config, { hash });
-
-        // if (receipt.status !== "success") {
-        //   throw new Error("Approval transaction failed");
-        // }
 
         return hash;
       } catch (error: any) {
