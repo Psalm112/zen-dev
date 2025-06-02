@@ -34,7 +34,6 @@ const CheckoutWithWeb3: React.FC<CheckoutWithWeb3Props> = React.memo(
 
     const handleCryptoPayment = useCallback(() => {
       if (!wallet.isConnected) {
-        // If wallet is not connected, the PaymentModal will handle the connection
         setShowPaymentModal(true);
         return;
       }
