@@ -1,3 +1,4 @@
+// src/components/trade/status/PendingPaymentStatus.tsx
 import { FC, useState, useEffect, useCallback, useMemo } from "react";
 import {
   OrderDetails,
@@ -16,6 +17,7 @@ import LogisticsSelector from "../../product/singleProduct/LogisticsSelector";
 import { useSnackbar } from "../../../context/SnackbarContext";
 import { useWeb3 } from "../../../context/Web3Context";
 import { useWalletBalance } from "../../../utils/hooks/useWalletBalance";
+import { useOrderData } from "../../../utils/hooks/useOrder";
 import { ESCROW_ADDRESSES } from "../../../utils/config/web3.config";
 import PaymentModal from "../../web3/PaymentModal";
 
@@ -51,6 +53,7 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
   const { showSnackbar } = useSnackbar();
   const { wallet, connectWallet } = useWeb3();
   const { usdtBalance, refetch: refetchBalance } = useWalletBalance();
+  const { changeOrderStatus } = useOrderData();
 
   // State management
   const [timeRemaining, setTimeRemaining] = useState<TimeRemaining>({
@@ -157,17 +160,42 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
   ]);
 
   const handlePaymentSuccess = useCallback(
-    (transaction: any) => {
+    async (transaction: any) => {
       setIsPaymentModalOpen(false);
-      showSnackbar("Payment completed successfully!", "success");
 
-      if (navigatePath) {
-        navigate(navigatePath, { replace: true });
-      } else if (onReleaseNow) {
-        onReleaseNow();
+      try {
+        // Update order status to accepted after successful payment
+        if (orderId) {
+          await changeOrderStatus(orderId, "accepted", false);
+        }
+
+        showSnackbar("Payment completed successfully!", "success");
+
+        if (navigatePath) {
+          navigate(navigatePath, { replace: true });
+        } else if (onReleaseNow) {
+          onReleaseNow();
+        }
+      } catch (error) {
+        console.error("Error updating order status:", error);
+        // Still show success for payment, but log the status update error
+        showSnackbar("Payment completed successfully!", "success");
+
+        if (navigatePath) {
+          navigate(navigatePath, { replace: true });
+        } else if (onReleaseNow) {
+          onReleaseNow();
+        }
       }
     },
-    [navigate, navigatePath, onReleaseNow, showSnackbar]
+    [
+      navigate,
+      navigatePath,
+      onReleaseNow,
+      showSnackbar,
+      orderId,
+      changeOrderStatus,
+    ]
   );
 
   const handleUpdateOrder = useCallback(async () => {

@@ -9,10 +9,12 @@ import StatusAlert from "./StatusAlert";
 import Button from "../../common/Button";
 import { BsShieldExclamation } from "react-icons/bs";
 import Modal from "../../common/Modal";
+import ConfirmationModal from "../../common/ConfirmationModal";
 import { motion } from "framer-motion";
 import { useWeb3 } from "../../../context/Web3Context";
 import { useSnackbar } from "../../../context/SnackbarContext";
 import { useContract } from "../../../utils/hooks/useSmartContract";
+import { useOrderData } from "../../../utils/hooks/useOrder";
 
 interface FundsReleaseStatusProps {
   tradeDetails?: TradeDetails;
@@ -41,15 +43,13 @@ const FundsReleaseStatus: FC<FundsReleaseStatusProps> = ({
   showTimer,
 }) => {
   const { showSnackbar } = useSnackbar();
+  const { changeOrderStatus } = useOrderData();
   const [processingState, setProcessingState] = useState<ProcessingState>({
     confirmDelivery: false,
     raiseDispute: false,
   });
-  // const [timeRemaining, setTimeRemaining] = useState({
-  //   minutes: 9,
-  //   seconds: 59,
-  // });
   const [isDisputeModalOpen, setIsDisputeModalOpen] = useState(false);
+  const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
   const [disputeReason, setDisputeReason] = useState("");
   const { confirmDelivery } = useContract();
   const { wallet } = useWeb3();
@@ -60,6 +60,24 @@ const FundsReleaseStatus: FC<FundsReleaseStatusProps> = ({
     }
     return orderDetails.seller;
   }, [orderDetails?.seller]);
+
+  const orderAmount = useMemo(() => {
+    return (
+      orderDetails?.amount?.toString() ||
+      tradeDetails?.amount?.toString() ||
+      "0"
+    );
+  }, [orderDetails?.amount, tradeDetails?.amount]);
+
+  const handleConfirmDeliveryClick = useCallback(() => {
+    setIsConfirmationModalOpen(true);
+  }, []);
+
+  const handleConfirmationModalClose = useCallback(() => {
+    if (!processingState.confirmDelivery) {
+      setIsConfirmationModalOpen(false);
+    }
+  }, [processingState.confirmDelivery]);
 
   const handleConfirmDelivery = useCallback(async () => {
     if (!wallet.isConnected) {
@@ -81,10 +99,20 @@ const FundsReleaseStatus: FC<FundsReleaseStatusProps> = ({
         throw new Error(result.message || "Failed to confirm delivery");
       }
 
+      // Update order status to completed
+      await changeOrderStatus(orderId, "completed", false);
+
       showSnackbar(
-        "Delivery confirmed successfully! Funds will be released to seller.",
+        "Delivery confirmed successfully! Order has been completed.",
         "success"
       );
+
+      setIsConfirmationModalOpen(false);
+
+      // Call parent callback if provided
+      if (onConfirmDelivery) {
+        onConfirmDelivery();
+      }
     } catch (error: any) {
       console.error("Error during delivery confirmation:", error);
       showSnackbar(
@@ -98,6 +126,7 @@ const FundsReleaseStatus: FC<FundsReleaseStatusProps> = ({
     wallet.isConnected,
     orderId,
     confirmDelivery,
+    changeOrderStatus,
     onConfirmDelivery,
     showSnackbar,
   ]);
@@ -140,6 +169,7 @@ const FundsReleaseStatus: FC<FundsReleaseStatusProps> = ({
     },
     [disputeReason, orderId, onOrderDispute, showSnackbar]
   );
+
   const actionButtons = useMemo(
     () => (
       <div className="w-full flex justify-evenly flex-row flex-wrap gap-4">
@@ -155,29 +185,20 @@ const FundsReleaseStatus: FC<FundsReleaseStatusProps> = ({
         )}
 
         <Button
-          title={
-            processingState.confirmDelivery ? (
-              <div className="flex items-center">
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                Processing...
-              </div>
-            ) : (
-              "Confirm Delivery"
-            )
-          }
+          title="Confirm Delivery"
           className={`w-fit text-white text-sm px-6 py-3 border-none rounded transition-colors ${
             processingState.confirmDelivery || processingState.raiseDispute
               ? "bg-gray-600 cursor-not-allowed opacity-50"
               : "bg-Red hover:bg-[#e02d37]"
           }`}
-          onClick={handleConfirmDelivery}
+          onClick={handleConfirmDeliveryClick}
           disabled={
             processingState.confirmDelivery || processingState.raiseDispute
           }
         />
       </div>
     ),
-    [onOrderDispute, processingState, handleConfirmDelivery]
+    [onOrderDispute, processingState, handleConfirmDeliveryClick]
   );
 
   const disputeModal = useMemo(
@@ -246,7 +267,7 @@ const FundsReleaseStatus: FC<FundsReleaseStatusProps> = ({
   return (
     <>
       <BaseStatus
-        statusTitle="Funds Release"
+        statusTitle="Order Status"
         statusDescription="Dezenmart has confirmed payment for this order."
         statusAlert={
           <StatusAlert
@@ -263,7 +284,19 @@ const FundsReleaseStatus: FC<FundsReleaseStatusProps> = ({
         showTimer={showTimer}
         actionButtons={actionButtons}
       />
+
       {disputeModal}
+
+      <ConfirmationModal
+        isOpen={isConfirmationModalOpen}
+        onClose={handleConfirmationModalClose}
+        onConfirm={handleConfirmDelivery}
+        type="delivery"
+        amount={orderAmount}
+        currency="btc"
+        recipientName={sellerName}
+        isProcessing={processingState.confirmDelivery}
+      />
     </>
   );
 };
