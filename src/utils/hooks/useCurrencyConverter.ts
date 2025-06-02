@@ -227,7 +227,7 @@ export const useCurrencyConverter = () => {
       if (currency === "USDT") {
         return new Intl.NumberFormat(navigator.language, {
           style: "currency",
-          currency: "USD",
+          currency: "USDT",
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         }).format(price);

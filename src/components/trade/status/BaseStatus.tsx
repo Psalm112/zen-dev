@@ -182,7 +182,7 @@ const BaseStatus: FC<BaseStatusProps> = ({
         <div className="py-4 px-6 md:px-12">
           <div className="flex flex-wrap items-center gap-4 mb-6">
             <div className="w-fit flex flex-col gap-2">
-              <div className="w-full flex gap-4">
+              <div className="w-full flex gap-4 items-center">
                 <motion.h3
                   className="font-medium text-xl text-white"
                   initial={{ opacity: 0 }}
@@ -194,7 +194,7 @@ const BaseStatus: FC<BaseStatusProps> = ({
                 <motion.span
                   className={`${
                     getTradeType() === "BUY" ? "bg-green-500" : "bg-red-500"
-                  } text-white text-xs px-3 py-1 rounded-full`}
+                  } h-fit text-white text-xs px-3 py-1 rounded-full`}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.2 }}

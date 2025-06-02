@@ -222,7 +222,7 @@ const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
               ) : (
                 <p className="text-2xl font-bold text-white">
                   {secondaryCurrency === "USDT"
-                    ? formatPrice(usdtNumericValue + celoNumericValue, "USDT")
+                    ? convertPrice(totalFiatValue, "FIAT", "USDT")
                     : formatPrice(totalFiatValue, "FIAT")}
                 </p>
               )}
