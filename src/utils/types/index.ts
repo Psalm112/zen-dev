@@ -116,7 +116,7 @@ export interface Order {
   createdAt: string;
   quantity: number;
   updatedAt: string;
-  logisticsProviderWalletAddress: string;
+  logisticsProviderWalletAddress: string[];
 }
 
 export interface OrderStatusUpdate {
