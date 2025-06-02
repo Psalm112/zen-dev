@@ -17,7 +17,7 @@ import { parseUnits, formatUnits, erc20Abi } from "viem";
 import {
   useReadContract,
   useWriteContract,
-  // useWaitForTransactionReceipt,
+  useWaitForTransactionReceipt,
 } from "wagmi";
 import {
   Web3ContextType,
@@ -82,7 +82,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
     address,
     query: {
       enabled: !!address && isCorrectNetwork,
-      refetchInterval: 30000, // Refetch every 30 seconds
+      refetchInterval: 30000,
     },
   });
 
@@ -257,8 +257,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       if (!isCorrectNetwork) {
-        await switchToCorrectNetwork();
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        throw new Error("Please switch to the correct network first");
       }
 
       const escrowAddress =
@@ -268,6 +267,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       try {
+        // Execute the buyTrade transaction with proper error handling
         const hash = await writeContractAsync({
           address: escrowAddress as `0x${string}`,
           abi: DEZENMART_ABI,
@@ -277,7 +277,12 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
             BigInt(params.quantity),
             params.logisticsProvider as `0x${string}`,
           ],
+          gas: BigInt(500000), // Set explicit gas limit
         });
+
+        if (!hash) {
+          throw new Error("Transaction failed to execute");
+        }
 
         const transaction: PaymentTransaction = {
           hash,
@@ -289,25 +294,36 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
           timestamp: Date.now(),
         };
 
-        showSnackbar(
-          "Purchase initiated! Waiting for confirmation...",
-          "success"
-        );
         return transaction;
-      } catch (error) {
+      } catch (error: any) {
         console.error("Buy trade failed:", error);
+
+        // Enhanced error handling for specific contract errors
+        if (error?.message?.includes("InsufficientUSDTBalance")) {
+          throw new Error("Insufficient USDT balance for this purchase");
+        }
+        if (error?.message?.includes("InsufficientUSDTAllowance")) {
+          throw new Error(
+            "USDT allowance insufficient. Please approve the amount first"
+          );
+        }
+        if (error?.message?.includes("InvalidTradeId")) {
+          throw new Error(
+            "Invalid trade ID. This product may no longer be available"
+          );
+        }
+        if (error?.message?.includes("InsufficientQuantity")) {
+          throw new Error("Requested quantity exceeds available stock");
+        }
+        if (error?.message?.includes("User rejected")) {
+          throw new Error("Transaction was rejected by user");
+        }
+
         const errorMessage = parseWeb3Error(error);
         throw new Error(errorMessage);
       }
     },
-    [
-      address,
-      chain,
-      isCorrectNetwork,
-      switchToCorrectNetwork,
-      writeContractAsync,
-      showSnackbar,
-    ]
+    [address, chain, isCorrectNetwork, writeContractAsync]
   );
 
   const approveUSDT = useCallback(
@@ -325,14 +341,35 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
         throw new Error("Contracts not available on this network");
       }
 
-      const hash = await writeContractAsync({
-        address: usdtAddress as `0x${string}`,
-        abi: erc20Abi,
-        functionName: "approve",
-        args: [escrowAddress as `0x${string}`, parseUnits(amount, 6)],
-      });
+      try {
+        // Use a higher allowance to avoid repeated approvals
+        const approvalAmount = parseUnits(
+          (parseFloat(amount) * 1.1).toString(),
+          6
+        );
 
-      return hash;
+        const hash = await writeContractAsync({
+          address: usdtAddress as `0x${string}`,
+          abi: erc20Abi,
+          functionName: "approve",
+          args: [escrowAddress as `0x${string}`, approvalAmount],
+          gas: BigInt(100000), // Set explicit gas limit for approval
+        });
+
+        if (!hash) {
+          throw new Error("Approval transaction failed");
+        }
+
+        return hash;
+      } catch (error: any) {
+        console.error("USDT approval failed:", error);
+
+        if (error?.message?.includes("User rejected")) {
+          throw new Error("Approval was rejected by user");
+        }
+
+        throw new Error(parseWeb3Error(error));
+      }
     },
     [address, chain, writeContractAsync]
   );
@@ -353,7 +390,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
         : undefined,
     query: {
       enabled: !!address && !!usdtContractAddress && isCorrectNetwork,
-      refetchInterval: 30000,
+      refetchInterval: 15000, // More frequent refetch for allowance
     },
   });
 
