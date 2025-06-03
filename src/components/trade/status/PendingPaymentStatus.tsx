@@ -374,12 +374,11 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
 
       try {
         if (orderId) {
-          changeOrderStatus(orderId, "accepted", true);
+          await changeOrderStatus(orderId, "accepted", true);
         }
 
         showSnackbar("Payment completed successfully!", "success");
 
-        // Performance: Immediate navigation for better UX
         if (navigatePath) {
           navigate(navigatePath, { replace: true });
         } else if (onReleaseNow) {
