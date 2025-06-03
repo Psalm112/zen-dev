@@ -26,12 +26,17 @@ import {
   PaymentParams,
   BuyTradeParams,
 } from "../utils/types/web3.types";
-import { TARGET_CHAIN, USDT_ADDRESSES } from "../utils/config/web3.config";
+import {
+  TARGET_CHAIN,
+  USDT_ADDRESSES,
+  wagmiConfig,
+} from "../utils/config/web3.config";
 import { useSnackbar } from "./SnackbarContext";
 import { useCurrencyConverter } from "../utils/hooks/useCurrencyConverter";
 import { DEZENMART_ABI } from "../utils/abi/dezenmartAbi.json";
 import { ESCROW_ADDRESSES } from "../utils/config/web3.config";
 import { parseWeb3Error } from "../utils/errorParser";
+import { readContract, simulateContract } from "@wagmi/core";
 
 interface ExtendedWalletState extends WalletState {
   usdtBalance?: {
@@ -45,6 +50,11 @@ interface ExtendedWalletState extends WalletState {
 interface ExtendedWeb3ContextType extends Omit<Web3ContextType, "wallet"> {
   wallet: ExtendedWalletState;
   buyTrade: (params: BuyTradeParams) => Promise<PaymentTransaction>;
+  validateTradeBeforePurchase: (
+    tradeId: string,
+    quantity: string,
+    logisticsProvider: string
+  ) => Promise<any>;
   approveUSDT: (amount: string) => Promise<string>;
   usdtAllowance: bigint | undefined;
   usdtDecimals: number | undefined;
@@ -267,34 +277,49 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       try {
-        // Ensure all parameters are properly typed and validated
         const tradeId = BigInt(params.tradeId);
         const quantity = BigInt(params.quantity);
         const logisticsProvider = params.logisticsProvider as `0x${string}`;
 
-        // Validate logistics provider address format
         if (
-          !logisticsProvider ||
-          !logisticsProvider.startsWith("0x") ||
+          !logisticsProvider?.startsWith("0x") ||
           logisticsProvider.length !== 42
         ) {
           throw new Error("Invalid logistics provider address");
         }
 
-        // Execute the buyTrade transaction
+        // Estimate gas first
+        let gasEstimate: bigint;
+        try {
+          const { request } = await simulateContract(wagmiConfig, {
+            address: escrowAddress as `0x${string}`,
+            abi: DEZENMART_ABI,
+            functionName: "buyTrade",
+            args: [tradeId, quantity, logisticsProvider],
+            account: address,
+          });
+
+          gasEstimate = request.gas
+            ? (request.gas * BigInt(120)) / BigInt(100)
+            : BigInt(800000);
+        } catch (estimateError) {
+          console.warn("Gas estimation failed, using default:", estimateError);
+          gasEstimate = BigInt(800000);
+        }
+
         const hash = await writeContractAsync({
           address: escrowAddress as `0x${string}`,
           abi: DEZENMART_ABI,
           functionName: "buyTrade",
           args: [tradeId, quantity, logisticsProvider],
-          gas: BigInt(500000),
+          gas: gasEstimate,
         });
 
         if (!hash) {
           throw new Error("Transaction failed to execute");
         }
 
-        const transaction: PaymentTransaction = {
+        return {
           hash,
           amount: "0",
           token: "USDT",
@@ -303,39 +328,89 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
           status: "pending",
           timestamp: Date.now(),
         };
-
-        return transaction;
       } catch (error: any) {
         console.error("Buy trade failed:", error);
 
-        // Enhanced error handling
-        if (error?.message?.includes("InsufficientUSDTBalance")) {
+        // Enhanced error parsing
+        const errorMessage = error?.message || error?.toString() || "";
+
+        if (errorMessage.includes("InsufficientUSDTBalance")) {
           throw new Error("Insufficient USDT balance for this purchase");
         }
-        if (error?.message?.includes("InsufficientUSDTAllowance")) {
+        if (errorMessage.includes("InsufficientUSDTAllowance")) {
           throw new Error(
             "USDT allowance insufficient. Please approve the amount first"
           );
         }
-        if (error?.message?.includes("InvalidTradeId")) {
+        if (
+          errorMessage.includes("InvalidTradeId") ||
+          errorMessage.includes("Trade not found")
+        ) {
           throw new Error(
             "Invalid trade ID. This product may no longer be available"
           );
         }
-        if (error?.message?.includes("InsufficientQuantity")) {
+        if (errorMessage.includes("InsufficientQuantity")) {
           throw new Error("Requested quantity exceeds available stock");
         }
-        if (error?.message?.includes("User rejected")) {
+        if (
+          errorMessage.includes("User rejected") ||
+          errorMessage.includes("user rejected")
+        ) {
           throw new Error("Transaction was rejected by user");
         }
+        if (errorMessage.includes("Internal JSON-RPC error")) {
+          throw new Error(
+            "Network error. Please check your connection and try again"
+          );
+        }
+        if (errorMessage.includes("gas")) {
+          throw new Error(
+            "Transaction failed due to gas issues. Please try again"
+          );
+        }
 
-        // Generic fallback
         throw new Error("Transaction failed. Please try again.");
       }
     },
     [address, chain, isCorrectNetwork, writeContractAsync]
   );
 
+  const validateTradeBeforePurchase = useCallback(
+    async (tradeId: string, quantity: string, logisticsProvider: string) => {
+      if (!address || !chain?.id) return false;
+
+      const escrowAddress =
+        ESCROW_ADDRESSES[chain.id as keyof typeof ESCROW_ADDRESSES];
+      if (!escrowAddress) return false;
+
+      try {
+        const tradeDetails = (await readContract(wagmiConfig, {
+          address: escrowAddress as `0x${string}`,
+          abi: DEZENMART_ABI,
+          functionName: "getTrade",
+          args: [BigInt(tradeId)],
+        })) as {
+          active: boolean;
+          remainingQuantity: bigint;
+          logisticsProviders: string[];
+        };
+
+        if (
+          !tradeDetails.active ||
+          tradeDetails.remainingQuantity < BigInt(quantity)
+        ) {
+          return false;
+        }
+
+        return tradeDetails.logisticsProviders.includes(logisticsProvider);
+      } catch (error) {
+        console.error("Trade validation failed:", error);
+        return false;
+      }
+    },
+    [address, chain]
+  );
   // Check current allowance
   const { data: usdtAllowance, refetch: refetchAllowance } = useReadContract({
     address: usdtContractAddress,
@@ -501,6 +576,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
     getUSDTBalance,
     buyTrade,
     approveUSDT,
+    validateTradeBeforePurchase,
     isCorrectNetwork,
   };
 

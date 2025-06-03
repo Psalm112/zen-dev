@@ -42,9 +42,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     switchToCorrectNetwork,
     getCurrentAllowance,
     connectWallet,
+    validateTradeBeforePurchase,
   } = useWeb3();
 
-  // State management
   const [step, setStep] = useState<PaymentStep>("review");
   const [needsApproval, setNeedsApproval] = useState(false);
   const [approvalHash, setApprovalHash] = useState<string>("");
@@ -57,7 +57,6 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   const [retryCount, setRetryCount] = useState(0);
   const [isLoadingBalance, setIsLoadingBalance] = useState(false);
 
-  // Memoized calculations
   const orderAmount = useMemo(() => {
     return (
       orderDetails?.amount ||
@@ -82,7 +81,6 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
   const hasInsufficientGas = useMemo(() => gasBalance < 0.01, [gasBalance]);
 
-  // Load balance with error handling
   const loadBalance = useCallback(async () => {
     if (!wallet.isConnected) return;
 
@@ -182,6 +180,18 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       setStep("processing");
       setError("");
 
+      const isValidTrade = await validateTradeBeforePurchase?.(
+        orderDetails.product.tradeId,
+        orderDetails.quantity.toString(),
+        orderDetails.logisticsProviderWalletAddress[0]
+      );
+
+      if (!isValidTrade) {
+        throw new Error(
+          "Trade validation failed. Product may no longer be available."
+        );
+      }
+
       if (needsApproval) {
         showSnackbar("Requesting USDT spending approval...", "info");
 
@@ -233,24 +243,51 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
       // Add delay before purchase transaction
       await new Promise((resolve) => setTimeout(resolve, 1000));
+      let retryAttempts = 0;
+      const maxRetries = 3;
 
-      showSnackbar("Processing purchase transaction...", "info");
+      while (retryAttempts < maxRetries) {
+        try {
+          showSnackbar("Processing purchase transaction...", "info");
 
-      const paymentTransaction = await buyTrade({
-        tradeId: orderDetails.product.tradeId,
-        quantity: orderDetails.quantity.toString(),
-        logisticsProvider: orderDetails.logisticsProviderWalletAddress[0],
-      });
+          const paymentTransaction = await buyTrade({
+            tradeId: orderDetails.product.tradeId,
+            quantity: orderDetails.quantity.toString(),
+            logisticsProvider: orderDetails.logisticsProviderWalletAddress[0],
+          });
 
-      setTransaction(paymentTransaction);
-      setStep("success");
-      onPaymentSuccess(paymentTransaction);
-      showSnackbar("Purchase completed successfully!", "success");
+          setTransaction(paymentTransaction);
+          setStep("success");
+          onPaymentSuccess(paymentTransaction);
+          showSnackbar("Purchase completed successfully!", "success");
 
-      // Refresh balance after successful transaction
-      setTimeout(() => {
-        loadBalance();
-      }, 3000);
+          setTimeout(() => loadBalance(), 3000);
+          break;
+        } catch (txError: any) {
+          retryAttempts++;
+          const errorMsg = txError.message || "Transaction failed";
+
+          if (retryAttempts >= maxRetries) {
+            throw txError;
+          }
+
+          if (
+            errorMsg.includes("Network error") ||
+            errorMsg.includes("JSON-RPC")
+          ) {
+            showSnackbar(
+              `Retry attempt ${retryAttempts}/${maxRetries}...`,
+              "info"
+            );
+            await new Promise((resolve) =>
+              setTimeout(resolve, 2000 * retryAttempts)
+            );
+            continue;
+          } else {
+            throw txError;
+          }
+        }
+      }
     } catch (error: unknown) {
       console.error("Payment failed:", error);
       const errorMessage = parseWeb3Error(error);

@@ -46,7 +46,15 @@ export const wagmiConfig = createConfig({
       : []),
   ],
   transports: {
-    [celo.id]: http(),
-    [celoAlfajores.id]: http(),
+    [celo.id]: http(undefined, {
+      batch: true,
+      retryCount: 3,
+      retryDelay: 1000,
+    }),
+    [celoAlfajores.id]: http(undefined, {
+      batch: true,
+      retryCount: 3,
+      retryDelay: 1000,
+    }),
   },
 });
