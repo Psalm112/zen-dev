@@ -239,7 +239,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       const paymentTransaction = await buyTrade({
         tradeId: orderDetails.product.tradeId,
         quantity: orderDetails.quantity.toString(),
-        logisticsProvider: orderDetails.logisticsProviderWalletAddress.[0],
+        logisticsProvider: orderDetails.logisticsProviderWalletAddress[0],
       });
 
       setTransaction(paymentTransaction);
