@@ -535,7 +535,7 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
               logisticsProviders={orderDetails.product.logisticsProviders ?? []}
               onSelect={handleLogisticsSelect}
               selectedProviderWalletAddress={
-                orderDetails.logisticsProviderWalletAddress
+                orderDetails.logisticsProviderWalletAddress[0]
               }
             />
           )}
