@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo, memo } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import Container from "../components/common/Container";
@@ -8,13 +8,27 @@ import { toast } from "react-toastify";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import { useOrderData } from "../utils/hooks/useOrder";
 
-const ViewOrderDetail = () => {
+const ViewOrderDetail = memo(() => {
   const { orderId } = useParams<{ orderId: string }>();
-
   const location = useLocation();
   const navigate = useNavigate();
-  const [orderStatus, setOrderStatus] = useState<TradeStatusType>("pending");
-  //   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Memoize initial status from URL params
+  const initialStatus = useMemo(() => {
+    if (location.search.includes("status=")) {
+      const statusParam = new URLSearchParams(location.search).get("status");
+      if (
+        statusParam &&
+        ["cancelled", "pending", "release", "completed"].includes(statusParam)
+      ) {
+        return statusParam as TradeStatusType;
+      }
+    }
+    return "pending" as TradeStatusType;
+  }, [location.search]);
+
+  const [orderStatus, setOrderStatus] =
+    useState<TradeStatusType>(initialStatus);
 
   const {
     getOrderById,
@@ -25,107 +39,109 @@ const ViewOrderDetail = () => {
     raiseDispute,
   } = useOrderData();
 
-  useEffect(() => {
-    if (location.search.includes("status=")) {
-      const statusParam = new URLSearchParams(location.search).get("status");
-      if (
-        statusParam &&
-        ["cancelled", "pending", "release", "completed"].includes(statusParam)
-      ) {
-        setOrderStatus(statusParam as TradeStatusType);
-      }
+  // Memoize status mapping
+  const statusMapping = useMemo(
+    () => ({
+      pending: "pending" as TradeStatusType,
+      accepted: "release" as TradeStatusType,
+      rejected: "cancelled" as TradeStatusType,
+      completed: "completed" as TradeStatusType,
+      disputed: "cancelled" as TradeStatusType,
+      refunded: "pending" as TradeStatusType,
+    }),
+    []
+  );
+
+  // Memoize transaction info to prevent recalculation
+  const transactionInfo = useMemo(() => {
+    if (!orderDetails?.buyer || !orderDetails?.seller) {
+      return {
+        buyerName: "Unknown Buyer",
+        sellerName: "Unknown Seller",
+        goodRating: 0,
+        completedOrders: 0,
+        completionRate: 0,
+        avgPaymentTime: 0,
+      };
     }
 
-    const fetchOrder = async () => {
-      if (orderId) {
-        await getOrderById(orderId);
-      }
+    return {
+      buyerName:
+        typeof orderDetails.buyer === "object"
+          ? orderDetails.buyer.name
+          : orderDetails.buyer,
+      sellerName:
+        typeof orderDetails.seller === "object"
+          ? orderDetails.seller.name
+          : orderDetails.seller,
+      goodRating: 0,
+      completedOrders: 0,
+      completionRate: 0,
+      avgPaymentTime: 0,
     };
+  }, [orderDetails?.buyer, orderDetails?.seller]);
 
-    fetchOrder();
-  }, [orderId, getOrderById, location.search]);
+  // Fetch order only once when orderId changes
+  useEffect(() => {
+    if (orderId) {
+      getOrderById(orderId);
+    }
+  }, [orderId, getOrderById]);
 
+  // Update status only when order details status changes
   useEffect(() => {
     if (orderDetails?.status) {
-      const statusMapping: Record<string, TradeStatusType> = {
-        pending: "pending",
-        accepted: "release",
-        rejected: "cancelled",
-        completed: "completed",
-        disputed: "cancelled",
-        refunded: "pending",
-      };
-
-      setOrderStatus(
-        statusMapping[orderDetails.status.toLowerCase()] || "pending"
-      );
-    }
-  }, [orderDetails]);
-
-  const transactionInfo =
-    orderDetails?.buyer && orderDetails?.seller
-      ? {
-          buyerName:
-            typeof orderDetails.buyer === "object"
-              ? orderDetails.buyer.name
-              : orderDetails.buyer,
-          sellerName:
-            typeof orderDetails.seller === "object"
-              ? orderDetails.seller.name
-              : orderDetails.seller,
-          goodRating: 0,
-          completedOrders: 0,
-          completionRate: 0,
-          avgPaymentTime: 0,
-        }
-      : {
-          buyerName: "Unknown Buyer",
-          sellerName: "Unknown Seller",
-          goodRating: 0,
-          completedOrders: 0,
-          completionRate: 0,
-          avgPaymentTime: 0,
-        };
-
-  const handleContactSeller = () => {
-    toast.info("Opening chat with seller...");
-    navigate(
-      `/chat/${
-        typeof orderDetails?.seller === "string"
-          ? orderDetails?.seller
-          : orderDetails?.seller?._id
-      }`
-    );
-  };
-
-  const handleContactBuyer = () => {
-    toast.info("Opening chat with buyer...");
-    // navigate(`/chat/${orderDetails?.buyer?._id}`);
-  };
-  const handleOrderDispute = async (reason: string): Promise<void> => {
-    if (!orderId) return;
-
-    try {
-      const disputeRes = await raiseDispute(orderId, reason, false);
-      const changeOrderRes = await changeOrderStatus(
-        orderId,
-        "disputed",
-        false
-      );
-
-      if (disputeRes && changeOrderRes?.status === "disputed") {
-        toast.success("Dispute has been filled successfully");
-        navigate(`/trades/viewtrades/${orderId}?status=cancelled`, {
-          replace: true,
-        });
+      const key =
+        orderDetails.status.toLowerCase() as keyof typeof statusMapping;
+      const newStatus = statusMapping[key] || "pending";
+      if (newStatus !== orderStatus) {
+        setOrderStatus(newStatus);
       }
-    } catch (error) {
-      toast.error("Failed to file dispute. Please try again.");
-      // console.log(error);
     }
-  };
+  }, [orderDetails?.status, statusMapping, orderStatus]);
 
-  const handleReleaseNow = async () => {
+  // Memoized callback functions to prevent recreating on every render
+  const handleContactSeller = useCallback(() => {
+    toast.info("Opening chat with seller...");
+    const sellerId =
+      typeof orderDetails?.seller === "string"
+        ? orderDetails.seller
+        : orderDetails?.seller?._id;
+    if (sellerId) {
+      navigate(`/chat/${sellerId}`);
+    }
+  }, [orderDetails?.seller, navigate]);
+
+  const handleContactBuyer = useCallback(() => {
+    toast.info("Opening chat with buyer...");
+    // Implement buyer chat navigation when needed
+  }, []);
+
+  const handleOrderDispute = useCallback(
+    async (reason: string): Promise<void> => {
+      if (!orderId) return;
+
+      try {
+        const [disputeRes, changeOrderRes] = await Promise.all([
+          raiseDispute(orderId, reason, false),
+          changeOrderStatus(orderId, "disputed", false),
+        ]);
+
+        if (disputeRes && changeOrderRes?.status === "disputed") {
+          toast.success("Dispute has been filed successfully");
+          navigate(`/trades/viewtrades/${orderId}?status=cancelled`, {
+            replace: true,
+          });
+        }
+      } catch (error) {
+        toast.error("Failed to file dispute. Please try again.");
+        console.error("Dispute error:", error);
+      }
+    },
+    [orderId, raiseDispute, changeOrderStatus, navigate]
+  );
+
+  const handleReleaseNow = useCallback(async () => {
     if (!orderId) return;
 
     try {
@@ -134,14 +150,13 @@ const ViewOrderDetail = () => {
       });
     } catch (error) {
       toast.error("Failed Release. Please try again.");
-      // console.log(error);
+      console.error("Release error:", error);
     }
-  };
+  }, [orderId, navigate]);
 
-  const handleConfirmDelivery = async () => {
+  const handleConfirmDelivery = useCallback(async () => {
     if (!orderId) return;
 
-    // setIsProcessing(true);
     try {
       await changeOrderStatus(orderId, "completed");
       setOrderStatus("completed");
@@ -151,12 +166,17 @@ const ViewOrderDetail = () => {
       toast.success("Order has been completed successfully!");
     } catch (error) {
       toast.error("Failed to complete the order. Please try again.");
-      // console.log(error);
-    } finally {
-      //   setIsProcessing(false);
+      console.error("Confirm delivery error:", error);
     }
-  };
+  }, [orderId, changeOrderStatus, navigate]);
 
+  // Memoize navigation path to prevent recalculation
+  const navigatePath = useMemo(
+    () => `/orders/${orderId}?status=release`,
+    [orderId]
+  );
+
+  // Early returns for loading and error states
   if (loading) {
     return (
       <div className="bg-Dark min-h-screen flex items-center justify-center">
@@ -192,7 +212,7 @@ const ViewOrderDetail = () => {
             Sorry, we couldn't find the order you're looking for.
           </p>
           <button
-            onClick={() => navigate(`/product`)}
+            onClick={() => navigate("/product")}
             className="bg-Red hover:bg-[#e02d37] text-white px-6 py-2 rounded-lg transition-colors"
           >
             Back to Products
@@ -224,12 +244,14 @@ const ViewOrderDetail = () => {
             onReleaseNow={handleReleaseNow}
             onConfirmDelivery={handleConfirmDelivery}
             orderId={orderId}
-            navigatePath={`/orders/${orderId}?status=release`}
+            navigatePath={navigatePath}
           />
         </motion.div>
       </Container>
     </div>
   );
-};
+});
+
+ViewOrderDetail.displayName = "ViewOrderDetail";
 
 export default ViewOrderDetail;

@@ -374,8 +374,7 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
 
       try {
         if (orderId) {
-          // Performance: Fire and forget for better UX
-          changeOrderStatus(orderId, "accepted", false).catch(console.error);
+          changeOrderStatus(orderId, "accepted", true);
         }
 
         showSnackbar("Payment completed successfully!", "success");
