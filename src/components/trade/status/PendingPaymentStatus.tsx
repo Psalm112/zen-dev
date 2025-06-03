@@ -389,8 +389,9 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
         const currentOrderId = stableOrderId.current;
         if (orderId) {
           await changeOrderStatus(orderId, "accepted", true);
+        } else if (orderDetails?._id) {
+          await changeOrderStatus(orderDetails._id, "accepted", true);
         }
-
         showSnackbar("Payment completed successfully!", "success");
 
         if (navigatePath) {
