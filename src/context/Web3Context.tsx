@@ -378,11 +378,17 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
 
   const validateTradeBeforePurchase = useCallback(
     async (tradeId: string, quantity: string, logisticsProvider: string) => {
-      if (!address || !chain?.id) return false;
+      if (!address || !chain?.id) {
+        console.warn("Wallet not connected for trade validation");
+        return false;
+      }
 
       const escrowAddress =
         ESCROW_ADDRESSES[chain.id as keyof typeof ESCROW_ADDRESSES];
-      if (!escrowAddress) return false;
+      if (!escrowAddress) {
+        console.warn("Escrow contract not available on this network");
+        return false;
+      }
 
       try {
         const tradeDetails = (await readContract(wagmiConfig, {
@@ -396,16 +402,34 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
           logisticsProviders: string[];
         };
 
-        if (
-          !tradeDetails.active ||
-          tradeDetails.remainingQuantity < BigInt(quantity)
-        ) {
+        // More detailed validation
+        if (!tradeDetails.active) {
+          console.warn(`Trade ${tradeId} is not active`);
           return false;
         }
 
-        return tradeDetails.logisticsProviders.includes(logisticsProvider);
-      } catch (error) {
-        console.error("Trade validation failed:", error);
+        if (tradeDetails.remainingQuantity < BigInt(quantity)) {
+          console.warn(
+            `Insufficient quantity for trade ${tradeId}. Available: ${tradeDetails.remainingQuantity}, Requested: ${quantity}`
+          );
+          return false;
+        }
+
+        if (!tradeDetails.logisticsProviders.includes(logisticsProvider)) {
+          console.warn(
+            `Logistics provider ${logisticsProvider} not available for trade ${tradeId}`
+          );
+          return false;
+        }
+
+        return true;
+      } catch (error: any) {
+        // Enhanced error logging
+        if (error?.message?.includes("TradeNotFound")) {
+          console.warn(`Trade ${tradeId} not found in contract`);
+        } else {
+          console.error("Trade validation failed:", error);
+        }
         return false;
       }
     },

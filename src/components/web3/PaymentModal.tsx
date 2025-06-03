@@ -145,7 +145,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       try {
         setIsProcessing(true);
         await switchToCorrectNetwork();
-        await new Promise((resolve) => setTimeout(resolve, 3000)); // Wait longer
+        await new Promise((resolve) => setTimeout(resolve, 3000));
         setIsProcessing(false);
       } catch (error) {
         setError(
@@ -188,7 +188,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
       if (!isValidTrade) {
         throw new Error(
-          "Trade validation failed. Product may no longer be available."
+          "This product is no longer available. Please refresh and try another item."
         );
       }
 
@@ -291,9 +291,21 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     } catch (error: unknown) {
       console.error("Payment failed:", error);
       const errorMessage = parseWeb3Error(error);
-      setError(errorMessage);
+      let errorDetail = errorMessage;
+      if (
+        errorMessage.includes("TradeNotFound") ||
+        errorMessage.includes("no longer available")
+      ) {
+        errorDetail =
+          "This product is no longer available. Please try a different item.";
+      } else if (errorMessage.includes("InsufficientQuantity")) {
+        errorDetail =
+          "Not enough stock available. Please reduce quantity or try later.";
+      }
+
+      setError(errorDetail);
       setStep("error");
-      showSnackbar(errorMessage, "error");
+      showSnackbar(errorDetail, "error");
     } finally {
       setIsProcessing(false);
     }

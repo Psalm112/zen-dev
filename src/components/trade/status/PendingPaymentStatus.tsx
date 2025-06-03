@@ -19,6 +19,7 @@ import { useWalletBalance } from "../../../utils/hooks/useWalletBalance";
 import { useOrderData } from "../../../utils/hooks/useOrder";
 import { ESCROW_ADDRESSES } from "../../../utils/config/web3.config";
 import PaymentModal from "../../web3/PaymentModal";
+import WalletConnectionModal from "../../web3/WalletConnectionModal";
 
 interface PendingPaymentStatusProps {
   tradeDetails?: TradeDetails;
@@ -55,17 +56,24 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
 }) => {
   const navigate = useNavigate();
   const { showSnackbar } = useSnackbar();
-  const { wallet, connectWallet } = useWeb3();
+  const { wallet, connectWallet, validateTradeBeforePurchase } = useWeb3();
   const { usdtBalance, refetch: refetchBalance } = useWalletBalance();
   const { changeOrderStatus } = useOrderData();
-
-  // Performance: Use refs for cleanup and state management
+  const [tradeValidation, setTradeValidation] = useState<{
+    isValid: boolean;
+    isLoading: boolean;
+    error: string | null;
+  }>({
+    isValid: true,
+    isLoading: false,
+    error: null,
+  });
+  const [showWalletModal, setShowWalletModal] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const mountedRef = useRef(true);
   const abortControllerRef = useRef<AbortController | null>(null);
   const balanceRefetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // State with proper initialization
   const [timeRemaining, setTimeRemaining] = useState<TimeRemaining>(() => ({
     minutes: 9,
     seconds: 59,
@@ -77,7 +85,44 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
   const [selectedLogisticsProvider, setSelectedLogisticsProvider] =
     useState<any>(null);
 
-  // Performance: Memoized validation with error boundary protection
+  useEffect(() => {
+    const validateTrade = async () => {
+      if (!orderDetails?.product?.tradeId || !wallet.isConnected) return;
+
+      setTradeValidation({ isValid: true, isLoading: true, error: null });
+
+      try {
+        const isValid = await validateTradeBeforePurchase?.(
+          orderDetails.product.tradeId,
+          orderDetails.quantity.toString(),
+          orderDetails.logisticsProviderWalletAddress[0]
+        );
+
+        setTradeValidation({
+          isValid: isValid || false,
+          isLoading: false,
+          error: isValid ? null : "Product no longer available",
+        });
+      } catch (error) {
+        console.error("Trade validation error:", error);
+        setTradeValidation({
+          isValid: false,
+          isLoading: false,
+          error: "Unable to verify product availability",
+        });
+      }
+    };
+
+    const timeoutId = setTimeout(validateTrade, 500);
+    return () => clearTimeout(timeoutId);
+  }, [
+    orderDetails?.product?.tradeId,
+    orderDetails?.quantity,
+    orderDetails?.logisticsProviderWalletAddress,
+    wallet.isConnected,
+    validateTradeBeforePurchase,
+  ]);
+
   const orderValidation = useMemo(() => {
     try {
       if (!orderDetails?.product?.price || !orderDetails.quantity) {
@@ -94,6 +139,21 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
         };
       }
 
+      // Check trade validation first (most critical)
+      if (tradeValidation.isLoading) {
+        return {
+          isValid: false,
+          error: "Verifying product availability...",
+        };
+      }
+
+      if (!tradeValidation.isValid) {
+        return {
+          isValid: false,
+          error: tradeValidation.error || "Product not available",
+        };
+      }
+
       return { isValid: true, error: null };
     } catch (error) {
       console.error("Order validation error:", error);
@@ -102,9 +162,15 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
         error: "Order validation failed",
       };
     }
-  }, [orderDetails?.product?.price, orderDetails?.quantity, quantity]);
+  }, [
+    orderDetails?.product?.price,
+    orderDetails?.quantity,
+    quantity,
+    tradeValidation.isValid,
+    tradeValidation.isLoading,
+    tradeValidation.error,
+  ]);
 
-  // Performance: Optimized calculations with proper number handling
   const calculations = useMemo(() => {
     if (!orderValidation.isValid || !orderDetails?.product?.price) {
       return {
@@ -161,7 +227,6 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     usdtBalance,
   ]);
 
-  // Performance: Memoized escrow address with error handling
   const escrowAddress = useMemo(() => {
     try {
       return ESCROW_ADDRESSES[44787] || null;
@@ -170,17 +235,23 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     }
   }, []);
 
-  // Performance: Memoized button text with loading state
   const payButtonText = useMemo(() => {
     if (loading) return "Processing...";
+
+    if (tradeValidation.isLoading) return "Checking availability...";
+    if (!tradeValidation.isValid) return "Product unavailable";
+
     if (!wallet.isConnected) return "Connect Wallet to Pay";
+
     if (!calculations.hasSufficientBalance) return "Insufficient Balance";
     return `Pay ${calculations.totalAmount.toFixed(2)} USDT`;
   }, [
+    loading,
+    tradeValidation.isLoading,
+    tradeValidation.isValid,
     wallet.isConnected,
     calculations.totalAmount,
     calculations.hasSufficientBalance,
-    loading,
   ]);
 
   // Performance: Initialize quantity only once
@@ -241,7 +312,6 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     }, 500);
   }, [refetchBalance]);
 
-  // Performance: Optimized payment handler with proper error boundaries
   const handlePayNow = useCallback(async () => {
     if (!orderValidation.isValid || loading) return;
 
@@ -251,8 +321,8 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
 
     try {
       if (!wallet.isConnected) {
-        await connectWallet();
-        // Performance: Use shorter wait time
+        // await connectWallet();
+        setShowWalletModal(true);
         await new Promise((resolve) => setTimeout(resolve, 500));
         debouncedRefetchBalance();
       }
@@ -446,7 +516,10 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
       <Button
         title={payButtonText}
         className={`text-white text-sm px-6 py-3 rounded transition-colors duration-200 disabled:cursor-not-allowed ${
-          calculations.hasSufficientBalance && !loading
+          calculations.hasSufficientBalance &&
+          !loading &&
+          tradeValidation.isValid &&
+          orderValidation.isValid
             ? "bg-Red hover:bg-[#e02d37]"
             : "bg-gray-600 opacity-75"
         }`}
@@ -454,7 +527,9 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
         disabled={
           !calculations.hasSufficientBalance ||
           loading ||
-          !orderValidation.isValid
+          !orderValidation.isValid ||
+          !tradeValidation.isValid ||
+          tradeValidation.isLoading
         }
       />
     ),
@@ -463,6 +538,8 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
       calculations.hasSufficientBalance,
       loading,
       orderValidation.isValid,
+      tradeValidation.isValid,
+      tradeValidation.isLoading,
       handlePayNow,
     ]
   );
@@ -565,6 +642,10 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
           onPaymentSuccess={handlePaymentSuccess}
         />
       )}
+      <WalletConnectionModal
+        isOpen={showWalletModal}
+        onClose={() => setShowWalletModal(false)}
+      />
     </>
   );
 };
