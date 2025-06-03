@@ -1,8 +1,11 @@
-import { http, createConfig } from "wagmi";
+import { http, createConfig, fallback } from "wagmi";
 import { celo, celoAlfajores } from "wagmi/chains";
 import { coinbaseWallet, metaMask, walletConnect } from "wagmi/connectors";
 
-// Celo USDT Contract Addresses
+const rpcEndpoints = {
+  [celo.id]: ["https://forno.celo.org", "https://rpc.ankr.com/celo"],
+  [celoAlfajores.id]: ["https://alfajores-forno.celo-testnet.org"],
+};
 export const USDT_ADDRESSES = {
   [celo.id]: import.meta.env.VITE_USDT_CONTRACT_ADDRESS_MAINNET!,
   [celoAlfajores.id]: import.meta.env.VITE_USDT_CONTRACT_ADDRESS_TESTNET!,
@@ -46,15 +49,23 @@ export const wagmiConfig = createConfig({
       : []),
   ],
   transports: {
-    [celo.id]: http(undefined, {
-      batch: true,
-      retryCount: 3,
-      retryDelay: 1000,
-    }),
-    [celoAlfajores.id]: http(undefined, {
-      batch: true,
-      retryCount: 3,
-      retryDelay: 1000,
-    }),
+    [celo.id]: fallback(
+      rpcEndpoints[celoAlfajores.id].map((url) =>
+        http(undefined, {
+          batch: true,
+          retryCount: 3,
+          retryDelay: 1000,
+        })
+      )
+    ),
+    [celoAlfajores.id]: fallback(
+      rpcEndpoints[celoAlfajores.id].map((url) =>
+        http(undefined, {
+          batch: true,
+          retryCount: 3,
+          retryDelay: 1000,
+        })
+      )
+    ),
   },
 });
