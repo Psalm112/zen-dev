@@ -46,8 +46,8 @@ interface UpdateOrderPayload {
 
 const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
   tradeDetails,
-  orderDetails,
-  transactionInfo,
+  orderDetails: details,
+  transactionInfo: txInfo,
   onReleaseNow,
   navigatePath,
   orderId,
@@ -71,6 +71,7 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
   const [showWalletModal, setShowWalletModal] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const mountedRef = useRef(true);
+  const stableOrderId = useRef<string | undefined>(orderId);
   const abortControllerRef = useRef<AbortController | null>(null);
   const balanceRefetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -84,6 +85,18 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
   const [quantity, setQuantity] = useState<number>(1);
   const [selectedLogisticsProvider, setSelectedLogisticsProvider] =
     useState<any>(null);
+
+  const orderDetails = useMemo(() => details, [details?._id, details?.status]);
+  const transactionInfo = useMemo(
+    () => txInfo,
+    [txInfo?.buyerName, txInfo?.sellerName]
+  );
+
+  useEffect(() => {
+    if (orderId) {
+      stableOrderId.current = orderId;
+    }
+  }, [orderId]);
 
   useEffect(() => {
     const validateTrade = async () => {
@@ -373,6 +386,7 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
       if (!mountedRef.current) return;
 
       try {
+        const currentOrderId = stableOrderId.current;
         if (orderId) {
           await changeOrderStatus(orderId, "accepted", true);
         }
@@ -386,7 +400,6 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
         }
       } catch (error) {
         console.error("Post-payment processing error:", error);
-        // Still navigate on payment success
         if (navigatePath) {
           navigate(navigatePath, { replace: true });
         } else if (onReleaseNow) {
@@ -394,14 +407,7 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
         }
       }
     },
-    [
-      navigate,
-      navigatePath,
-      onReleaseNow,
-      showSnackbar,
-      orderId,
-      changeOrderStatus,
-    ]
+    [navigate, navigatePath, onReleaseNow, showSnackbar, changeOrderStatus]
   );
 
   // Performance: Optimized update handler with validation
@@ -490,6 +496,25 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
   const handleLogisticsSelect = useCallback((provider: any) => {
     setSelectedLogisticsProvider(provider);
   }, []);
+
+  const Payment = useMemo(
+    () =>
+      orderDetails && escrowAddress ? (
+        <PaymentModal
+          isOpen={isPaymentModalOpen}
+          onClose={handlePaymentModalClose}
+          orderDetails={orderDetails}
+          onPaymentSuccess={handlePaymentSuccess}
+        />
+      ) : null,
+    [
+      isPaymentModalOpen,
+      orderDetails?._id,
+      escrowAddress,
+      handlePaymentModalClose,
+      handlePaymentSuccess,
+    ]
+  );
 
   // Performance: Memoized components
   const editButton = useMemo(
@@ -632,14 +657,7 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
         </div>
       </Modal>
 
-      {orderDetails && escrowAddress && (
-        <PaymentModal
-          isOpen={isPaymentModalOpen}
-          onClose={handlePaymentModalClose}
-          orderDetails={orderDetails}
-          onPaymentSuccess={handlePaymentSuccess}
-        />
-      )}
+      {Payment}
       <WalletConnectionModal
         isOpen={showWalletModal}
         onClose={() => setShowWalletModal(false)}

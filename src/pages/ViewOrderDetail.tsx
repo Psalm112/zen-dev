@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, memo } from "react";
+import { useState, useEffect, useCallback, useMemo, memo, useRef } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import Container from "../components/common/Container";
@@ -7,11 +7,20 @@ import TradeStatus from "../components/trade/status/TradeStatus";
 import { toast } from "react-toastify";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import { useOrderData } from "../utils/hooks/useOrder";
+import { useSnackbar } from "../context/SnackbarContext";
 
 const ViewOrderDetail = memo(() => {
   const { orderId } = useParams<{ orderId: string }>();
   const location = useLocation();
   const navigate = useNavigate();
+  const { showSnackbar } = useSnackbar();
+  const stableOrderId = useRef<string | undefined>(orderId);
+
+  useEffect(() => {
+    if (orderId) {
+      stableOrderId.current = orderId;
+    }
+  }, [orderId]);
 
   // Memoize initial status from URL params
   const initialStatus = useMemo(() => {
@@ -119,48 +128,51 @@ const ViewOrderDetail = memo(() => {
 
   const handleOrderDispute = useCallback(
     async (reason: string): Promise<void> => {
-      if (!orderId) return;
+      const currentOrderId = stableOrderId.current;
+      if (!currentOrderId) return;
 
       try {
         const [disputeRes, changeOrderRes] = await Promise.all([
-          raiseDispute(orderId, reason, false),
-          changeOrderStatus(orderId, "disputed", false),
+          raiseDispute(currentOrderId, reason, false),
+          changeOrderStatus(currentOrderId, "disputed", false),
         ]);
 
         if (disputeRes && changeOrderRes?.status === "disputed") {
-          toast.success("Dispute has been filed successfully");
-          navigate(`/trades/viewtrades/${orderId}?status=cancelled`, {
+          showSnackbar("Dispute has been filed successfully", "success");
+          navigate(`/trades/viewtrades/${currentOrderId}?status=cancelled`, {
             replace: true,
           });
         }
       } catch (error) {
-        toast.error("Failed to file dispute. Please try again.");
+        showSnackbar("Failed to file dispute. Please try again.", "error");
         console.error("Dispute error:", error);
       }
     },
-    [orderId, raiseDispute, changeOrderStatus, navigate]
+    [raiseDispute, changeOrderStatus, navigate]
   );
 
   const handleReleaseNow = useCallback(async () => {
-    if (!orderId) return;
+    const currentOrderId = stableOrderId.current;
+    if (!currentOrderId) return;
 
     try {
-      navigate(`/trades/orders/${orderId}?status=release`, {
+      navigate(`/trades/orders/${currentOrderId}?status=release`, {
         replace: true,
       });
     } catch (error) {
       toast.error("Failed Release. Please try again.");
       console.error("Release error:", error);
     }
-  }, [orderId, navigate]);
+  }, [navigate]);
 
   const handleConfirmDelivery = useCallback(async () => {
-    if (!orderId) return;
+    const currentOrderId = stableOrderId.current;
+    if (!currentOrderId) return;
 
     try {
-      await changeOrderStatus(orderId, "completed");
+      await changeOrderStatus(currentOrderId, "completed");
       setOrderStatus("completed");
-      navigate(`/trades/viewtrades/${orderId}?status=completed`, {
+      navigate(`/trades/viewtrades/${currentOrderId}?status=completed`, {
         replace: true,
       });
       toast.success("Order has been completed successfully!");
@@ -168,13 +180,12 @@ const ViewOrderDetail = memo(() => {
       toast.error("Failed to complete the order. Please try again.");
       console.error("Confirm delivery error:", error);
     }
-  }, [orderId, changeOrderStatus, navigate]);
+  }, [changeOrderStatus, navigate]);
 
-  // Memoize navigation path to prevent recalculation
-  const navigatePath = useMemo(
-    () => `/orders/${orderId}?status=release`,
-    [orderId]
-  );
+  const navigatePath = useMemo(() => {
+    const currentOrderId = stableOrderId.current || orderId;
+    return `/orders/${currentOrderId}?status=release`;
+  }, [orderId]);
 
   // Early returns for loading and error states
   if (loading) {

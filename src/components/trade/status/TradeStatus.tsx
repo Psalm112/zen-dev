@@ -86,10 +86,17 @@ const TradeStatus: FC<TradeStatusProps> = memo(
         )}
       </ErrorBoundary>
     );
+  },
+  (prevProps, nextProps) => {
+    return (
+      prevProps.status === nextProps.status &&
+      prevProps.orderDetails?._id === nextProps.orderDetails?._id &&
+      prevProps.orderDetails?.status === nextProps.orderDetails?.status &&
+      prevProps.orderId === nextProps.orderId
+    );
   }
 );
 
-// Memoize the status component renderer
 const renderStatusComponent = (
   status: string,
   orderDetails?: OrderDetails,

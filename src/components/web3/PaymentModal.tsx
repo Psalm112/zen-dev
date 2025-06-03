@@ -235,6 +235,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           }
 
           showSnackbar("USDT spending approved!", "success");
+          if (onPaymentSuccess && transaction) {
+            onPaymentSuccess(transaction);
+          }
         } catch (approvalError) {
           console.error("Approval failed:", approvalError);
           throw new Error(`Approval failed: ${parseWeb3Error(approvalError)}`);
