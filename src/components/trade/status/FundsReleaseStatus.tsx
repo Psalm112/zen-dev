@@ -93,26 +93,24 @@ const FundsReleaseStatus: FC<FundsReleaseStatusProps> = ({
     setProcessingState((prev) => ({ ...prev, confirmDelivery: true }));
 
     try {
-      const result = await confirmDelivery(orderId);
+      if (orderDetails?.purchaseId) {
+        const result = await confirmDelivery(orderDetails?.purchaseId);
+        if (!result.success) {
+          throw new Error(result.message || "Failed to confirm delivery");
+        }
+        await changeOrderStatus(orderId, "completed", false);
 
-      if (!result.success) {
-        throw new Error(result.message || "Failed to confirm delivery");
+        showSnackbar(
+          "Delivery confirmed successfully! Order has been completed.",
+          "success"
+        );
+
+        setIsConfirmationModalOpen(false);
       }
-
-      // Update order status to completed
-      await changeOrderStatus(orderId, "completed", false);
-
       showSnackbar(
-        "Delivery confirmed successfully! Order has been completed.",
-        "success"
+        "Unabele to confirm delivery at the moment, please try again.",
+        "error"
       );
-
-      setIsConfirmationModalOpen(false);
-
-      // Call parent callback if provided
-      if (onConfirmDelivery) {
-        onConfirmDelivery();
-      }
     } catch (error: any) {
       console.error("Error during delivery confirmation:", error);
       showSnackbar(
