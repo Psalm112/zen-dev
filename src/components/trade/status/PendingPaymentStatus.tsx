@@ -20,7 +20,11 @@ import { useOrderData } from "../../../utils/hooks/useOrder";
 import { ESCROW_ADDRESSES } from "../../../utils/config/web3.config";
 import PaymentModal from "../../web3/PaymentModal";
 import WalletConnectionModal from "../../web3/WalletConnectionModal";
-import { storeOrderId } from "../../../utils/helpers";
+import {
+  clearStoredOrderId,
+  getStoredOrderId,
+  storeOrderId,
+} from "../../../utils/helpers";
 
 interface PendingPaymentStatusProps {
   tradeDetails?: TradeDetails;
@@ -72,7 +76,6 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
   const [showWalletModal, setShowWalletModal] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const mountedRef = useRef(true);
-  const stableOrderId = useRef<string | undefined>(orderId);
   const abortControllerRef = useRef<AbortController | null>(null);
   const balanceRefetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -93,11 +96,6 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     [txInfo?.buyerName, txInfo?.sellerName]
   );
 
-  useEffect(() => {
-    if (orderId) {
-      stableOrderId.current = orderId;
-    }
-  }, [orderId]);
   useEffect(() => {
     if (orderId) {
       storeOrderId(orderId);
@@ -158,7 +156,6 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
         };
       }
 
-      // Check trade validation first (most critical)
       if (tradeValidation.isLoading) {
         return {
           isValid: false,
@@ -212,7 +209,6 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
         selectedLogisticsProvider?.walletAddress !==
         orderDetails.logisticsProviderWalletAddress;
 
-      // Performance: Parse balance once and cache
       const userBalance = (() => {
         const balanceStr = String(usdtBalance || 0).replace(/[,\s]/g, "");
         const parsed = Number(balanceStr);
@@ -283,7 +279,6 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     }
   }, [orderDetails?.quantity]);
 
-  // Performance: Optimized timer with proper cleanup
   useEffect(() => {
     if (!showTimer) return;
 
@@ -305,7 +300,6 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     return () => clearInterval(timer);
   }, [showTimer]);
 
-  // Performance: Single cleanup effect
   useEffect(() => {
     mountedRef.current = true;
 
@@ -318,7 +312,6 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     };
   }, []);
 
-  // Performance: Debounced balance refetch
   const debouncedRefetchBalance = useCallback(() => {
     if (balanceRefetchTimeoutRef.current) {
       clearTimeout(balanceRefetchTimeoutRef.current);
@@ -384,39 +377,41 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     showSnackbar,
   ]);
 
-  // Performance: Optimized payment success handler
   const handlePaymentSuccess = useCallback(
     async (transaction: any) => {
       setIsPaymentModalOpen(false);
       if (!mountedRef.current) return;
 
       try {
-        const currentOrderId = stableOrderId.current;
+        const currentOrderId = orderId || getStoredOrderId();
         if (currentOrderId) {
           await changeOrderStatus(currentOrderId, "accepted", true);
-        } else if (orderDetails?._id) {
-          await changeOrderStatus(orderDetails._id, "accepted", true);
         }
+        // else if (orderDetails?._id) {
+        //   await changeOrderStatus(orderDetails._id, "accepted", true);
+        // }
         showSnackbar("Payment completed successfully!", "success");
+        clearStoredOrderId();
 
         if (navigatePath) {
           navigate(navigatePath, { replace: true });
-        } else if (onReleaseNow) {
-          onReleaseNow();
         }
+        // else if (onReleaseNow) {
+        //   onReleaseNow();
+        // }
       } catch (error) {
         console.error("Post-payment processing error:", error);
         if (navigatePath) {
           navigate(navigatePath, { replace: true });
-        } else if (onReleaseNow) {
-          onReleaseNow();
         }
+        // else if (onReleaseNow) {
+        //   onReleaseNow();
+        // }
       }
     },
-    [navigate, navigatePath, onReleaseNow, showSnackbar, changeOrderStatus]
+    [navigate, navigatePath, showSnackbar, changeOrderStatus]
   );
 
-  // Performance: Optimized update handler with validation
   const handleUpdateOrder = useCallback(async () => {
     if (!orderId || !onUpdateOrder || loading || !calculations.hasChanges) {
       if (!calculations.hasChanges) {

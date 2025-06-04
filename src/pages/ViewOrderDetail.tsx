@@ -8,21 +8,20 @@ import { toast } from "react-toastify";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import { useOrderData } from "../utils/hooks/useOrder";
 import { useSnackbar } from "../context/SnackbarContext";
+import { getStoredOrderId, storeOrderId } from "../utils/helpers";
 
 const ViewOrderDetail = memo(() => {
   const { orderId } = useParams<{ orderId: string }>();
   const location = useLocation();
   const navigate = useNavigate();
   const { showSnackbar } = useSnackbar();
-  const stableOrderId = useRef<string | undefined>(orderId);
 
   useEffect(() => {
     if (orderId) {
-      stableOrderId.current = orderId;
+      storeOrderId(orderId);
     }
   }, [orderId]);
 
-  // Memoize initial status from URL params
   const initialStatus = useMemo(() => {
     if (location.search.includes("status=")) {
       const statusParam = new URLSearchParams(location.search).get("status");
@@ -48,7 +47,6 @@ const ViewOrderDetail = memo(() => {
     raiseDispute,
   } = useOrderData();
 
-  // Memoize status mapping
   const statusMapping = useMemo(
     () => ({
       pending: "pending" as TradeStatusType,
@@ -61,7 +59,6 @@ const ViewOrderDetail = memo(() => {
     []
   );
 
-  // Memoize transaction info to prevent recalculation
   const transactionInfo = useMemo(() => {
     if (!orderDetails?.buyer || !orderDetails?.seller) {
       return {
@@ -90,14 +87,12 @@ const ViewOrderDetail = memo(() => {
     };
   }, [orderDetails?.buyer, orderDetails?.seller]);
 
-  // Fetch order only once when orderId changes
   useEffect(() => {
     if (orderId) {
       getOrderById(orderId);
     }
   }, [orderId, getOrderById]);
 
-  // Update status only when order details status changes
   useEffect(() => {
     if (orderDetails?.status) {
       const key =
@@ -128,7 +123,7 @@ const ViewOrderDetail = memo(() => {
 
   const handleOrderDispute = useCallback(
     async (reason: string): Promise<void> => {
-      const currentOrderId = stableOrderId.current;
+      const currentOrderId = orderId || getStoredOrderId();
       if (!currentOrderId) return;
 
       try {
@@ -152,7 +147,7 @@ const ViewOrderDetail = memo(() => {
   );
 
   const handleReleaseNow = useCallback(async () => {
-    const currentOrderId = stableOrderId.current;
+    const currentOrderId = orderId || getStoredOrderId();
     if (!currentOrderId) return;
 
     try {
@@ -166,7 +161,7 @@ const ViewOrderDetail = memo(() => {
   }, [navigate]);
 
   const handleConfirmDelivery = useCallback(async () => {
-    const currentOrderId = stableOrderId.current;
+    const currentOrderId = orderId || getStoredOrderId();
     if (!currentOrderId) return;
 
     try {
@@ -183,7 +178,7 @@ const ViewOrderDetail = memo(() => {
   }, [changeOrderStatus, navigate]);
 
   const navigatePath = useMemo(() => {
-    const currentOrderId = stableOrderId.current || orderId;
+    const currentOrderId = orderId || getStoredOrderId();
     return `/orders/${currentOrderId}?status=release`;
   }, [orderId]);
 
