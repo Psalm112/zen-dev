@@ -384,6 +384,7 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
 
       try {
         const currentOrderId = getStoredOrderId();
+        console.log("rest", currentOrderId);
         if (currentOrderId) {
           await changeOrderStatus(currentOrderId, "accepted", true);
         }
