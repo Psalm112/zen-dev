@@ -24,7 +24,6 @@ const initialState: NotificationsState = {
   lastCountFetched: null,
 };
 
-// Cache timeout (2 minutes - shorter for notifications)
 const CACHE_TIMEOUT = 2 * 60 * 1000;
 
 export const fetchNotifications = createAsyncThunk<
@@ -38,7 +37,6 @@ export const fetchNotifications = createAsyncThunk<
       const state = getState() as { notifications: NotificationsState };
       const now = Date.now();
 
-      // Skip fetching if data is fresh and not forcing refresh
       if (
         !forceRefresh &&
         state.notifications.notifications.length > 0 &&
@@ -76,7 +74,6 @@ export const fetchUnreadCount = createAsyncThunk<
       const state = getState() as { notifications: NotificationsState };
       const now = Date.now();
 
-      // Skip fetching if data is fresh and not forcing refresh
       if (
         !forceRefresh &&
         state.notifications.lastCountFetched &&
@@ -151,7 +148,6 @@ const notificationsSlice = createSlice({
           state.loading = "succeeded";
           state.lastFetched = Date.now();
 
-          // Update unread count based on notifications
           state.unreadCount = action.payload.filter((n) => !n.read).length;
         }
       )
@@ -186,7 +182,6 @@ const notificationsSlice = createSlice({
           action: PayloadAction<{ success: boolean; notificationIds: string[] }>
         ) => {
           if (action.payload.success) {
-            // Update notification read status
             state.notifications = state.notifications.map((notification) =>
               action.payload.notificationIds.includes(notification._id)
                 ? { ...notification, read: true }

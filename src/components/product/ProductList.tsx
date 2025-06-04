@@ -132,7 +132,6 @@ const ProductList = ({
     loadInitialData();
   }, [isFeatured, fetchAllProducts, fetchSponsoredProducts]);
 
-  // Update display products when data changes
   useEffect(() => {
     if (isInitialLoading || loading) return;
 

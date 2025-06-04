@@ -8,8 +8,8 @@ interface CheckoutWithWeb3Props {
   orderData: {
     id: string;
     amount: string;
-    tradeId?: string; // Add optional tradeId
-    logisticsProvider?: string; // Add optional logisticsProvider
+    tradeId?: string;
+    logisticsProvider?: string;
     items: Array<{ name: string; quantity: number; price: string }>;
   };
   onOrderComplete: (transactionHash: string) => void;
@@ -20,14 +20,12 @@ const CheckoutWithWeb3: React.FC<CheckoutWithWeb3Props> = React.memo(
     const { wallet } = useWeb3();
     const [showPaymentModal, setShowPaymentModal] = useState(false);
 
-    // Memoize button text to prevent unnecessary re-renders
     const buttonText = useMemo(() => {
       return wallet.isConnected
         ? "Pay with USDT"
         : "Connect Wallet to Pay with Crypto";
     }, [wallet.isConnected]);
 
-    // Optimize button class computation
     const buttonClassName = useMemo(() => {
       return "w-full bg-green-600 hover:bg-green-700 text-white p-4 text-left justify-start transition-colors duration-200";
     }, []);
@@ -52,19 +50,18 @@ const CheckoutWithWeb3: React.FC<CheckoutWithWeb3Props> = React.memo(
       setShowPaymentModal(false);
     }, []);
 
-    // Calculate total quantity from items
+    // total quantity from items
     const totalQuantity = useMemo(() => {
       return orderData.items.reduce((sum, item) => sum + item.quantity, 0);
     }, [orderData.items]);
 
-    // Memoize order details to prevent unnecessary PaymentModal re-renders
-    const memoizedOrderDetails = useMemo(
+    const details = useMemo(
       () => ({
         id: orderData.id,
         amount: orderData.amount,
-        tradeId: orderData.tradeId || "0", // Default to "0" if not provided
+        tradeId: orderData.tradeId || "0",
         quantity: totalQuantity.toString(),
-        logisticsProvider: orderData.logisticsProvider || "", // Default to empty string if not provided
+        logisticsProvider: orderData.logisticsProvider || "",
         items: orderData.items,
         escrowAddress: import.meta.env.VITE_ESCROW_CONTRACT_MAINNET!,
       }),

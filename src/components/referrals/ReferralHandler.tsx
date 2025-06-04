@@ -19,12 +19,10 @@ const ReferralHandler: React.FC = () => {
       if (!storedCode) return;
 
       try {
-        // Apply the code and then remove it from storage
         await applyCode(storedCode);
       } catch (error) {
         console.error("Failed to apply referral code:", error);
       } finally {
-        // Remove the code from storage regardless of success/failure
         clearPendingReferralCode();
         setIsProcessed(true);
       }

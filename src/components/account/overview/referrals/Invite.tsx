@@ -41,7 +41,6 @@ const ReferralInvite = forwardRef<any, ReferralInviteProps>(
     const setIsShareModalOpen =
       setExternalShareModalOpen || setInternalShareModalOpen;
 
-    // Expose the openShareModal method to parent components
     useImperativeHandle(ref, () => ({
       openShareModal: () => setIsShareModalOpen(true),
     }));

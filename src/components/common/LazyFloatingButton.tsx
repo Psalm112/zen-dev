@@ -10,7 +10,6 @@ interface LazyFloatingButtonProps {
   color?: "primary" | "secondary";
 }
 
-// Optimized loading placeholder with correct positioning and label space
 const ButtonPlaceholder: FC<{
   position?: "bottom-right" | "bottom-center";
   hasLabel?: boolean;

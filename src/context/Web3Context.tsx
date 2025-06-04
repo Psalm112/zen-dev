@@ -424,7 +424,6 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
 
         return true;
       } catch (error: any) {
-        // Enhanced error logging
         if (error?.message?.includes("TradeNotFound")) {
           console.warn(`Trade ${tradeId} not found in contract`);
         } else {
@@ -451,7 +450,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
         : undefined,
     query: {
       enabled: !!address && !!usdtContractAddress && isCorrectNetwork,
-      refetchInterval: 15000, // More frequent refetch for allowance
+      refetchInterval: 15000,
     },
   });
 
@@ -491,7 +490,6 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       try {
-        // Check current allowance first
         const currentAllowance = await getCurrentAllowance();
         const requiredAmount = parseFloat(amount);
 
@@ -499,7 +497,6 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
           return "0x0"; // Already approved
         }
 
-        // Set approval to max uint256 to avoid repeated approvals
         const maxApproval = BigInt(
           "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
         );

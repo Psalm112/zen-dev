@@ -177,7 +177,7 @@ const Trade = () => {
   const [showConnectionModal, setShowConnectionModal] = useState(false);
   const { wallet } = useWeb3();
 
-  // Memoized products data
+  // products data
   const products = useMemo(() => SAMPLE_PRODUCTS, []);
   const incomingOrders = useMemo(() => SAMPLE_INCOMING_ORDERS, []);
 

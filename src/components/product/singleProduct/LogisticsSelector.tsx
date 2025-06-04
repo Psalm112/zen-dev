@@ -25,7 +25,6 @@ interface LogisticsSelectorProps {
   selectedProviderWalletAddress?: string;
 }
 
-// Constants for random data generation
 const COMPANY_PREFIXES = [
   "Swift",
   "Express",
@@ -101,7 +100,6 @@ const LogisticsSelector = ({
     []
   );
 
-  // Transform API logistics providers into full provider objects
   const transformedLogisticsProviders = useMemo(() => {
     if (
       !logisticsProviders ||
@@ -113,11 +111,9 @@ const LogisticsSelector = ({
     return logisticsProviders.map(generateRandomLogisticsData);
   }, [logisticsProviders, generateRandomLogisticsData]);
 
-  // Update providers when transformed data changes
   useEffect(() => {
     setProviders(transformedLogisticsProviders);
 
-    // Set default provider if none selected
     if (!selectedProvider && transformedLogisticsProviders.length > 0) {
       setSelected(transformedLogisticsProviders[0]);
       onSelect(transformedLogisticsProviders[0]);

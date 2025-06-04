@@ -21,11 +21,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
   useEffect(() => {
     const textarea = textareaRef.current;
     if (!textarea) return;
-
-    // Reset height to auto to get the correct scrollHeight
     textarea.style.height = "24px";
 
-    // Calculate new height with a maximum of 4 rows
     const lineHeight = 24;
     const maxHeight = lineHeight * 4;
     const newHeight = Math.min(textarea.scrollHeight, maxHeight);

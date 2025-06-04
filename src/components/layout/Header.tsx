@@ -30,7 +30,6 @@ const Header = () => {
   const { unreadCount, fetchUserUnreadCount } = useNotifications();
   const { loadConversations, totalUnreadMessages } = useChat();
 
-  // Optimized data fetching with proper error handling
   const fetchData = useCallback(
     async (silent = false) => {
       try {
@@ -47,7 +46,6 @@ const Header = () => {
     [fetchUserUnreadCount, loadConversations]
   );
 
-  // Initial data fetch and periodic updates
   useEffect(() => {
     let mounted = true;
     let intervalId: NodeJS.Timeout;
@@ -56,7 +54,6 @@ const Header = () => {
       if (!mounted) return;
       await fetchData();
 
-      // Set up polling only if component is still mounted
       if (mounted) {
         intervalId = setInterval(() => fetchData(true), 30000);
       }
@@ -90,7 +87,6 @@ const Header = () => {
     }
   }, [showUserMenu]);
 
-  // Optimized logout handler with proper error handling
   const handleLogout = useCallback(async () => {
     try {
       setShowUserMenu(false);
@@ -104,18 +100,15 @@ const Header = () => {
       navigate("/", { replace: true });
     } catch (error) {
       console.error("Error during logout:", error);
-      // Still logout from auth even if wallet disconnect fails
       logout();
       navigate("/", { replace: true });
     }
   }, [disconnectWallet, logout, navigate, wallet.isConnected]);
 
-  // User menu toggle handler
   const handleUserMenuToggle = useCallback(() => {
     setShowUserMenu((prev) => !prev);
   }, []);
 
-  // Profile navigation handler
   const handleProfileNavigation = useCallback(() => {
     setShowUserMenu(false);
     navigate("/account");
@@ -176,27 +169,11 @@ const Header = () => {
           ))}
         </nav>
 
-        {/* Right Actions */}
         <div className="flex items-center gap-2 md:gap-3">
           <CurrencyToggle />
 
           {/* Wallet button */}
           <WalletConnectButton />
-          {/* <button
-            onClick={handleWalletClick}
-            disabled={isConnecting}
-            className={`flex items-center gap-1 md:gap-1.5 bg-[#292B30] text-white px-2 md:px-3 py-1.5 rounded-md transition-all ${
-              isConnecting
-                ? "opacity-70 cursor-not-allowed"
-                : "hover:bg-[#33363b] active:scale-95"
-            }`}
-            aria-label={isConnected ? "Wallet connected" : "Connect wallet"}
-          >
-            <BiWallet className="text-lg" />
-            <span className="text-xs md:text-sm font-medium hidden xs:inline">
-              {walletButtonContent}
-            </span>
-          </button> */}
 
           {isAuthenticated ? (
             <>

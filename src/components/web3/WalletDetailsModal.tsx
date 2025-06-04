@@ -126,7 +126,7 @@ const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
     { mode: "CELO" as const, label: "CELO", symbol: "◉", priority: 3 },
   ].sort((a, b) => a.priority - b.priority);
 
-  // Calculate fiat values for display
+  // fiat values
   const usdtNumericValue = wallet.usdtBalance
     ? parseFloat(wallet.usdtBalance.raw || "0")
     : 0;

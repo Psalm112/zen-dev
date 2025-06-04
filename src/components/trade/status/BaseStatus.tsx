@@ -41,7 +41,6 @@ const BaseStatus: FC<BaseStatusProps> = memo(
   }) => {
     const [copied, setCopied] = useState(false);
 
-    // Memoize expensive computations
     const derivedData = useMemo(() => {
       const productName =
         tradeDetails?.productName ||
@@ -99,7 +98,6 @@ const BaseStatus: FC<BaseStatusProps> = memo(
       window.history.back();
     }, []);
 
-    // Memoize timer component to prevent re-renders
     const TimerComponent = useMemo(() => {
       if (!showTimer || !timeRemaining) return null;
 
@@ -132,7 +130,6 @@ const BaseStatus: FC<BaseStatusProps> = memo(
       );
     }, [showTimer, timeRemaining, onContact, contactLabel]);
 
-    // Memoize contact button component
     const ContactButton = useMemo(() => {
       if (showTimer || !onContact) return null;
 
@@ -154,7 +151,6 @@ const BaseStatus: FC<BaseStatusProps> = memo(
       );
     }, [showTimer, onContact, contactLabel]);
 
-    // Memoize transaction info section
     const TransactionInfoSection = useMemo(
       () => (
         <motion.div

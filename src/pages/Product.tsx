@@ -34,7 +34,7 @@ const Product = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [activeCategory, setActiveCategory] = useState(categoryParam || "All");
 
-  // Memoized debounced search function
+  // search
   const debouncedSearch = useMemo(
     () =>
       debounce(async (query: string) => {
@@ -85,7 +85,6 @@ const Product = () => {
     window.history.back();
   }, []);
 
-  // Memoized search results with new product detection
   const searchResultsWithNew = useMemo(() => {
     return searchResults
       .map((product) => {

@@ -21,7 +21,7 @@ const Chat = () => {
 
     loadConversations(false, true);
 
-    // Set up auto refresh - refresh conversations every minute
+    // refresh conversations every minute
     const interval = setInterval(() => {
       loadConversations(false, true);
     }, 60000);

@@ -463,7 +463,6 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     showSnackbar,
   ]);
 
-  // Performance: Optimized modal handlers
   const handleEditModalClose = useCallback(() => {
     if (!loading) {
       setIsEditModalOpen(false);
@@ -482,7 +481,6 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     }
   }, [loading]);
 
-  // Performance: Optimized input handlers
   const handleQuantityChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = Math.max(
@@ -517,7 +515,6 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     ]
   );
 
-  // Performance: Memoized components
   const editButton = useMemo(
     () => (
       <Button

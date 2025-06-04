@@ -17,7 +17,6 @@ interface TradeStatusProps extends StatusProps {
   showTimer?: boolean;
 }
 
-// Memoized error fallback component
 const ErrorFallback = memo(({ error }: { error: Error }) => (
   <div className="p-4 bg-[#292B30] rounded-lg text-Red">
     <p className="font-medium mb-2">
@@ -29,7 +28,6 @@ const ErrorFallback = memo(({ error }: { error: Error }) => (
 
 ErrorFallback.displayName = "ErrorFallback";
 
-// Memoized empty state component
 const EmptyState = memo(() => (
   <div className="p-4 bg-[#292B30] rounded-lg text-center text-gray-400">
     Order information is not available.
@@ -53,12 +51,11 @@ const TradeStatus: FC<TradeStatusProps> = memo(
     navigatePath,
     showTimer = false,
   }) => {
-    // Early return with memoized component
     if (!tradeDetails && !orderDetails) {
       return <EmptyState />;
     }
 
-    // Provide safe defaults for transaction info
+    // defaults for transaction info
     const safeTransactionInfo: TradeTransactionInfo = transactionInfo || {
       buyerName: "Unknown",
       sellerName: "Unknown",
@@ -111,7 +108,6 @@ const renderStatusComponent = (
   navigatePath?: string,
   showTimer?: boolean
 ) => {
-  // Common props object to reduce prop drilling
   const commonProps = {
     tradeDetails,
     orderDetails,

@@ -19,7 +19,6 @@ import { LogisticsProvider } from "../../../../utils/types";
 import { useSnackbar } from "../../../../context/SnackbarContext";
 import { useContract } from "../../../../utils/hooks/useContract";
 
-// Lazy load the LoadingSpinner component with a fallback
 const LoadingSpinner = lazy(() => import("../../../common/LoadingSpinner"));
 
 interface FormErrors {
@@ -64,10 +63,8 @@ const CATEGORIES = [
   "Other",
 ];
 
-// Replace the hardcoded logisticsProviders array with an empty array
 const logisticsProviders: LogisticsProvider[] = [];
 
-// Add Nigerian cities and company names for random generation
 const NIGERIAN_CITIES = [
   "Lagos",
   "Abuja",
@@ -112,7 +109,6 @@ const COMPANY_SUFFIXES = [
   "Movers",
 ];
 
-// Animation variants
 const fadeInAnimation = {
   initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
@@ -131,7 +127,6 @@ const CreateProduct = () => {
     logisticsProviderLoading,
   } = useContract();
 
-  // Refs
   const fileInputRef = useRef<HTMLInputElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
@@ -156,7 +151,6 @@ const CreateProduct = () => {
   const [searchLogistics, setSearchLogistics] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
 
-  // Variant management
   const [variants, setVariants] = useState<ProductVariant[]>([
     { id: `variant-${Date.now()}`, properties: [], quantity: 0 },
   ]);
@@ -166,7 +160,6 @@ const CreateProduct = () => {
     value: "",
   });
 
-  // updateVariantQuantity
   const updateVariantQuantity = (index: number, quantity: string) => {
     const numericValue = parseInt(quantity, 10);
 
@@ -176,36 +169,30 @@ const CreateProduct = () => {
       return updated;
     });
 
-    // Clear variant error when quantity changes
     if (errors.variants) {
       setErrors((prev) => ({ ...prev, variants: undefined }));
     }
   };
 
-  // getTotalVariantQuantity function
   const getTotalVariantQuantity = useCallback(() => {
     return variants.reduce((sum, variant) => sum + (variant.quantity || 0), 0);
   }, [variants]);
 
-  // Form field handlers
   const updateFormField = (field: string, value: string) => {
     setFormState((prev) => ({
       ...prev,
       [field]: value,
     }));
 
-    // Clear error when field is updated
     if (errors[field as keyof FormErrors]) {
       setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
   };
 
-  // Focus the name input when component mounts
   useEffect(() => {
     nameInputRef.current?.focus();
   }, []);
 
-  // Debounce search term for logistics providers
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearchTerm(searchLogistics);
@@ -216,7 +203,7 @@ const CreateProduct = () => {
     };
   }, [searchLogistics]);
 
-  // Handle conversion between USDT and local currency
+  // conversion between USDT and local currency
   const handleUSDTChange = useCallback(
     (value: string) => {
       updateFormField("priceInUSDT", value);
@@ -253,7 +240,6 @@ const CreateProduct = () => {
     [convertPrice]
   );
 
-  // Handle search change with error handling
   const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
     try {
       setSearchLogistics(e.target.value);
@@ -263,13 +249,11 @@ const CreateProduct = () => {
     }
   };
 
-  // Media handling functions with optimizations
   const handleMediaChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
 
     const newFiles = Array.from(e.target.files);
 
-    // Check if adding new files would exceed the limit
     if (mediaFiles.length + newFiles.length > MAX_FILES) {
       setErrors((prev) => ({
         ...prev,
@@ -278,7 +262,6 @@ const CreateProduct = () => {
       return;
     }
 
-    // Process files with improved error handling
     const result = processMediaFiles(newFiles);
 
     if (result.errorMessage) {
@@ -288,13 +271,11 @@ const CreateProduct = () => {
       setErrors((prev) => ({ ...prev, media: undefined }));
     }
 
-    // Update media files with new ones
     setMediaFiles((prev) =>
       [...prev, ...result.validFiles].slice(0, MAX_FILES)
     );
   };
 
-  // Optimized media processing function
   const processMediaFiles = (
     files: File[]
   ): {
@@ -343,26 +324,22 @@ const CreateProduct = () => {
   };
 
   const removeMedia = (index: number) => {
-    // Release object URL before removing
     URL.revokeObjectURL(mediaFiles[index].preview);
     setMediaFiles(mediaFiles.filter((_, i) => i !== index));
     setErrors((prev) => ({ ...prev, media: undefined }));
   };
 
-  // Clean up object URLs when component unmounts or files change
   useEffect(() => {
     return () => {
       mediaFiles.forEach((media) => URL.revokeObjectURL(media.preview));
     };
   }, []);
 
-  // Variant management functions
   const addVariantProperty = () => {
     if (!currentVariantProperty.name || !currentVariantProperty.value) return;
 
     const propertyNameLower = currentVariantProperty.name.toLowerCase();
 
-    // Check if property already exists for this variant
     const isDuplicate = variants[
       currentVariantProperty.variantIndex
     ].properties.some((prop) => prop.name.toLowerCase() === propertyNameLower);
@@ -410,7 +387,6 @@ const CreateProduct = () => {
 
     setVariants((prev) => prev.filter((_, i) => i !== index));
 
-    // Update current variant index if needed
     setCurrentVariantProperty((prev) => ({
       ...prev,
       variantIndex:
@@ -428,7 +404,6 @@ const CreateProduct = () => {
     });
   };
 
-  // Format variants for backend as array of objects
   const formatVariantsForBackend = useCallback((): Array<
     Record<string, string | number>
   > => {
@@ -455,18 +430,14 @@ const CreateProduct = () => {
     });
   }, [variants]);
 
-  // reorder variants when active variant changes
   const handleVariantSelection = (idx: number) => {
-    // Don't reorder if selecting the same variant
     if (currentVariantProperty.variantIndex === idx) return;
 
     setVariants((prev) => {
       const newVariants = [...prev];
-      // Move selected variant to the top
       const [selectedVariant] = newVariants.splice(idx, 1);
       newVariants.unshift(selectedVariant);
 
-      // Update the index in currentVariantProperty
       setCurrentVariantProperty({
         ...currentVariantProperty,
         variantIndex: 0,
@@ -487,11 +458,9 @@ const CreateProduct = () => {
       }
     });
 
-    // Clear logistics error when selection changes
     setErrors((prev) => ({ ...prev, logistics: undefined }));
   }, []);
 
-  // Generate random logistics provider data
   const generateRandomLogisticsData = useCallback((address: string) => {
     const randomPrefix =
       COMPANY_PREFIXES[Math.floor(Math.random() * COMPANY_PREFIXES.length)];
@@ -509,18 +478,15 @@ const CreateProduct = () => {
     };
   }, []);
 
-  // Transform API logistics providers into full provider objects
   const transformedLogisticsProviders = useMemo(() => {
     if (!apiResponse || !Array.isArray(apiResponse.data)) return [];
     return apiResponse.data.map(generateRandomLogisticsData);
   }, [apiResponse, generateRandomLogisticsData]);
 
-  // Fetch logistics providers on component mount
   useEffect(() => {
     getLogisticsProviders();
   }, [getLogisticsProviders]);
 
-  // Update the filteredLogistics to use transformed providers
   const filteredLogistics = useMemo(() => {
     if (!debouncedSearchTerm.trim()) {
       return transformedLogisticsProviders;
@@ -597,11 +563,11 @@ const CreateProduct = () => {
       newErrors.variants = "Please specify quantity for all variants";
     }
 
-    // Check if total variant quantity exceeds product stock
+    // Check if total variant quantity is not equal to product stock
     const totalVariantQuantity = getTotalVariantQuantity();
     const stockQuantity = parseInt(formState.stock, 10) || 0;
 
-    if (nonEmptyVariants.length > 0 && totalVariantQuantity > stockQuantity) {
+    if (nonEmptyVariants.length > 0 && totalVariantQuantity !== stockQuantity) {
       newErrors.variants = `Total variant quantity (${totalVariantQuantity}) exceeds available stock (${stockQuantity})`;
     }
 
@@ -635,7 +601,6 @@ const CreateProduct = () => {
         sellerWalletAddress,
       } = formState;
 
-      // Add basic product information
       formData.append("name", name);
       formData.append("description", description);
       formData.append("category", category);
@@ -644,7 +609,6 @@ const CreateProduct = () => {
       formData.append("sellerWalletAddress", sellerWalletAddress);
       formData.append("useUSDT", "true");
 
-      // Add logistics provider addresses and costs
       if (selectedLogistics.length > 0) {
         // const addresses = selectedLogistics.map((provider) => provider.address);
         // const costs = selectedLogistics.map(
@@ -667,10 +631,8 @@ const CreateProduct = () => {
         formData.append("type", JSON.stringify(variantsArray));
       }
 
-      // Add media files
       mediaFiles.forEach((media) => {
         formData.append(`images`, media.file);
-        // formData.append(`mediaTypes`, media.type);
       });
 
       const result = await createProduct(formData);
@@ -679,8 +641,7 @@ const CreateProduct = () => {
         setSuccessMessage("Product created successfully! Redirecting...");
         showSnackbar("Product created successfully!", "success");
 
-        // Delay navigation to show success message
-        console.log(result, "kk");
+        // console.log(result, "kk");
         setTimeout(() => {
           navigate(`/product/${result.data._id}`);
         }, 1500);
@@ -697,7 +658,7 @@ const CreateProduct = () => {
     }
   };
 
-  // Handle keyboard events for accessibility
+  // keyboard events for accessibility
   const handleKeyPress = (e: React.KeyboardEvent, callback: () => void) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();

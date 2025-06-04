@@ -97,7 +97,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     }
   }, [wallet.isConnected, getUSDTBalance, showSnackbar]);
 
-  // Check approval requirements with proper error handling
+  // Check approval requirements
   const checkApprovalNeeds = useCallback(async () => {
     if (!wallet.isConnected || !isCorrectNetwork) return;
 
@@ -199,14 +199,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           const approvalTx = await approveUSDT(orderAmount.toString());
 
           if (approvalTx !== "0x0") {
-            // Only wait if new approval was made
             setApprovalHash(approvalTx);
             showSnackbar(
               "USDT approval submitted. Waiting for confirmation...",
               "info"
             );
 
-            // Wait for approval confirmation with retry logic
             let confirmed = false;
             let attempts = 0;
             const maxAttempts = 20; // 40 seconds total
@@ -244,7 +242,6 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
         }
       }
 
-      // Add delay before purchase transaction
       await new Promise((resolve) => setTimeout(resolve, 1000));
       let retryAttempts = 0;
       const maxRetries = 3;
@@ -329,7 +326,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     showSnackbar,
     loadBalance,
   ]);
-  // Enhanced retry with state refresh
+
   const handleRetry = useCallback(() => {
     setRetryCount((prev) => prev + 1);
     setStep("review");
@@ -342,7 +339,6 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     checkApprovalNeeds();
   }, [loadBalance, checkApprovalNeeds]);
 
-  // Safe modal close with process check
   const handleModalClose = useCallback(() => {
     if (step === "processing" && isProcessing) {
       showSnackbar(
@@ -354,7 +350,6 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     onClose();
   }, [step, isProcessing, onClose, showSnackbar]);
 
-  // Get display balance with fallback
   const displayBalance = useMemo(() => {
     return wallet.usdtBalance?.usdt || `${usdtBalance} USDT`;
   }, [wallet.usdtBalance?.usdt, usdtBalance]);

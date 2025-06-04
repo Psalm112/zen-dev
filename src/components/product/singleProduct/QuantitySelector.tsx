@@ -16,7 +16,6 @@ const QuantitySelector = ({
 }: QuantitySelectorProps) => {
   const [quantity, setQuantity] = useState(1);
 
-  // If there's a specific available quantity, use it as the max
   const effectiveMax =
     availableQuantity !== undefined ? Math.min(max, availableQuantity) : max;
 

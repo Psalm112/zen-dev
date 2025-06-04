@@ -12,12 +12,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   // Pages that should not display header/footer
   const isAuthPage = ["/login", "/auth/google"].includes(location.pathname);
 
-  // useEffect(() => {
-  //   if (location.pathname === "/auth/google") {
-  //     console.log("On auth/google page, URL:");
-  //   }
-  // }, [location.pathname, navigate]);
-
   return (
     <>
       {!isAuthPage && <Header />}

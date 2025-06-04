@@ -36,7 +36,6 @@ const ChatConversation: React.FC<ChatConversationProps> = ({
   });
 
   useEffect(() => {
-    // Scroll to bottom on new messages
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 

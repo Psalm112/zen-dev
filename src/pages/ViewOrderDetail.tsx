@@ -104,7 +104,6 @@ const ViewOrderDetail = memo(() => {
     }
   }, [orderDetails?.status, statusMapping, orderStatus]);
 
-  // Memoized callback functions to prevent recreating on every render
   const handleContactSeller = useCallback(() => {
     toast.info("Opening chat with seller...");
     const sellerId =
@@ -118,7 +117,6 @@ const ViewOrderDetail = memo(() => {
 
   const handleContactBuyer = useCallback(() => {
     toast.info("Opening chat with buyer...");
-    // Implement buyer chat navigation when needed
   }, []);
 
   const handleOrderDispute = useCallback(
@@ -182,7 +180,6 @@ const ViewOrderDetail = memo(() => {
     return `/orders/${currentOrderId}?status=release`;
   }, [orderId]);
 
-  // Early returns for loading and error states
   if (loading) {
     return (
       <div className="bg-Dark min-h-screen flex items-center justify-center">

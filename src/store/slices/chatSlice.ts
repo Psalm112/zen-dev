@@ -111,7 +111,6 @@ export const getConversations = createAsyncThunk<
       const state = getState();
       const now = Date.now();
 
-      // Skip fetching if data is fresh and not forcing refresh
       if (
         !forceRefresh &&
         state.chat.conversations.length > 0 &&
@@ -154,7 +153,6 @@ const chatSlice = createSlice({
     addLocalMessage: (state, action: PayloadAction<Message>) => {
       state.currentConversation.push(action.payload);
       console.log("local", state.currentConversation);
-      // Also update the conversations list if the conversation exists
       const conversationIndex = state.conversations.findIndex(
         (conv) => conv.user._id === action.payload.recipient
       );
@@ -176,7 +174,6 @@ const chatSlice = createSlice({
         (state, action: PayloadAction<Message>) => {
           state.loading = "succeeded";
 
-          // Add to current conversation if this is the active conversation
           if (
             state.currentRecipient === action.payload.recipient ||
             state.currentRecipient === action.payload.sender

@@ -10,7 +10,6 @@ import { useWeb3 } from "../context/Web3Context";
 import WalletConnectionModal from "../components/web3/WalletConnectionModal";
 import WalletDetailsModal from "../components/web3/WalletDetailsModal";
 
-// Static data to prevent re-creation on each render
 const QUICK_ACTIONS_CONFIG = [
   {
     icon: Browseproduct,

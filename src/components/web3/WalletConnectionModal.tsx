@@ -56,7 +56,7 @@ const WalletConnectionModal: React.FC<WalletConnectionModalProps> = ({
     }
   }, [wallet.isConnected, connectingWallet, onClose, showSnackbar]);
 
-  // Connection timeout handler
+  // Connection timeout
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
 

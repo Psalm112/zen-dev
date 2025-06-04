@@ -34,7 +34,6 @@ const ProductDetails = ({ product, onVariantSelect }: ProductDetailsProps) => {
       Array.isArray(product.type) &&
       product.type.length > 0
     ) {
-      // Find first variant with quantity > 0
       const firstAvailableVariant =
         product.type.find((variant: ProductVariant) => variant.quantity > 0) ||
         product.type[0];

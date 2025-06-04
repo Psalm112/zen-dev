@@ -20,7 +20,6 @@ interface ProductPropertiesProps {
   selectedVariant?: ProductVariant;
 }
 
-// Performance optimization: memoize color hex function
 const getColorHex = (color: string): string => {
   const colorMap: Record<string, string> = {
     red: "#ff343f",
@@ -56,13 +55,11 @@ const ProductProperties = ({
   onVariantSelect,
   selectedVariant,
 }: ProductPropertiesProps) => {
-  // Use ref to track if variant selection is internal vs external
   const [internalUpdate, setInternalUpdate] = useState(false);
   const [selectedOptions, setSelectedOptions] = useState<
     Record<string, string>
   >({});
 
-  // Normalize property keys (handle color/colour, etc)
   const normalizeKey = useCallback((key: string): string => {
     const keyMap: Record<string, string> = {
       colour: "color",
@@ -70,7 +67,6 @@ const ProductProperties = ({
     return keyMap[key.toLowerCase()] || key;
   }, []);
 
-  // Inverse normalize keys for variant matching
   const denormalizeKey = useCallback(
     (normalizedKey: string, variant: ProductVariant): string => {
       if (normalizedKey === "color" && variant.hasOwnProperty("colour")) {
@@ -81,7 +77,7 @@ const ProductProperties = ({
     []
   );
 
-  // Extract variant properties with optimization
+  // Extract variant properties
   const variantProperties = useMemo<VariantProperties>(() => {
     if (
       !product?.type ||
@@ -113,7 +109,6 @@ const ProductProperties = ({
       );
 
       properties[normalizedKey] = values.map((value) => {
-        // Calculate availability once per option
         const isAvailable = product.type.some(
           (variant) => String(variant[key]) === value && variant.quantity > 0
         );
@@ -138,7 +133,6 @@ const ProductProperties = ({
     return properties;
   }, [product?.type, normalizeKey]);
 
-  // Find a matching variant based on selected options
   const findMatchingVariant = useCallback((): ProductVariant | undefined => {
     if (!product?.type || Object.keys(selectedOptions).length === 0)
       return undefined;

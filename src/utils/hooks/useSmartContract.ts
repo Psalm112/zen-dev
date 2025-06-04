@@ -43,7 +43,6 @@ export const useContract = () => {
         if (!isCorrectNetwork) {
           try {
             await switchToCorrectNetwork();
-            // Wait for network switch to complete
             await new Promise((resolve) => setTimeout(resolve, 1500));
           } catch (error) {
             return {

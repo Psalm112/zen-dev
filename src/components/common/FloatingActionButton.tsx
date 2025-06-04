@@ -18,7 +18,6 @@ const FloatingActionButton: FC<FloatingActionButtonProps> = ({
   color = "primary",
 }) => {
   const positionClasses = {
-    // Adjusted positioning to account for mobile navigation
     "bottom-right": "bottom-20 md:bottom-6 right-4 md:right-6",
     "bottom-center":
       "bottom-20 md:bottom-6 left-1/2 transform -translate-x-1/2",

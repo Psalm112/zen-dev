@@ -29,7 +29,6 @@ const ViewTrade = () => {
     loading: orderLoading,
   } = useOrderData();
 
-  // Memoized filtered trades to prevent unnecessary re-renders
   const filteredActiveTrades = useMemo(() => {
     return activeTrades?.filter((trade) => trade && trade.product) || [];
   }, [activeTrades]);
@@ -43,7 +42,6 @@ const ViewTrade = () => {
     setActiveTab(tab);
   }, []);
 
-  // Trade click handler with proper navigation
   const handleTradeClick = useCallback(
     (tradeId: string) => {
       navigate(`/orders/${tradeId}`, { replace: false });
@@ -51,7 +49,6 @@ const ViewTrade = () => {
     [navigate]
   );
 
-  // Optimized order loading function
   const loadOrders = useCallback(
     async (silent = false) => {
       if (!wallet.isConnected) return;
@@ -61,13 +58,12 @@ const ViewTrade = () => {
           setIsLoading(true);
         }
 
-        // Fetch both buyer and seller orders in parallel
+        // Fetch both buyer and seller orders
         const [buyerResult, merchantResult] = await Promise.allSettled([
           fetchBuyerOrders(false, silent),
           fetchMerchantOrders(false, silent),
         ]);
 
-        // Log any errors for debugging without throwing
         if (buyerResult.status === "rejected") {
           console.warn("Failed to fetch buyer orders:", buyerResult.reason);
         }
@@ -81,7 +77,6 @@ const ViewTrade = () => {
         console.error("Failed to load orders:", error);
       } finally {
         if (!silent) {
-          // Add minimum loading time for smooth UX
           setTimeout(() => {
             setIsLoading(false);
           }, 600);
@@ -101,12 +96,11 @@ const ViewTrade = () => {
       await loadOrders(false);
 
       if (isMounted) {
-        // Set up periodic refresh for active trades
         const refreshInterval = setInterval(() => {
           if (activeTab === "active") {
             loadOrders(true);
           }
-        }, 30000); // Refresh every 30 seconds for active trades
+        }, 30000);
 
         return () => clearInterval(refreshInterval);
       }
@@ -136,7 +130,6 @@ const ViewTrade = () => {
   //   }
   // }, [error, clearError]);
 
-  // Show wallet connection UI if not connected
   if (!wallet.isConnected && !wallet.isConnecting) {
     return (
       <div className="bg-Dark min-h-screen text-white">
