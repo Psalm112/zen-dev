@@ -349,6 +349,10 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
         );
         return;
       }
+      if (orderId && !getStoredOrderId()) {
+        console.log("💾 Storing order ID before payment:", orderId);
+        storeOrderId(orderId);
+      }
 
       setIsPaymentModalOpen(true);
     } catch (error) {
@@ -377,41 +381,174 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     showSnackbar,
   ]);
 
+  const [debugInfo, setDebugInfo] = useState<{
+    paymentInitiated: boolean;
+    paymentCompleted: boolean;
+    statusChangeAttempted: boolean;
+    lastError: string | null;
+  }>({
+    paymentInitiated: false,
+    paymentCompleted: false,
+    statusChangeAttempted: false,
+    lastError: null,
+  });
+
   const handlePaymentSuccess = useCallback(
     async (transaction: any) => {
+      console.log("🎉 Payment success callback triggered", {
+        transaction,
+        timestamp: new Date().toISOString(),
+        mountedRef: mountedRef.current,
+      });
+
+      setDebugInfo((prev) => ({
+        ...prev,
+        paymentCompleted: true,
+        lastError: null,
+      }));
       setIsPaymentModalOpen(false);
-      if (!mountedRef.current) return;
+      if (!mountedRef.current) {
+        console.warn("Component unmounted before payment success handling");
+        return;
+      }
 
       try {
         const currentOrderId = getStoredOrderId();
-        console.log("rest", currentOrderId);
+        const fallbackOrderId = orderId || orderDetails?._id;
+        const targetOrderId = currentOrderId || fallbackOrderId;
+
+        console.log("📦 Order ID resolution:", {
+          storedOrderId: currentOrderId,
+          propOrderId: orderId,
+          orderDetailsId: orderDetails?._id,
+          targetOrderId,
+        });
+        setDebugInfo((prev) => ({
+          ...prev,
+          statusChangeAttempted: true,
+        }));
+
+        if (targetOrderId) {
+          console.log("🔄 Attempting to change order status:", {
+            orderId: targetOrderId,
+            status: "accepted",
+            transaction: transaction?.hash,
+          });
+
+          // Add timeout wrapper for the status change
+          const statusChangePromise = changeOrderStatus(
+            targetOrderId,
+            "accepted",
+            true
+          );
+          const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error("Status change timeout")), 10000);
+          });
+
+          await Promise.race([statusChangePromise, timeoutPromise]);
+
+          console.log("✅ Order status changed successfully");
+          showSnackbar("Payment completed and order updated!", "success");
+        } else {
+          console.warn("⚠️ No order ID found for status update");
+          showSnackbar("Payment completed successfully!", "success");
+        }
+
+        // console.log("rest", currentOrderId);
+        // if (currentOrderId) {
+        //   await changeOrderStatus(currentOrderId, "accepted", true);
+        // }
+
         if (currentOrderId) {
-          await changeOrderStatus(currentOrderId, "accepted", true);
+          clearStoredOrderId();
+          console.log("🧹 Cleared stored order ID");
         }
         // else if (orderDetails?._id) {
         //   await changeOrderStatus(orderDetails._id, "accepted", true);
         // }
-        showSnackbar("Payment completed successfully!", "success");
-        clearStoredOrderId();
+        // showSnackbar("Payment completed successfully!", "success");
+        // clearStoredOrderId();
 
-        if (navigatePath) {
-          navigate(navigatePath, { replace: true });
-        }
+        setTimeout(() => {
+          if (mountedRef.current) {
+            if (navigatePath) {
+              console.log("🧭 Navigating to:", navigatePath);
+              navigate(navigatePath, { replace: true });
+            } else if (onReleaseNow) {
+              console.log("🚀 Triggering onReleaseNow callback");
+              onReleaseNow();
+            }
+          }
+        }, 1000);
+
+        // if (navigatePath) {
+        //   navigate(navigatePath, { replace: true });
+        // }
         // else if (onReleaseNow) {
         //   onReleaseNow();
         // }
       } catch (error) {
         console.error("Post-payment processing error:", error);
-        if (navigatePath) {
-          navigate(navigatePath, { replace: true });
-        }
+        setDebugInfo((prev) => ({
+          ...prev,
+          lastError: error instanceof Error ? error.message : "Unknown error",
+        }));
+
+        showSnackbar(
+          `Payment successful, but order update failed: ${
+            error instanceof Error ? error.message : "Unknown error"
+          }`,
+          "info"
+        );
+
+        setTimeout(() => {
+          if (mountedRef.current) {
+            if (navigatePath) {
+              navigate(navigatePath, { replace: true });
+            } else if (onReleaseNow) {
+              onReleaseNow();
+            }
+          }
+        }, 2000);
+        // if (navigatePath) {
+        //   navigate(navigatePath, { replace: true });
+        // }
         // else if (onReleaseNow) {
         //   onReleaseNow();
         // }
       }
     },
-    [navigate, navigatePath, showSnackbar, changeOrderStatus]
+    [
+      orderId,
+      orderDetails?._id,
+      navigate,
+      navigatePath,
+      onReleaseNow,
+      showSnackbar,
+      changeOrderStatus,
+    ]
   );
+
+  const debugDisplay = useMemo(() => {
+    if (process.env.NODE_ENV !== "development") return null;
+
+    return (
+      <div className="fixed bottom-4 right-4 bg-black/80 text-white p-4 rounded-lg text-xs max-w-sm">
+        <div className="font-bold mb-2">Debug Info:</div>
+        <div>Payment Initiated: {debugInfo.paymentInitiated ? "✅" : "❌"}</div>
+        <div>Payment Completed: {debugInfo.paymentCompleted ? "✅" : "❌"}</div>
+        <div>
+          Status Change Attempted:{" "}
+          {debugInfo.statusChangeAttempted ? "✅" : "❌"}
+        </div>
+        <div>Stored Order ID: {getStoredOrderId() || "None"}</div>
+        <div>Prop Order ID: {orderId || "None"}</div>
+        {debugInfo.lastError && (
+          <div className="text-red-400 mt-2">Error: {debugInfo.lastError}</div>
+        )}
+      </div>
+    );
+  }, [debugInfo, orderId]);
 
   const handleUpdateOrder = useCallback(async () => {
     if (!orderId || !onUpdateOrder || loading || !calculations.hasChanges) {
@@ -661,6 +798,8 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
         isOpen={showWalletModal}
         onClose={() => setShowWalletModal(false)}
       />
+
+      {debugDisplay}
     </>
   );
 };
