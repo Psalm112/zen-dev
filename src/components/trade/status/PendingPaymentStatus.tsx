@@ -20,6 +20,7 @@ import { useOrderData } from "../../../utils/hooks/useOrder";
 import { ESCROW_ADDRESSES } from "../../../utils/config/web3.config";
 import PaymentModal from "../../web3/PaymentModal";
 import WalletConnectionModal from "../../web3/WalletConnectionModal";
+import { storeOrderId } from "../../../utils/helpers";
 
 interface PendingPaymentStatusProps {
   tradeDetails?: TradeDetails;
@@ -95,6 +96,11 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
   useEffect(() => {
     if (orderId) {
       stableOrderId.current = orderId;
+    }
+  }, [orderId]);
+  useEffect(() => {
+    if (orderId) {
+      storeOrderId(orderId);
     }
   }, [orderId]);
 
@@ -267,7 +273,6 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     calculations.hasSufficientBalance,
   ]);
 
-  // Performance: Initialize quantity only once
   useEffect(() => {
     if (
       orderDetails?.quantity &&
@@ -387,8 +392,8 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
 
       try {
         const currentOrderId = stableOrderId.current;
-        if (orderId) {
-          await changeOrderStatus(orderId, "accepted", true);
+        if (currentOrderId) {
+          await changeOrderStatus(currentOrderId, "accepted", true);
         } else if (orderDetails?._id) {
           await changeOrderStatus(orderDetails._id, "accepted", true);
         }
