@@ -391,7 +391,14 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
         console.log("rest", currentOrder?._id);
         if (currentOrder?._id) {
           console.log("currentOrder inside if", currentOrder);
-          await changeOrderStatus(currentOrder._id, "accepted", true);
+          await changeOrderStatus(
+            currentOrder._id,
+            {
+              status: "accepted",
+              purchaseId: "",
+            },
+            true
+          );
         }
         // else if (orderDetails?._id) {
         //   await changeOrderStatus(orderDetails._id, "accepted", true);

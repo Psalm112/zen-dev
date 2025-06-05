@@ -98,7 +98,13 @@ const FundsReleaseStatus: FC<FundsReleaseStatusProps> = ({
         if (!result.success) {
           throw new Error(result.message || "Failed to confirm delivery");
         }
-        await changeOrderStatus(orderId, "completed", false);
+        await changeOrderStatus(
+          orderId,
+          {
+            status: "completed",
+          },
+          false
+        );
 
         showSnackbar(
           "Delivery confirmed successfully! Order has been completed.",

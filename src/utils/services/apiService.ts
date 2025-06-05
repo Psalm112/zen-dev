@@ -1,6 +1,7 @@
 import {
   CreateTradeParams,
   MarkReadParams,
+  OrderStatus,
   SendMessageParams,
   TradeResponse,
   UserProfile,
@@ -344,7 +345,14 @@ export const api = {
       signal: controller.signal,
     });
   },
-  updateOrderStatus: async (orderId: string, status: string) => {
+  updateOrderStatus: async (
+    orderId: string,
+    details: {
+      purchaseId?: string;
+      status?: OrderStatus;
+      [key: string]: string | OrderStatus | undefined;
+    }
+  ) => {
     // Clear cache on update
     requestCache.delete(cacheKey("/orders?type=buyer"));
     requestCache.delete(cacheKey("/orders?type=seller"));
@@ -352,7 +360,7 @@ export const api = {
     return fetchWithAuth(`/orders/${orderId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ details }),
     });
   },
   createTrade: async (
