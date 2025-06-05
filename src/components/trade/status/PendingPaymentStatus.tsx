@@ -381,7 +381,7 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
     async (transaction: any) => {
       setIsPaymentModalOpen(false);
       console.log("currentOrder befor", currentOrder);
-      if (!mountedRef.current) return;
+      // if (!mountedRef.current) return;
 
       console.log("currentOrder after", currentOrder);
       try {
