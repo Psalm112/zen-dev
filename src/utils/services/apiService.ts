@@ -349,7 +349,7 @@ export const api = {
     requestCache.delete(cacheKey("/orders?type=buyer"));
     requestCache.delete(cacheKey("/orders?type=seller"));
     requestCache.delete(cacheKey(`/orders/${orderId}`));
-    return fetchWithAuth(`/orders/${orderId}/status`, {
+    return fetchWithAuth(`/orders/${orderId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
