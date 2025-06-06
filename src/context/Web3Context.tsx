@@ -36,7 +36,11 @@ import { useCurrencyConverter } from "../utils/hooks/useCurrencyConverter";
 import { DEZENMART_ABI } from "../utils/abi/dezenmartAbi.json";
 import { ESCROW_ADDRESSES } from "../utils/config/web3.config";
 import { parseWeb3Error } from "../utils/errorParser";
-import { readContract, simulateContract } from "@wagmi/core";
+import {
+  readContract,
+  simulateContract,
+  waitForTransactionReceipt,
+} from "@wagmi/core";
 
 interface ExtendedWalletState extends WalletState {
   usdtBalance?: {
@@ -319,6 +323,30 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
           throw new Error("Transaction failed to execute");
         }
 
+        const receipt = await waitForTransactionReceipt(wagmiConfig, {
+          hash,
+          timeout: 60000,
+        });
+
+        let purchaseId: string | undefined;
+
+        if (receipt.logs) {
+          const purchaseCreatedEvent = receipt.logs.find((log) => {
+            try {
+              // Check if this is the PurchaseCreated event
+              return log.topics[0] === "0x..."; // Replace with actual event signature hash
+            } catch {
+              return false;
+            }
+          });
+
+          if (purchaseCreatedEvent) {
+            if (purchaseCreatedEvent.topics[1]) {
+              purchaseId = BigInt(purchaseCreatedEvent.topics[1]).toString();
+            }
+          }
+        }
+
         return {
           hash,
           amount: "0",
@@ -327,6 +355,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
           from: address,
           status: "pending",
           timestamp: Date.now(),
+          purchaseId,
         };
       } catch (error: any) {
         console.error("Buy trade failed:", error);
