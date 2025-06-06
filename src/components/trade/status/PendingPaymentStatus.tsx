@@ -25,6 +25,7 @@ import {
   getStoredOrderId,
   storeOrderId,
 } from "../../../utils/helpers";
+import { PaymentTransaction } from "../../../utils/types/web3.types";
 
 interface PendingPaymentStatusProps {
   tradeDetails?: TradeDetails;
@@ -378,7 +379,7 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
   ]);
 
   const handlePaymentSuccess = useCallback(
-    async (transaction: any) => {
+    async (transaction: PaymentTransaction) => {
       setIsPaymentModalOpen(false);
       console.log("currentOrder befor", currentOrder);
       // if (!mountedRef.current) return;
@@ -388,14 +389,14 @@ const PendingPaymentStatus: FC<PendingPaymentStatusProps> = ({
         const currentOrderId = getStoredOrderId();
 
         console.log("currentOrder inside", currentOrder);
-        console.log("rest", currentOrder?._id);
+        console.log("rest", transaction);
         if (currentOrder?._id) {
           console.log("currentOrder inside if", currentOrder);
           await changeOrderStatus(
             currentOrder._id,
             {
               status: "accepted",
-              purchaseId: "",
+              purchaseId: transaction.purchaseId,
             },
             true
           );
