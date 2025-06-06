@@ -54,7 +54,7 @@ export const fetchUserOrders = createAsyncThunk<
       if (!response.ok) {
         return rejectWithValue(response.error || "Failed to fetch orders");
       }
-      return response.data;
+      return response.data.data.orders;
     } catch (error) {
       return rejectWithValue(
         error instanceof Error ? error.message : "Unknown error"
@@ -77,7 +77,7 @@ export const fetchSellerOrders = createAsyncThunk<
           response.error || "Failed to fetch seller orders"
         );
       }
-      return response.data;
+      return response.data.data.orders;
     } catch (error) {
       return rejectWithValue(
         error instanceof Error ? error.message : "Unknown error"
