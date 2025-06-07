@@ -13,7 +13,7 @@ import {
   useBalance,
   useSwitchChain,
 } from "wagmi";
-import { parseUnits, formatUnits, erc20Abi } from "viem";
+import { parseUnits, formatUnits, erc20Abi, decodeEventLog } from "viem";
 import {
   useReadContract,
   useWriteContract,
@@ -331,19 +331,31 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
         let purchaseId: string | undefined;
 
         if (receipt.logs) {
-          const purchaseCreatedEvent = receipt.logs.find((log) => {
-            try {
-              // Check if this is the PurchaseCreated event
-              return log.topics[0] === "0x..."; // Replace with actual event signature hash
-            } catch {
-              return false;
-            }
-          });
+          try {
+            const decodedLogs = receipt.logs
+              .map((log) => {
+                try {
+                  return decodeEventLog({
+                    abi: DEZENMART_ABI,
+                    data: log.data,
+                    topics: log.topics,
+                  });
+                } catch {
+                  return null;
+                }
+              })
+              .filter(Boolean);
 
-          if (purchaseCreatedEvent) {
-            if (purchaseCreatedEvent.topics[1]) {
-              purchaseId = BigInt(purchaseCreatedEvent.topics[1]).toString();
+            const purchaseCreatedEvent = decodedLogs.find(
+              (event: any) => event?.eventName === "PurchaseCreated"
+            );
+
+            if (purchaseCreatedEvent?.args) {
+              const args = purchaseCreatedEvent.args as any;
+              purchaseId = args.purchaseId?.toString();
             }
+          } catch (error) {
+            console.warn("Failed to decode event logs:", error);
           }
         }
 
