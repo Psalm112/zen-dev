@@ -14,16 +14,16 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <>
-      {!isAuthPage && <Header />}
+      {/* {!isAuthPage && <Header />} */}
       <ErrorBoundary>
         <main className="h-full pb-16 md:pb-0">{children}</main>
       </ErrorBoundary>
-      {!isAuthPage && (
+      {/* {!isAuthPage && (
         <>
           <MobileNavigation />
           <Footer />
         </>
-      )}
+      )} */}
     </>
   );
 };
