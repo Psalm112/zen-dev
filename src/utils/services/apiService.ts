@@ -360,7 +360,7 @@ export const api = {
     return fetchWithAuth(`/orders/${orderId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ details }),
+      body: JSON.stringify(details),
     });
   },
   createTrade: async (
