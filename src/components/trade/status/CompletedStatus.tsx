@@ -466,8 +466,8 @@ const CompletedStatus: FC<CompletedStatusProps> = ({
         whileTap={{ scale: 0.98 }}
       >
         <Button
-          title="Sell more"
-          onClick={() => (window.location.href = "/trades")}
+          title="Buy more"
+          onClick={() => (window.location.href = "/product")}
           className="bg-Red max-w-md mx-auto flex items-center justify-center p-3 hover:bg-red-600 text-white w-full"
         />
       </motion.div>
