@@ -31,8 +31,13 @@ const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
 }) => {
   const { showSnackbar } = useSnackbar();
   const { secondaryCurrency } = useCurrency();
-  const { wallet, disconnectWallet, isCorrectNetwork, switchToCorrectNetwork } =
-    useWeb3();
+  const {
+    wallet,
+    disconnectWallet,
+    isCorrectNetwork,
+    switchToCorrectNetwork,
+    usdtDecimals,
+  } = useWeb3();
 
   const {
     userCountry,
@@ -67,6 +72,7 @@ const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
   const handleCopyAddress = () => {
     if (wallet.address) {
       copyToClipboard(wallet.address);
+      console.log("decimal", usdtDecimals);
       showSnackbar("Address copied to clipboard", "success");
     }
   };
