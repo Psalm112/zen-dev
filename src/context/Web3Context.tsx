@@ -120,7 +120,8 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
     args: address ? [address] : undefined,
     query: {
       enabled: !!address && !!usdtContractAddress && isCorrectNetwork,
-      refetchInterval: 30000,
+      refetchInterval: 60000,
+      staleTime: 30000,
     },
   });
 
@@ -128,19 +129,15 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     if (isConnected && address && isCorrectNetwork) {
       const interval = setInterval(() => {
-        refetchUSDTBalance();
-        refetchCeloBalance();
-      }, 30000);
+        if (!isLoadingUSDT) {
+          refetchUSDTBalance();
+          refetchCeloBalance();
+        }
+      }, 60000);
 
       return () => clearInterval(interval);
     }
-  }, [
-    isConnected,
-    address,
-    isCorrectNetwork,
-    refetchUSDTBalance,
-    refetchCeloBalance,
-  ]);
+  }, [isConnected, address, isCorrectNetwork, isLoadingUSDT]);
 
   const connectWallet = useCallback(async () => {
     try {
