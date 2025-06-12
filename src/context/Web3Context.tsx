@@ -230,7 +230,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
         raw: rawBalance,
         usdt: `${formatWithDecimals(numericBalance, 6)} USDT`,
         celo: formatPrice(convertPrice(numericBalance, "USDT", "CELO"), "CELO"),
-        fiat: `$${formatWithDecimals(numericBalance, 2)}`,
+        fiat: formatPrice(convertPrice(numericBalance, "USDT", "FIAT"), "FIAT"),
       };
     } catch (error) {
       console.error("Error formatting USDT balance:", error);
