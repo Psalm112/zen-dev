@@ -52,6 +52,7 @@ const ProductContainer: React.FC = () => {
                 className="mt-6 md:mt-10"
                 isCategoryView={false}
                 showViewAll={false}
+                isUserProducts
               />
             )}
           </Suspense>

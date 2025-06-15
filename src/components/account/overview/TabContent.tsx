@@ -17,7 +17,6 @@ import LoadingSpinner from "../../common/LoadingSpinner";
 import { useOrderData } from "../../../utils/hooks/useOrder";
 import { useWatchlist } from "../../../utils/hooks/useWatchlist";
 
-// const CreateProduct = lazy(() => import("./products/CreateProduct"));
 const ProductContainer = lazy(() => import("./products/Container"));
 
 interface TabContentProps {
